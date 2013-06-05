@@ -1,0 +1,36 @@
+{
+  "name": "coap",
+  "version": "0.1.0",
+  "description": "A CoAP library for node",
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha --recursive test/**/*spec.js",
+    "lint-lib": "find lib -name \"*.js\" -print0 | xargs -0 ./node_modules/.bin/jshint",
+    "lint-tests": "find lib -name \"*.js\" -print0 | xargs -0 ./node_modules/.bin/jshint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mcollina/node-coap.git"
+  },
+  "pre-commit": [
+    "test",
+    "lint-lib",
+    "lint-tests"
+  ],
+  "keywords": [
+    "coap",
+    "m2m",
+    "iot",
+    "client",
+    "server",
+    "udp"
+  ],
+  "author": "Matteo Collina <hello@matteocollina.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "chai": "~1.6.0",
+    "jshint": "~2.1.3",
+    "mocha": "~1.10.0",
+    "pre-commit": "0.0.3"
+  }
+}
