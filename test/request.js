@@ -126,4 +126,17 @@ describe('request', function() {
       done()
     })
   })
+
+  it('should accept a method parameter', function(done) {
+    request({
+        port: port
+      , method: 'POST'
+    }).end()
+
+    server.on('message', function(msg) {
+      var packet = parse(msg)
+      expect(packet.code).to.eql('0.02')
+      done()
+    })
+  })
 })

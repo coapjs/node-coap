@@ -16,6 +16,7 @@ module.exports.request = function(url) {
     url = URL.parse(url)
   }
 
+  packet.code = url.method || 'GET'
   url.port = url.port || coapPort
 
   urlPropertyToPacketOption(url, packet, 'pathname', 'Uri-Path', '/')
