@@ -18,6 +18,8 @@ This library follows the
 It does not parse the protocol but it use
 [CoAP-packet](http://github.com/mcollina/coap-packet) instead.
 
+**node-coap** is an **OPEN Open Source Project**, see the <a href="#contributing">Contributing</a> section to find out what this means.
+
 This has been tested only on node v0.10.
 
 ## Installation
@@ -75,6 +77,14 @@ If it is an object:
 `coap.request()` returns an instance of `stream.Writable`. If you need
 to add a payload, just `pipe` into it.
 Otherwise, you __must__ call `end` to submit the request.
+
+## Contributing
+
+__node-coap__ is an **OPEN Open Source Project**. This means that:
+
+> Individuals making significant and valuable contributions are given commit-access to the project to contribute as they see fit. This project is more like an open wiki than a standard guarded open source project.
+
+See the [CONTRIBUTING.md](https://github.com/mcollina/node-coap/blob/master/CONTRIBUTING.md) file for more details.
 
 ## Contributors
 
