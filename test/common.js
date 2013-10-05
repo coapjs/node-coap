@@ -1,9 +1,8 @@
-"use strict";
 
-global.expect = require("chai").expect;
+global.expect = require("chai").expect
 
-var portCounter = 9042;
+var portCounter = 9042
 global.nextPort = function() {
-  return ++portCounter;
-};
+  return ++portCounter
+}
 

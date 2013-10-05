@@ -1,12 +1,10 @@
 {
   "name": "coap",
-  "version": "0.1.0",
-  "description": "A CoAP library for node",
+  "version": "0.0.1",
+  "description": "A CoAP library for node modelled after 'http'",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --recursive test/**/*spec.js",
-    "lint-lib": "find lib -name \"*.js\" -print0 | xargs -0 ./node_modules/.bin/jshint",
-    "lint-tests": "find lib -name \"*.js\" -print0 | xargs -0 ./node_modules/.bin/jshint"
+    "test": "./node_modules/.bin/mocha --bail --reporter spec"
   },
   "repository": {
     "type": "git",
@@ -28,9 +26,12 @@
   "author": "Matteo Collina <hello@matteocollina.com>",
   "license": "MIT",
   "devDependencies": {
-    "chai": "~1.6.0",
-    "jshint": "~2.1.3",
-    "mocha": "~1.10.0",
-    "pre-commit": "0.0.3"
+    "pre-commit": "0.0.4",
+    "chai": "~1.8.0",
+    "mocha": "~1.13.0"
+  },
+  "dependencies": {
+    "coap-packet": "~0.1.1",
+    "bl": "~0.4.2"
   }
 }

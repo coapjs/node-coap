@@ -2,5 +2,5 @@
 --require test/common
 --ui bdd
 --growl
+--check-leaks
 --colors
---globals s
