@@ -28,8 +28,8 @@ $: npm install coap --save
 
 ## Basic Example
 
-The following example opens an UDP client and UDP server and sends a
-CoAP message between them:
+The following example opens a UDP server and sends a
+CoAP message to it:
 
 ```
 const dgram       = require('dgram')
