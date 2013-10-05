@@ -27,7 +27,7 @@ module.exports.request = function(url) {
     packet.payload = req.slice()
     message = generate(packet)
 
-    client.send(message, 0, message.length, url.port, url.hostname, function(err, bytes) {
+    client.send(message, 0, message.length, url.port, url.hostname || url.host, function(err, bytes) {
       client.close()
     })
   })
