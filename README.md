@@ -56,6 +56,7 @@ server.on('message', function(data) {
 
   * <a href="#parse"><code>coap.<b>request()</b></code></a>
 
+<a name="request"></a>
 ### request(url)
 
 Execute a CoAP request. `url` can be a string or an object.
@@ -78,6 +79,7 @@ If it is an object:
 to add a payload, just `pipe` into it.
 Otherwise, you __must__ call `end` to submit the request.
 
+<a name="contributing"></a>
 ## Contributing
 
 __node-coap__ is an **OPEN Open Source Project**. This means that:
