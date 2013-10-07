@@ -19,7 +19,6 @@ module.exports.request = function(url) {
 
   packet.code = url.method || 'GET'
   url.port = url.port || coapPort
-  packet.token = url.token
 
   urlPropertyToPacketOption(url, packet, 'pathname', 'Uri-Path', '/')
   urlPropertyToPacketOption(url, packet, 'query', 'Uri-Query', '&')
