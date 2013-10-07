@@ -1,16 +1,20 @@
 
-const bl        = require('bl')
-    , dgram     = require('dgram')
-    , parse     = require('coap-packet').parse
-    , generate  = require('coap-packet').generate
-    , URL       = require('url')
-    , Server    = require('./lib/server')
-    , coapPort  = 5683
+const bl              = require('bl')
+    , dgram           = require('dgram')
+    , parse           = require('coap-packet').parse
+    , generate        = require('coap-packet').generate
+    , URL             = require('url')
+    , Server          = require('./lib/server')
+    , IncomingMessage = require('./lib/incoming_message')
+    , coapPort        = 5683
 
 module.exports.request = function(url) {
-  var req    = bl()
-    , client = dgram.createSocket('udp4')
-    , packet = { options: [] }
+  var req     = bl()
+    , client  = dgram.createSocket('udp4', function(msg, rsinfo) {
+                  req.emit('response', new IncomingMessage(parse(msg), rsinfo))
+                  client.close()
+                })
+    , packet  = { options: [] }
     , message
 
   if (typeof url === 'string') {
@@ -29,9 +33,7 @@ module.exports.request = function(url) {
     packet.payload = req.slice()
     message = generate(packet)
 
-    client.send(message, 0, message.length, url.port, url.hostname || url.host, function(err, bytes) {
-      client.close()
-    })
+    client.send(message, 0, message.length, url.port, url.hostname || url.host)
   })
 
   return req

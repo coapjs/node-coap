@@ -139,4 +139,29 @@ describe('request', function() {
       done()
     })
   })
+
+  it('should emit a response', function(done) {
+    var req = request({
+      port: port
+    })
+
+    server.on('message', function(msg, rsinfo) {
+      var packet = parse(msg)
+        , toSend = generate({
+                       messageId: packet.messageId
+                     , token: packet.token
+                     , payload: new Buffer('42')
+                   })
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+    })
+
+    req.on('response', function(res) {
+      res.pipe(bl(function(err, data) {
+        expect(data).to.eql(new Buffer('42'))
+        done()
+      }))
+    })
+
+    req.end()
+  })
 })
