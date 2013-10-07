@@ -132,14 +132,19 @@ describe('request', function() {
       , token: new Buffer(5)
     }
 
-    beforeEach(function() {
+    function sendAndRespond(status) {
       send(generate(packet))
       server.on('request', function(req, res) {
+        if (status) {
+          res.statusCode = status
+        }
+
         res.end('42')
       })
-    })
+    }
 
     it('should reply with a payload to a non-con message', function(done) {
+      sendAndRespond()
       client.on('message', function(msg) {
         expect(parse(msg).payload).to.eql(new Buffer('42'))
         done()
@@ -147,6 +152,7 @@ describe('request', function() {
     })
 
     it('should include the original messageId', function(done) {
+      sendAndRespond()
       client.on('message', function(msg) {
         expect(parse(msg).messageId).to.eql(4242)
         done()
@@ -154,8 +160,25 @@ describe('request', function() {
     })
 
     it('should include the token', function(done) {
+      sendAndRespond()
       client.on('message', function(msg) {
         expect(parse(msg).token).to.eql(packet.token)
+        done()
+      })
+    })
+
+    it('should respond with a different code', function(done) {
+      sendAndRespond('2.04')
+      client.on('message', function(msg) {
+        expect(parse(msg).code).to.eql('2.04')
+        done()
+      })
+    })
+
+    it('should respond with a numeric code', function(done) {
+      sendAndRespond(204)
+      client.on('message', function(msg) {
+        expect(parse(msg).code).to.eql('2.04')
         done()
       })
     })
