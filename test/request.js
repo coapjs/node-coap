@@ -139,4 +139,19 @@ describe('request', function() {
       done()
     })
   })
+
+  it('should send a token', function(done) {
+    var token = new Buffer(5)
+      , req = request({
+        hostname: 'localhost'
+      , port: port
+      , token: token
+    })
+    req.end(new Buffer('hello world'))
+
+    server.on('message', function(msg) {
+      expect(parse(msg).token).to.eql(token)
+      done()
+    })
+  })
 })
