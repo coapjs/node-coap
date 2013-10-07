@@ -4,6 +4,7 @@ const bl        = require('bl')
     , parse     = require('coap-packet').parse
     , generate  = require('coap-packet').generate
     , URL       = require('url')
+    , Server    = require('./lib/server')
     , coapPort  = 5683
 
 module.exports.request = function(url) {
@@ -35,6 +36,8 @@ module.exports.request = function(url) {
 
   return req
 }
+
+module.exports.createServer = Server
 
 function urlPropertyToPacketOption(url, packet, property, option, separator) {
   if (url[property])
