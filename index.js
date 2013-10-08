@@ -6,7 +6,7 @@ const bl              = require('bl')
     , URL             = require('url')
     , Server          = require('./lib/server')
     , IncomingMessage = require('./lib/incoming_message')
-    , coapPort        = 5683
+    , parameters      = require('./lib/parameters')
 
 module.exports.request = function(url) {
   var req     = bl()
@@ -22,7 +22,7 @@ module.exports.request = function(url) {
   }
 
   packet.code = url.method || 'GET'
-  url.port = url.port || coapPort
+  url.port = url.port || parameters.coapPort
 
   urlPropertyToPacketOption(url, packet, 'pathname', 'Uri-Path', '/')
   urlPropertyToPacketOption(url, packet, 'query', 'Uri-Query', '&')

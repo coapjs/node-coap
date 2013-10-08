@@ -42,6 +42,18 @@ describe('server', function() {
     })
   })
 
+  it('should listen by default to 5683', function(done) {
+    server.close() // we need to change port
+    server = coap.createServer()
+    port = 5683
+    server.listen(function() {
+      send(generate())
+    })
+    server.on('request', function(req, res) {
+      done()
+    })
+  })
+
   it('should receive a request that can be piped', function(done) {
     var buf = new Buffer(25)
     send(generate({ payload: buf }))
