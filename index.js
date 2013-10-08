@@ -7,10 +7,11 @@ const bl              = require('bl')
     , URL             = require('url')
     , Server          = require('./lib/server')
     , IncomingMessage = require('./lib/incoming_message')
+    , OutgoingMessage = require('./lib/outgoing_message')
     , parameters      = require('./lib/parameters')
 
 module.exports.request = function(url) {
-  var req     = bl()
+  var req
 
     , bOff    = backoff.exponential({
                   randomisationFactor: 0.2,
@@ -30,36 +31,34 @@ module.exports.request = function(url) {
                   req.emit('response', new IncomingMessage(parse(msg), rsinfo))
                 })
 
-    , packet  = { options: [] }
+    , message
 
-    , send    = function() {
-                  try {
-                    packet.payload = req.slice()
-                    var message = generate(packet)
+    , send
 
-                    client.send(message, 0, message.length,
-                                url.port, url.hostname || url.host)
+  send = function(buf) {
+    if (Buffer.isBuffer(buf))
+      message = buf
 
-                    bOff.backoff()
-                  } catch(error) {
-                    req.emit('error', error)
-                  }
-                }
+    client.send(message, 0, message.length,
+                url.port, url.hostname || url.host)
+
+    bOff.backoff()
+  }
+
+  req = new OutgoingMessage({}, send)
 
   if (typeof url === 'string')
     url = URL.parse(url)
 
-  packet.code = url.method || 'GET'
+  req.statusCode = url.method || 'GET'
   url.port = url.port || parameters.coapPort
 
-  urlPropertyToPacketOption(url, packet, 'pathname', 'Uri-Path', '/')
-  urlPropertyToPacketOption(url, packet, 'query', 'Uri-Query', '&')
+  urlPropertyToPacketOption(url, req, 'pathname', 'Uri-Path', '/')
+  urlPropertyToPacketOption(url, req, 'query', 'Uri-Query', '&')
 
   client.on('error', req.emit.bind(req, 'error'))
 
-  req.on('finish', send)
   req.on('error', cleanUp)
-  req.on('response', cleanUp)
 
   bOff.failAfter(parameters.maxRetransmit - 1)
   bOff.on('ready', send)
@@ -74,17 +73,14 @@ module.exports.request = function(url) {
 
 module.exports.createServer = Server
 
-function urlPropertyToPacketOption(url, packet, property, option, separator) {
+function urlPropertyToPacketOption(url, req, property, option, separator) {
   if (url[property])
-    url[property].split(separator)
-       .filter(function(part) { return part !== '' })
-       .forEach(function(part) {
+    req.setOption(option, url[property].split(separator)
+         .filter(function(part) { return part !== '' })
+         .map(function(part) {
 
       var buf = new Buffer(Buffer.byteLength(part))
       buf.write(part)
-      packet.options.push({
-          name: option
-        , value: buf
-      })
-    })
+      return buf
+    }))
 }

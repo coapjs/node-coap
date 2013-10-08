@@ -176,6 +176,70 @@ describe('request', function() {
     req.end()
   })
 
+  it('should allow to add an option', function(done) {
+    var req = request({
+                port: port
+              })
+      , buf = new Buffer(3)
+    
+    req.setOption('ETag', buf)
+    req.end()
+
+    server.on('message', function(msg) {
+      expect(parse(msg).options[0].name).to.eql('ETag')
+      expect(parse(msg).options[0].value).to.eql(buf)
+      done()
+    })
+  })
+
+  it('should overwrite the option', function(done) {
+    var req = request({
+                port: port
+              })
+      , buf = new Buffer(3)
+    
+    req.setOption('ETag', new Buffer(3))
+    req.setOption('ETag', buf)
+    req.end()
+
+    server.on('message', function(msg) {
+      expect(parse(msg).options[0].value).to.eql(buf)
+      done()
+    })
+  })
+
+  it('should alias setOption to setHeader', function(done) {
+    var req = request({
+                port: port
+              })
+      , buf = new Buffer(3)
+    
+    req.setHeader('ETag', buf)
+    req.end()
+
+    server.on('message', function(msg) {
+      expect(parse(msg).options[0].value).to.eql(buf)
+      done()
+    })
+  })
+
+  it('should set multiple options', function(done) {
+    var req = request({
+                port: port
+              })
+      , buf1 = new Buffer(3)
+      , buf2 = new Buffer(3)
+    
+    req.setOption('433', [buf1, buf2])
+    req.end()
+
+    server.on('message', function(msg) {
+      expect(parse(msg).options[0].value).to.eql(buf1)
+      expect(parse(msg).options[1].value).to.eql(buf2)
+      done()
+    })
+  })
+
   describe('retries', function() {
     var clock
 
