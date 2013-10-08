@@ -4,6 +4,7 @@ const coap      = require('../')
     , generate  = require('coap-packet').generate
     , dgram     = require('dgram')
     , bl        = require('bl')
+    , sinon     = require('sinon')
     , request   = coap.request
 
 describe('request', function() {
@@ -163,5 +164,71 @@ describe('request', function() {
     })
 
     req.end()
+  })
+
+  describe('retries', function() {
+    var clock
+
+    beforeEach(function() {
+      clock = sinon.useFakeTimers()
+    })
+
+    afterEach(function() {
+      clock.restore()
+    })
+
+    function fastForward(increase, max) {
+      clock.tick(increase)
+      if (increase < max)
+        setImmediate(fastForward.bind(null, increase, max - increase))
+    }
+
+    it('should error after ~247 seconds', function(done) {
+      var req = request('coap://localhost:' + port)
+      req.end()
+
+      req.on('error', function(err) {
+        expect(err).to.have.property('message', 'No reply in 247s')
+        done()
+      })
+
+      clock.tick(247 * 1000)
+    })
+
+    it('should retry four times before erroring', function(done) {
+      var req = request('coap://localhost:' + port)
+        , messages = 0
+
+      req.end()
+      server.on('message', function(msg) {
+        messages++
+      })
+
+      req.on('error', function(err) {
+        // original one plus 4 retries
+        expect(messages).to.eql(5)
+        done()
+      })
+
+      fastForward(100, 247 * 1000)
+    })
+
+    it('should retry four times before 45s', function(done) {
+      var req = request('coap://localhost:' + port)
+        , messages = 0
+
+      req.end()
+      server.on('message', function(msg) {
+        messages++
+      })
+
+      setTimeout(function() {
+        // original one plus 4 retries
+        expect(messages).to.eql(5)
+        done()
+      }, 45 * 1000)
+
+      fastForward(100, 45 * 1000)
+    })
   })
 })

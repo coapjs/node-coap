@@ -29,11 +29,13 @@
     "pre-commit": "0.0.4",
     "chai": "~1.8.0",
     "mocha": "~1.13.0",
-    "timekeeper": "0.0.3"
+    "timekeeper": "0.0.3",
+    "sinon": "~1.7.3"
   },
   "dependencies": {
     "coap-packet": "~0.1.1",
     "bl": "~0.4.2",
+    "backoff": "~2.3.0",
     "lru-cache": "~2.3.1"
   }
 }

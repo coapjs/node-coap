@@ -1,6 +1,7 @@
 
 const bl              = require('bl')
     , dgram           = require('dgram')
+    , backoff         = require('backoff')
     , parse           = require('coap-packet').parse
     , generate        = require('coap-packet').generate
     , URL             = require('url')
@@ -10,16 +11,36 @@ const bl              = require('bl')
 
 module.exports.request = function(url) {
   var req     = bl()
+
+    , bOff    = backoff.exponential({
+                  randomisationFactor: 0.2,
+                  initialDelay: 1222,
+                  maxDelay: parameters.maxTransmitSpan * 1000
+                })
+
+    , timer
+
     , client  = dgram.createSocket('udp4', function(msg, rsinfo) {
                   req.emit('response', new IncomingMessage(parse(msg), rsinfo))
                   client.close()
+                  bOff.reset()
+                  clearTimeout(timer)
                 })
-    , packet  = { options: [] }
-    , message
 
-  if (typeof url === 'string') {
+    , packet  = { options: [] }
+
+    , send    = function() {
+                  packet.payload = req.slice()
+                  var message = generate(packet)
+
+                  client.send(message, 0, message.length,
+                              url.port, url.hostname || url.host)
+
+                  bOff.backoff()
+                }
+
+  if (typeof url === 'string')
     url = URL.parse(url)
-  }
 
   packet.code = url.method || 'GET'
   url.port = url.port || parameters.coapPort
@@ -29,12 +50,15 @@ module.exports.request = function(url) {
 
   client.on('error', req.emit.bind(req, 'error'))
 
-  req.on('finish', function() {
-    packet.payload = req.slice()
-    message = generate(packet)
+  req.on('finish', send)
 
-    client.send(message, 0, message.length, url.port, url.hostname || url.host)
-  })
+  bOff.failAfter(parameters.maxRetransmit - 1)
+  bOff.on('ready', send)
+
+  timer = setTimeout(function() {
+    var err  = new Error('No reply in ' + parameters.exchangeLifetime + 's')
+    req.emit('error', err)
+  }, parameters.exchangeLifetime * 1000)
 
   return req
 }
