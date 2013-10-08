@@ -140,6 +140,17 @@ describe('server', function() {
     })
   })
 
+  it('should have res emitting an error if the message is too big', function(done) {
+    send(generate())
+    server.on('request', function(req, res) {
+      res.on('error', function() {
+        done()
+      })
+
+      res.end(new Buffer(1280))
+    })
+  })
+
   describe('with a non-confirmable message', function() {
     var packet = {
         confirmable: false
