@@ -28,10 +28,12 @@
   "devDependencies": {
     "pre-commit": "0.0.4",
     "chai": "~1.8.0",
-    "mocha": "~1.13.0"
+    "mocha": "~1.13.0",
+    "timekeeper": "0.0.3"
   },
   "dependencies": {
     "coap-packet": "~0.1.1",
-    "bl": "~0.4.2"
+    "bl": "~0.4.2",
+    "lru-cache": "~2.3.1"
   }
 }

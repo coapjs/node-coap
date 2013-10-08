@@ -5,8 +5,10 @@ const coap      = require('../')
     , dgram     = require('dgram')
     , bl        = require('bl')
     , request   = coap.request
+    , tk        = require('timekeeper')
+    , params    = require('../lib/parameters')
 
-describe('request', function() {
+describe('server', function() {
   var server
     , port
     , clientPort
@@ -26,6 +28,7 @@ describe('request', function() {
 
   afterEach(function() {
     server.close()
+    tk.reset()
   })
 
   function send(message) {
@@ -180,6 +183,36 @@ describe('request', function() {
       client.on('message', function(msg) {
         expect(parse(msg).code).to.eql('2.04')
         done()
+      })
+    })
+
+    it('should calculate the response only once', function(done) {
+      send(generate(packet))
+      send(generate(packet))
+
+      server.on('request', function(req, res) {
+        res.end('42')
+
+        // this will error if called twice
+        done()
+      })
+    })
+
+    it('should calculate the response twice after the interval', function(done) {
+      var now = Date.now()
+      send(generate(packet))
+
+      server.once('request', function(req, res) {
+        res.end('42')
+
+        tk.travel(now + params.exchangeLifetime * 1000)
+
+        server.on('request', function(req, res) {
+          res.end('24')
+          done()
+        })
+
+        send(generate(packet))
       })
     })
   })
