@@ -151,6 +151,22 @@ describe('server', function() {
     })
   })
 
+  it('should expose the options', function(done) {
+    var options = [{
+        name: '555'
+      , value: new Buffer(45)
+    }]
+
+    send(generate({
+      options: options
+    }))
+
+    server.on('request', function(req, res) {
+      expect(req.options).to.eql(options)
+      done()
+    })
+  })
+
   describe('with a non-confirmable message', function() {
     var packet = {
         confirmable: false
@@ -205,6 +221,73 @@ describe('server', function() {
       sendAndRespond(204)
       client.on('message', function(msg) {
         expect(parse(msg).code).to.eql('2.04')
+        done()
+      })
+    })
+
+    it('should allow to add an option', function(done) {
+      var buf = new Buffer(3)
+
+      send(generate(packet))
+
+      server.on('request', function(req, res) {
+        res.setOption('ETag', buf)
+        res.end('42')
+      })
+
+      client.on('message', function(msg) {
+        expect(parse(msg).options[0].name).to.eql('ETag')
+        expect(parse(msg).options[0].value).to.eql(buf)
+        done()
+      })
+    })
+
+    it('should overwrite the option', function(done) {
+      var buf = new Buffer(3)
+
+      send(generate(packet))
+
+      server.on('request', function(req, res) {
+        res.setOption('ETag', new Buffer(3))
+        res.setOption('ETag', buf)
+        res.end('42')
+      })
+
+      client.on('message', function(msg) {
+        expect(parse(msg).options[0].value).to.eql(buf)
+        done()
+      })
+    })
+
+    it('should alias setOption to setHeader', function(done) {
+      send(generate(packet))
+
+      server.on('request', function(req, res) {
+        res.setHeader('ETag', 'hello world')
+        res.end('42')
+      })
+
+      client.on('message', function(msg) {
+        expect(parse(msg).options[0].name).to.eql('ETag')
+        expect(parse(msg).options[0].value).to.eql(new Buffer('hello world'))
+        done()
+      })
+    })
+
+    it('should set multiple options', function(done) {
+      var buf1 = new Buffer(3)
+        , buf2 = new Buffer(3)
+
+      send(generate(packet))
+
+      server.on('request', function(req, res) {
+        res.setOption('433', [buf1, buf2])
+        res.end('42')
+      })
+
+      client.on('message', function(msg) {
+        expect(parse(msg).options[0].value).to.eql(buf1)
+        expect(parse(msg).options[1].value).to.eql(buf2)
         done()
       })
     })
