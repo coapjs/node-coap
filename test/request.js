@@ -57,6 +57,16 @@ describe('request', function() {
     })
   })
 
+  it('should error if the message is too big', function(done) {
+    var req = request('coap://localhost:' + port)
+
+    req.on('error', function() {
+      done()
+    })
+
+    req.end(new Buffer(1280))
+  })
+
   it('should imply a default port', function(done) {
     server2 = dgram.createSocket('udp4')
 

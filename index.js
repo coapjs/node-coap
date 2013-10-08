@@ -20,23 +20,30 @@ module.exports.request = function(url) {
 
     , timer
 
-    , client  = dgram.createSocket('udp4', function(msg, rsinfo) {
-                  req.emit('response', new IncomingMessage(parse(msg), rsinfo))
+    , cleanUp = function() {
                   client.close()
                   bOff.reset()
                   clearTimeout(timer)
+                }
+
+    , client  = dgram.createSocket('udp4', function(msg, rsinfo) {
+                  req.emit('response', new IncomingMessage(parse(msg), rsinfo))
                 })
 
     , packet  = { options: [] }
 
     , send    = function() {
-                  packet.payload = req.slice()
-                  var message = generate(packet)
+                  try {
+                    packet.payload = req.slice()
+                    var message = generate(packet)
 
-                  client.send(message, 0, message.length,
-                              url.port, url.hostname || url.host)
+                    client.send(message, 0, message.length,
+                                url.port, url.hostname || url.host)
 
-                  bOff.backoff()
+                    bOff.backoff()
+                  } catch(error) {
+                    req.emit('error', error)
+                  }
                 }
 
   if (typeof url === 'string')
@@ -51,6 +58,8 @@ module.exports.request = function(url) {
   client.on('error', req.emit.bind(req, 'error'))
 
   req.on('finish', send)
+  req.on('error', cleanUp)
+  req.on('response', cleanUp)
 
   bOff.failAfter(parameters.maxRetransmit - 1)
   bOff.on('ready', send)
