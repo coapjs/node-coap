@@ -255,6 +255,32 @@ __node-coap__ is an **OPEN Open Source Project**. This means that:
 
 See the [CONTRIBUTING.md](https://github.com/mcollina/node-coap/blob/master/CONTRIBUTING.md) file for more details.
 
+<a name="registerOption"></a>
+### registerOption(name, toBinary, toString)
+
+Register a new option to be converted to string and added to the
+`message.headers`.
+`toBinary` is a function that accept a string and returns a `Buffer`.
+`toString` is a function that accept a `Buffer` and returns a `String`.
+
+<a name="registerFormat"></a>
+### registerFormat(name, value)
+
+Register a new format to be interpreted and sent in CoAP
+`Content-Format` option.
+Each format is identified by a number, see the [Content-Format
+registry](http://tools.ietf.org/html/draft-ietf-core-coap-18#section-12.3).
+
+These are the defaults formats:
+```js
+registerFormat('text/plain', 0)
+registerFormat('application/link-format', 40)
+registerFormat('application/xml', 41)
+registerFormat('application/octet-stream', 42)
+registerFormat('application/exi', 47)
+registerFormat('application/json', 50)
+```
+
 ## Limitations
 
 At the moment only non-confirmable messages are supported (NON in the
