@@ -4,8 +4,17 @@ node-coap
 [![Build
 Status](https://travis-ci.org/mcollina/node-coap.png)](https://travis-ci.org/mcollina/node-coap)
 
-__node-coap__ is an _highly experimental_ client and (in the future)
-server library for CoAP modelled after the `http` module.
+__node-coap__ is an _highly experimental_ client and server library for CoAP modelled after the `http` module.
+
+  * <a href="#intro">Introduction</a>
+  * <a href="#install">Installation</a>
+  * <a href="#basic">Basic Example</a>
+  * <a href="#api">API</a>
+  * <a href="#contributing">Contributing</a>
+  * <a href="#licence">Licence &amp; copyright</a>
+
+<a name="intro"></a>
+## Introduction
 
 What is CoAP?
 > Constrained Application Protocol (CoAP) is a software protocol
@@ -22,12 +31,14 @@ It does not parse the protocol but it use
 
 This has been tested only on node v0.10.
 
+<a name="install"></a>
 ## Installation
 
 ```
 $: npm install coap --save
 ```
 
+<a name="basic"></a>
 ## Basic Example
 
 The following example opens a UDP server and sends a
@@ -56,10 +67,13 @@ server.listen(function() {
 })
 ```
 
+<a name="api"></a>
 ## API
 
   * <a href="#request"><code>coap.<b>request()</b></code></a>
   * <a href="#createServer"><code>coap.<b>createServer()</b></code></a>
+  * <a href="#incoming"><code>IncomingMessage</b></code></a>
+  * <a href="#outgoing"><code>OutgoingMessage</b></code></a>
 
 <a name="request"></a>
 ### request(url)
@@ -81,7 +95,7 @@ If it is an object:
   e.g. 'a=b&c=d'
 
 `coap.request()` returns an instance of <a
-href='#incoming'><code>coap.IncomingMessage</code></a>.
+href='#incoming'><code>IncomingMessage</code></a>.
 If you need
 to add a payload, just `pipe` into it.
 Otherwise, you __must__ call `end` to submit the request.
@@ -93,7 +107,7 @@ Otherwise, you __must__ call `end` to submit the request.
 Emitted when a response is received.
 `response` is
 an instance of <a
-href='#incoming'><code>coap.IncomingMessage</code></a>.
+href='#incoming'><code>IncomingMessage</code></a>.
 
 <a name="createServer"></a>
 ### createServer([requestListener])
@@ -109,9 +123,9 @@ added to the `'request'` event.
 
 Emitted each time there is a request. 
 `request` is an instance of <a
-href='#incoming'><code>coap.IncomingMessage</code></a> and `response` is
+href='#incoming'><code>IncomingMessage</code></a> and `response` is
 an instance of <a
-href='#outgoing'><code>coap.OutgoingMessage</code></a>.
+href='#outgoing'><code>OutgoingMessage</code></a>.
 
 #### server.listen(port, [hostname], [callback])
 
@@ -131,7 +145,7 @@ This function is synchronous, but it provides an asynchronous callback
 for convenience.
 
 <a name="outgoing"></a>
-### coap.OutgoingMessage
+### OutgoingMessage
 
 An `OutgoingMessage` object is returned by `coap.request` or
 emitted by the `coap.createServer` `'response'` event.
@@ -178,7 +192,7 @@ See the
 for all the possible options.
 
 <a name="incoming"></a>
-### coap.IncomingMessage
+### IncomingMessage
 
 An `IncomingMessage` object is created by `coap.createServer` or
 `coap.request`
