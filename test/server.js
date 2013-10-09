@@ -83,6 +83,25 @@ describe('server', function() {
     })
   })
 
+  it('should include the code', function(done) {
+    var buf = new Buffer(25)
+    send(generate({ payload: buf }))
+    server.on('request', function(req, res) {
+      expect(req).to.have.property('code', '0.01')
+      done()
+    })
+  })
+
+  ;['GET', 'POST', 'PUT', 'DELETE'].forEach(function(method) {
+    it('should include the \'' + method + '\' method', function(done) {
+      send(generate({ code: method }))
+      server.on('request', function(req, res) {
+        expect(req).to.have.property('method', method)
+        done()
+      })
+    })
+  })
+
   it('should include the path in the URL', function(done) {
     send(generate({
         options: [{
