@@ -130,6 +130,108 @@ Closes the server.
 This function is synchronous, but it provides an asynchronous callback
 for convenience.
 
+<a name="outgoing"></a>
+### coap.OutgoingMessage
+
+An `OutgoingMessage` object is returned by `coap.request` or
+emitted by the `coap.createServer` `'response'` event.
+It may be used to access response status, headers and data.
+
+It implements the [Writable
+Stream][http://nodejs.org/api/stream.html#stream_class_stream_writable] interface, as well as the
+following additional methods and properties.
+
+#### message.statusCode
+
+The CoAP code ot the message.
+It is HTTP-compatible, as it can be passed `404`.
+
+#### message.setOption(name, value)
+
+Sets a single option value.
+All the options are in binary format, except for
+`'Content-Format'`, `'Accept'` and `'ETag'`.
+See <a href='#registerOption'> to know how to register more.
+
+Use an array of buffers
+if you need to send multiple options with the same name.
+
+If you need to pass a custom option, pass a string containing a 
+
+Example:
+
+    message.setOption("Content-Format", "application/json");
+
+or
+
+    message.setOption("555", [new Buffer('abcde',
+new Buffer('ghi')]);
+
+`setOption` is also aliased as `setHeader` for HTTP API
+compatibility.
+
+Also, `'Content-Type'` is aliased to `'Content-Format'` for HTTP
+compatibility.
+
+See the
+[spec](http://tools.ietf.org/html/draft-ietf-core-coap-18#section-5.4)
+for all the possible options.
+
+<a name="incoming"></a>
+### coap.IncomingMessage
+
+An `IncomingMessage` object is created by `coap.createServer` or
+`coap.request`
+and passed as the first argument to the `'request'` and `'response'` event
+respectively. It may be used to access response status, headers and data.
+
+It implements the [Readable
+Stream][http://nodejs.org/api/stream.html#stream_class_stream_readable] interface, as well as the
+following additional methods and properties.
+
+#### message.payload
+
+The full payload of the message, as a Buffer.
+
+#### message.options
+
+All the CoAP options, as parsed by
+[CoAP-packet](http://github.com/mcollina/coap-packet).
+
+All the options are in binary format, except for
+`'Content-Format'`, `'Accept'` and `'ETag'`.
+See <a href='#registerOption'> to know how to register more.
+
+See the
+[spec](http://tools.ietf.org/html/draft-ietf-core-coap-18#section-5.4)
+for all the possible options.
+
+#### message.headers
+
+All the CoAP options that can be represented in a human-readable format.
+Currently they are only `'Content-Format'`, `'Accept'` and
+`'ETag'`.
+See <a href='#registerOption'> to know how to register more.
+
+Also, `'Content-Type'` is aliased to `'Content-Format'` for HTTP
+compatibility.
+
+#### message.code
+
+The CoAP code of the message.
+
+#### message.method
+
+The method of the message, it might be
+`'GET'`, `'POST'`, `'PUT'`, `'DELETE'` or `null`.
+It is null if the CoAP code cannot be parsed into a method, i.e. it is
+not in the '0.' range.
+
+#### message.url
+
+The URL of the request, e.g.
+`'coap://localhost:12345/hello/world?a=b&b=c'`.
+
 <a name="contributing"></a>
 ## Contributing
 
