@@ -397,5 +397,13 @@ describe('server', function() {
         done()
       })
     })
+
+    it('should reply with a \'5.00\' if it cannot parse the packet', function(done) {
+      send(new Buffer(3))
+      client.on('message', function(msg) {
+        expect(parse(msg).code).to.eql('5.00')
+        done()
+      })
+    })
   })
 })
