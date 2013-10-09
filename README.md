@@ -45,7 +45,7 @@ The following example opens a UDP server and sends a
 CoAP message to it:
 
 ```js
-const coap        = require('../') // or coap
+const coap        = require('coap')
     , server      = coap.createServer()
 
 server.on('request', function(req, res) {
