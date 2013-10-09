@@ -307,6 +307,6 @@ __node-coap__ is only possible due to the excellent work of the following contri
 ## LICENSE
 Copyright (c) 2013 node-coap contributors (listed above).
 
-Coap-Packet is licensed under an MIT +no-false-attribs license.
+node-coap is licensed under an MIT +no-false-attribs license.
 All rights not explicitly granted in the MIT license are reserved.
 See the included LICENSE file for more details.
