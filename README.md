@@ -152,7 +152,7 @@ emitted by the `coap.createServer` `'response'` event.
 It may be used to access response status, headers and data.
 
 It implements the [Writable
-Stream][http://nodejs.org/api/stream.html#stream_class_stream_writable] interface, as well as the
+Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable) interface, as well as the
 following additional methods and properties.
 
 #### message.statusCode
@@ -200,7 +200,7 @@ and passed as the first argument to the `'request'` and `'response'` event
 respectively. It may be used to access response status, headers and data.
 
 It implements the [Readable
-Stream][http://nodejs.org/api/stream.html#stream_class_stream_readable] interface, as well as the
+Stream](http://nodejs.org/api/stream.html#stream_class_stream_readable) interface, as well as the
 following additional methods and properties.
 
 #### message.payload
