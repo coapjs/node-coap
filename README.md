@@ -35,7 +35,7 @@ This has been tested only on node v0.10.
 ## Installation
 
 ```
-$: npm install coap --save
+$ npm install coap --save
 ```
 
 <a name="basic"></a>
@@ -44,7 +44,7 @@ $: npm install coap --save
 The following example opens a UDP server and sends a
 CoAP message to it:
 
-```
+```js
 const coap        = require('../') // or coap
     , server      = coap.createServer()
 
