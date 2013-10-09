@@ -216,7 +216,7 @@ All the CoAP options, as parsed by
 
 All the options are in binary format, except for
 `'Content-Format'`, `'Accept'` and `'ETag'`.
-See <a href='#registerOption'> to know how to register more.
+See <a href='#registerOption'><code>registerOption()</code></a> to know how to register more.
 
 See the
 [spec](http://tools.ietf.org/html/draft-ietf-core-coap-18#section-5.4)
