@@ -74,6 +74,8 @@ server.listen(function() {
   * <a href="#createServer"><code>coap.<b>createServer()</b></code></a>
   * <a href="#incoming"><code>IncomingMessage</b></code></a>
   * <a href="#outgoing"><code>OutgoingMessage</b></code></a>
+  * <a href="#registerOption"><code>coap.registerOption()</b></code></a>
+  * <a href="#registerFormat"><code>coap.registerFormat()</b></code></a>
 
 <a name="request"></a>
 ### request(url)
@@ -246,6 +248,22 @@ not in the '0.' range.
 The URL of the request, e.g.
 `'coap://localhost:12345/hello/world?a=b&b=c'`.
 
+<a name="registerOption"></a>
+### coap.registerOption(name, toBinary, toString)
+
+Register a new option to be converted to string and added to the
+`message.headers`.
+`toBinary` is a function that accept a string and returns a `Buffer`.
+`toString` is a function that accept a `Buffer` and returns a `String`.
+
+<a name="registerFormat"></a>
+### coap.registerFormat(name, value)
+
+Register a new format to be interpreted and sent in CoAP
+`Content-Format` option.
+Each format is identified by a number, see the [Content-Format
+registry](http://tools.ietf.org/html/draft-ietf-core-coap-18#section-12.3).
+
 <a name="contributing"></a>
 ## Contributing
 
@@ -254,22 +272,6 @@ __node-coap__ is an **OPEN Open Source Project**. This means that:
 > Individuals making significant and valuable contributions are given commit-access to the project to contribute as they see fit. This project is more like an open wiki than a standard guarded open source project.
 
 See the [CONTRIBUTING.md](https://github.com/mcollina/node-coap/blob/master/CONTRIBUTING.md) file for more details.
-
-<a name="registerOption"></a>
-### registerOption(name, toBinary, toString)
-
-Register a new option to be converted to string and added to the
-`message.headers`.
-`toBinary` is a function that accept a string and returns a `Buffer`.
-`toString` is a function that accept a `Buffer` and returns a `String`.
-
-<a name="registerFormat"></a>
-### registerFormat(name, value)
-
-Register a new format to be interpreted and sent in CoAP
-`Content-Format` option.
-Each format is identified by a number, see the [Content-Format
-registry](http://tools.ietf.org/html/draft-ietf-core-coap-18#section-12.3).
 
 These are the defaults formats:
 ```js
