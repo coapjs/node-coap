@@ -240,6 +240,138 @@ describe('request', function() {
     })
   })
 
+  var formatsString = {
+      'text/plain': new Buffer([0])
+    , 'application/link-format': new Buffer([40])
+    , 'application/xml': new Buffer([41])
+    , 'application/octet-stream': new Buffer([42])
+    , 'application/exi': new Buffer([47])
+    , 'application/json': new Buffer([50])
+  }
+
+  describe('with the \'Content-Format\' header in the outgoing message', function() {
+    function buildTest(format, value) {
+      it('should parse ' + format, function(done) {
+        var req = request({
+                    port: port
+                  })
+        
+        req.setOption('Content-Format', format)
+        req.end()
+
+        server.on('message', function(msg) {
+          expect(parse(msg).options[0].value).to.eql(value)
+          done()
+        })
+      })
+    }
+
+    for (var format in formatsString) {
+      buildTest(format, formatsString[format])
+    }
+  })
+
+  describe('with the \'Accept\' header in the outgoing message', function() {
+    function buildTest(format, value) {
+      it('should parse ' + format, function(done) {
+        var req = request({
+                    port: port
+                  })
+        
+        req.setHeader('Accept', format)
+        req.end()
+
+        server.on('message', function(msg) {
+          expect(parse(msg).options[0].value).to.eql(value)
+          done()
+        })
+      })
+    }
+
+    for (var format in formatsString) {
+      buildTest(format, formatsString[format])
+    }
+  })
+
+  describe('with the \'Content-Format\' in the response', function() {
+    function buildResponse(value) {
+      return function(msg, rsinfo) {
+        var packet  = parse(msg)
+          , toSend  = generate({
+                          messageId: packet.messageId
+                        , token: packet.token
+                        , options: [{
+                              name: 'Content-Format'
+                            , value: value
+                          }]
+                     })
+        server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+      }
+    }
+
+    function buildTest(format, value) {
+      it('should parse ' + format, function(done) {
+        var req = request({
+          port: port
+        })
+
+        server.on('message', buildResponse(value))
+
+        req.on('response', function(res) {
+          expect(res.options[0].value).to.eql(format)
+          done()
+        })
+
+        req.end()
+      })
+
+      it('should include ' + format + ' in the headers', function(done) {
+        var req = request({
+          port: port
+        })
+
+        server.on('message', buildResponse(value))
+
+        req.on('response', function(res) {
+          expect(res.headers['Content-Format']).to.eql(format)
+          done()
+        })
+
+        req.end()
+      })
+    }
+
+    for (var format in formatsString) {
+      buildTest(format, formatsString[format])
+    }
+  })
+
+  it('should include \'ETag\' in the response headers', function(done) {
+    var req = request({
+      port: port
+    })
+
+    server.on('message', function(msg, rsinfo) {
+      var packet  = parse(msg)
+        , toSend  = generate({
+                        messageId: packet.messageId
+                      , token: packet.token
+                      , options: [{
+                            name: 'ETag'
+                          , value: new Buffer('abcdefgh')
+                        }]
+                    })
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+    })
+
+    req.on('response', function(res) {
+      expect(res.headers).to.have.property('ETag', 'abcdefgh')
+      done()
+    })
+
+    req.end()
+  })
+
   describe('retries', function() {
     var clock
 

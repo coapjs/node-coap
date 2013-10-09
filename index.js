@@ -9,6 +9,7 @@ const bl              = require('bl')
     , IncomingMessage = require('./lib/incoming_message')
     , OutgoingMessage = require('./lib/outgoing_message')
     , parameters      = require('./lib/parameters')
+    , optionsConv     = require('./lib/option_converter')
 
 module.exports.request = function(url) {
   var req
@@ -84,3 +85,6 @@ function urlPropertyToPacketOption(url, req, property, option, separator) {
       return buf
     }))
 }
+
+module.exports.registerOption = optionsConv.registerOption
+module.exports.registerFormat = optionsConv.registerFormat
