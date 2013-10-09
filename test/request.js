@@ -240,6 +240,21 @@ describe('request', function() {
     })
   })
 
+  it('should alias the \'Content-Format\' option to \'Content-Type\'', function(done) {
+    var req = request({
+                port: port
+              })
+    
+    req.setOption('Content-Type', new Buffer([0]))
+    req.end()
+
+    server.on('message', function(msg) {
+      expect(parse(msg).options[0].name).to.eql('Content-Format')
+      expect(parse(msg).options[0].value).to.eql(new Buffer([0]))
+      done()
+    })
+  })
+
   var formatsString = {
       'text/plain': new Buffer([0])
     , 'application/link-format': new Buffer([40])
@@ -334,6 +349,7 @@ describe('request', function() {
 
         req.on('response', function(res) {
           expect(res.headers['Content-Format']).to.eql(format)
+          expect(res.headers['Content-Type']).to.eql(format)
           done()
         })
 
