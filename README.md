@@ -34,27 +34,32 @@ The following example opens a UDP server and sends a
 CoAP message to it:
 
 ```
-const dgram       = require('dgram')
-    , coapPacket  = require('coap-packet')
-    , parse       = packet.parse
-    , payload     = new Buffer('Hello World')
-    , port        = 41234
-    , server      = dgram.createSocket("udp4")
-    , coap        = require('coap')
+const coap        = require('../') // or coap
+    , server      = coap.createServer()
 
-server.bind(port, function() {
-  coap.request('coap://localhost:' + port).end(paylaod)
+server.on('request', function(req, res) {
+  res.end('Hello ' + req.url.split('/')[1] + '\n')
 })
 
-server.on('message', function(data) {
-  console.log(parse(data).payload.toString())
-  server.close()
+// the default CoAP port is 5683
+server.listen(function() {
+  var req = coap.request('coap://localhost/Matteo')
+
+  req.on('response', function(res) {
+    res.pipe(process.stdout)
+    res.on('end', function() {
+      process.exit(0)
+    })
+  })
+
+  req.end()
 })
 ```
 
 ## API
 
-  * <a href="#parse"><code>coap.<b>request()</b></code></a>
+  * <a href="#request"><code>coap.<b>request()</b></code></a>
+  * <a href="#createServer"><code>coap.<b>createServer()</b></code></a>
 
 <a name="request"></a>
 ### request(url)
@@ -75,9 +80,55 @@ If it is an object:
 - `query`: Query string. Defaults to `''`. Should not include the path,
   e.g. 'a=b&c=d'
 
-`coap.request()` returns an instance of `stream.Writable`. If you need
+`coap.request()` returns an instance of <a
+href='#incoming'><code>coap.IncomingMessage</code></a>.
+If you need
 to add a payload, just `pipe` into it.
 Otherwise, you __must__ call `end` to submit the request.
+
+#### Event: 'response'
+
+`function (response) { }`
+
+Emitted when a response is received.
+`response` is
+an instance of <a
+href='#incoming'><code>coap.IncomingMessage</code></a>.
+
+<a name="createServer"></a>
+### createServer([requestListener])
+
+Returns a new CoAP Server object.
+
+The `requestListener` is a function which is automatically
+added to the `'request'` event.
+
+#### Event: 'request'
+
+`function (request, response) { }`
+
+Emitted each time there is a request. 
+`request` is an instance of <a
+href='#incoming'><code>coap.IncomingMessage</code></a> and `response` is
+an instance of <a
+href='#outgoing'><code>coap.OutgoingMessage</code></a>.
+
+#### server.listen(port, [hostname], [callback])
+
+Begin accepting connections on the specified port and hostname.  If the
+hostname is omitted, the server will accept connections directed to any
+IPv4 address (`INADDR_ANY`).
+
+To listen to a unix socket, supply a filename instead of port and hostname.
+
+This function is asynchronous.
+
+#### server.close([callback])
+
+Closes the server.
+
+This function is synchronous, but it provides an asynchronous callback
+for convenience.
 
 <a name="contributing"></a>
 ## Contributing
@@ -88,9 +139,22 @@ __node-coap__ is an **OPEN Open Source Project**. This means that:
 
 See the [CONTRIBUTING.md](https://github.com/mcollina/node-coap/blob/master/CONTRIBUTING.md) file for more details.
 
+## Limitations
+
+At the moment only non-confirmable messages are supported (NON in the
+CoAP spec). This means less reliability, as there is no way for a client
+to know if the server has received the message.
+
+Moreover, the maximum packet size is 1280, as the
+[blockwise](http://datatracker.ietf.org/doc/draft-ietf-core-block/) is
+not supported yet.
+
+The [observe](http://datatracker.ietf.org/doc/draft-ietf-core-observe/)
+support is planned too.
+
 ## Contributors
 
-Coap-Packet is only possible due to the excellent work of the following contributors:
+__node-coap__ is only possible due to the excellent work of the following contributors:
 
 <table><tbody>
 <tr><th align="left">Matteo Collina</th><td><a href="https://github.com/mcollina">GitHub/mcollina</a></td><td><a href="https://twitter.com/matteocollina">Twitter/@matteocollina</a></td></tr>
