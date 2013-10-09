@@ -167,6 +167,52 @@ describe('server', function() {
     })
   })
 
+  var formatsString = {
+      'text/plain': new Buffer([0])
+    , 'application/link-format': new Buffer([40])
+    , 'application/xml': new Buffer([41])
+    , 'application/octet-stream': new Buffer([42])
+    , 'application/exi': new Buffer([47])
+    , 'application/json': new Buffer([50])
+  }
+
+  describe('with the \'Content-Format\' header in the request', function() {
+    function buildTest(option, format, value) {
+      it('should parse \'' + option + ': ' + format + '\'', function(done) {
+        send(generate({
+          options: [{
+              name: option
+            , value: value
+          }]
+        }))
+
+        server.on('request', function(req) {
+          expect(req.options[0].value).to.eql(format)
+          done()
+        })
+      })
+
+      it('should include \'' + option + ': ' + format + '\' in the headers', function(done) {
+        send(generate({
+          options: [{
+              name: option
+            , value: value
+          }]
+        }))
+
+        server.on('request', function(req) {
+          expect(req.headers).to.have.property(option, format)
+          done()
+        })
+      })
+    }
+
+    for (var format in formatsString) {
+      buildTest('Content-Format', format, formatsString[format])
+      buildTest('Accept', format, formatsString[format])
+    }
+  })
+
   describe('with a non-confirmable message', function() {
     var packet = {
         confirmable: false
@@ -319,6 +365,36 @@ describe('server', function() {
         })
 
         send(generate(packet))
+      })
+    })
+
+    it('should include \'ETag\' in the response options', function(done) {
+      send(generate())
+
+      server.on('request', function(req, res) {
+        res.setOption('ETag', 'abcdefgh')
+        res.end('42')
+      })
+
+      client.on('message', function(msg, rsinfo) {
+        expect(parse(msg).options[0].name).to.eql('ETag')
+        expect(parse(msg).options[0].value).to.eql(new Buffer('abcdefgh'))
+        done()
+      })
+    })
+
+    it('should include \'Content-Format\' in the response options', function(done) {
+      send(generate())
+
+      server.on('request', function(req, res) {
+        res.setOption('Content-Format', 'text/plain')
+        res.end('42')
+      })
+
+      client.on('message', function(msg, rsinfo) {
+        expect(parse(msg).options[0].name).to.eql('Content-Format')
+        expect(parse(msg).options[0].value).to.eql(new Buffer([0]))
+        done()
       })
     })
   })
