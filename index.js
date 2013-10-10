@@ -14,14 +14,37 @@ const bl              = require('bl')
 module.exports.request = function(url) {
   var req, sender
 
+    , closing = false
+    , acking  = false
+
     , cleanUp = function() {
+                  closing = true
                   sender.reset()
-                  client.close()
+                  if (!acking)
+                    client.close()
                 }
 
     , client  = dgram.createSocket('udp4', function(msg, rsinfo) {
                   var packet = parse(msg)
+                    , buf
+
+                  if (packet.confirmable) {
+                    buf = generate({
+                        code: '0.00'
+                      , ack: true
+                      , messageId: packet.messageId
+                      , token: packet.token
+                    })
+                    acking = true
+
+                    client.send(buf, 0, buf.length, rsinfo.port, rsinfo.address, function() {
+                      if (closing)
+                        client.close()
+                    })
+                  }
+
                   sender.reset()
+
                   if (packet.code !== '0.00')
                     req.emit('response', new IncomingMessage(packet, rsinfo))
                 })

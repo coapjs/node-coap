@@ -225,6 +225,46 @@ describe('request', function() {
     req.end()
   })
 
+
+  it('should send an ACK back after receiving a CON response', function(done) {
+    var req = request({
+        port: port
+      , confirmable: true
+    })
+
+    server.once('message', function(msg, rsinfo) {
+      var packet = parse(msg)
+        , toSend = generate({
+                       messageId: packet.messageId
+                     , token: packet.token
+                     , payload: new Buffer('')
+                     , ack: true
+                     , code: '0.00'
+                   })
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+
+      toSend = generate({
+          token: packet.token
+        , payload: new Buffer('42')
+        , confirmable: true
+        , code: '2.00'
+      })
+
+      console.log('sending', parse(toSend))
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+
+      server.once('message', function(msg, rsinfo) {
+        packet = parse(msg)
+        expect(packet.code).to.eql('0.00')
+        expect(packet.ack).to.be.true
+        expect(packet.messageId).to.eql(parse(toSend).messageId)
+        done()
+      })
+    })
+
+    req.end()
+  })
+
   it('should not emit a response with an ack', function(done) {
     var req = request({
         port: port
