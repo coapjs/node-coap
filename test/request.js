@@ -250,7 +250,6 @@ describe('request', function() {
         , code: '2.00'
       })
 
-      console.log('sending', parse(toSend))
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
 
       server.once('message', function(msg, rsinfo) {
@@ -281,13 +280,11 @@ describe('request', function() {
                    })
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
       setTimeout(function() {
-        console.log('timeout')
         done()
       }, 20)
     })
 
     req.on('response', function(res) {
-      console.log(res.payload)
       done(new Error('Unexpected response'))
     })
 

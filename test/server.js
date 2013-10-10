@@ -543,10 +543,9 @@ describe('server', function() {
       client.once('message', function(msg) {
         client.on('message', function(msg) {
           var res = parse(msg)
-          send(generate({ 
+          send(generate({
               code: '0.00'
             , messageId: res.messageId
-            , token: res.token
             , ack: true }))
           messages++
         })
