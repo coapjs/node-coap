@@ -28,7 +28,15 @@ module.exports.request = function(url) {
 
   sender = new RetrySend(client, url.port, url.hostname || url.host)
 
-  req = new OutgoingMessage({}, function(buf) {
+  req = new OutgoingMessage({}, function(packet) {
+    var buf
+
+    try {
+      buf = generate(packet)
+    } catch(err) {
+      return req.emit('error', err)
+    }
+
     sender.send(buf)
   })
 

@@ -414,7 +414,7 @@ describe('request', function() {
         done()
       })
 
-      clock.tick(247 * 1000)
+      fastForward(1000, 247 * 1000)
     })
 
     it('should retry four times before erroring', function(done) {
