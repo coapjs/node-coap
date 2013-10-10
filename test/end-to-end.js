@@ -19,6 +19,18 @@ describe('end-to-end', function() {
     })
   })
 
+  it('should return code 2.05 by default', function(done) {
+    var req = coap.request('coap://localhost:'+port + '/abcd/ef/gh/?foo=bar&beep=bop').end()
+    req.on('response', function(res) {
+      expect(res.code).to.eql('2.05')
+      done()
+    })
+
+    server.on('request', function(req, res) {
+      res.end('hello')
+    })
+  })
+
   describe('formats', function() {
     var formats = [ 'text/plain', 'application/link-format',
       'application/xml', 'application/octet-stream',
