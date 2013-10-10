@@ -92,7 +92,8 @@ If it is an object:
 - `port`: Port of remote server. Defaults to 5483.
 - `method`: A string specifying the CoAP request method. Defaults to
   `'GET'`.
-- `confirmable`: send a CoAP confirmable message (CON).
+- `confirmable`: send a CoAP confirmable message (CON), defaults to
+  `true`.
 - `pathname`: Request path. Defaults to `'/'`. Should not include query string
 - `query`: Query string. Defaults to `''`. Should not include the path,
   e.g. 'a=b&c=d'
