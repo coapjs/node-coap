@@ -169,7 +169,8 @@ It is HTTP-compatible, as it can be passed `404`.
 Sets a single option value.
 All the options are in binary format, except for
 `'Content-Format'`, `'Accept'` and `'ETag'`.
-See <a href='#registerOption'> to know how to register more.
+See <a href='#registerOption'><code>registerOption</code></a>
+ to know how to register more.
 
 Use an array of buffers
 if you need to send multiple options with the same name.
