@@ -92,6 +92,8 @@ If it is an object:
 - `port`: Port of remote server. Defaults to 5483.
 - `method`: A string specifying the CoAP request method. Defaults to
   `'GET'`.
+- `confirmable`: send a CoAP confirmable message (CON), defaults to
+  `true`.
 - `pathname`: Request path. Defaults to `'/'`. Should not include query string
 - `query`: Query string. Defaults to `''`. Should not include the path,
   e.g. 'a=b&c=d'
@@ -285,11 +287,7 @@ registerFormat('application/json', 50)
 
 ## Limitations
 
-At the moment only non-confirmable messages are supported (NON in the
-CoAP spec). This means less reliability, as there is no way for a client
-to know if the server has received the message.
-
-Moreover, the maximum packet size is 1280, as the
+The maximum packet size is 1280, as the
 [blockwise](http://datatracker.ietf.org/doc/draft-ietf-core-block/) is
 not supported yet.
 

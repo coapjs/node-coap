@@ -1,7 +1,6 @@
 
 const bl              = require('bl')
     , dgram           = require('dgram')
-    , backoff         = require('backoff')
     , parse           = require('coap-packet').parse
     , generate        = require('coap-packet').generate
     , URL             = require('url')
@@ -10,64 +9,78 @@ const bl              = require('bl')
     , OutgoingMessage = require('./lib/outgoing_message')
     , parameters      = require('./lib/parameters')
     , optionsConv     = require('./lib/option_converter')
+    , RetrySend       = require('./lib/retry_send')
 
 module.exports.request = function(url) {
-  var req
+  var req, sender
 
-    , bOff    = backoff.exponential({
-                  randomisationFactor: 0.2,
-                  initialDelay: 1222,
-                  maxDelay: parameters.maxTransmitSpan * 1000
-                })
-
-    , timer
+    , closing = false
+    , acking  = false
 
     , cleanUp = function() {
-                  client.close()
-                  bOff.reset()
-                  clearTimeout(timer)
+                  closing = true
+                  sender.reset()
+                  if (!acking)
+                    client.close()
                 }
 
     , client  = dgram.createSocket('udp4', function(msg, rsinfo) {
-                  req.emit('response', new IncomingMessage(parse(msg), rsinfo))
+                  var packet = parse(msg)
+                    , buf
+
+                  if (packet.confirmable) {
+                    buf = generate({
+                        code: '0.00'
+                      , ack: true
+                      , messageId: packet.messageId
+                      , token: packet.token
+                    })
+                    acking = true
+
+                    client.send(buf, 0, buf.length, rsinfo.port, rsinfo.address, function() {
+                      if (closing)
+                        client.close()
+                    })
+                  }
+
+                  sender.reset()
+
+                  if (packet.code !== '0.00')
+                    req.emit('response', new IncomingMessage(packet, rsinfo))
                 })
-
-    , message
-
-    , send
-
-  send = function(buf) {
-    if (Buffer.isBuffer(buf))
-      message = buf
-
-    client.send(message, 0, message.length,
-                url.port, url.hostname || url.host)
-
-    bOff.backoff()
-  }
-
-  req = new OutgoingMessage({}, send)
 
   if (typeof url === 'string')
     url = URL.parse(url)
 
+  sender = new RetrySend(client, url.port, url.hostname || url.host)
+
+  req = new OutgoingMessage({}, function(packet) {
+    var buf
+
+    if (url.confirmable !== false) {
+      packet.confirmable = true
+    }
+
+    try {
+      buf = generate(packet)
+    } catch(err) {
+      return req.emit('error', err)
+    }
+
+    sender.send(buf)
+  })
+
   req.statusCode = url.method || 'GET'
-  url.port = url.port || parameters.coapPort
+
 
   urlPropertyToPacketOption(url, req, 'pathname', 'Uri-Path', '/')
   urlPropertyToPacketOption(url, req, 'query', 'Uri-Query', '&')
 
   client.on('error', req.emit.bind(req, 'error'))
+  sender.on('error', req.emit.bind(req, 'error'))
 
   req.on('error', cleanUp)
-
-  bOff.failAfter(parameters.maxRetransmit - 1)
-  bOff.on('ready', send)
-
-  timer = setTimeout(function() {
-    var err  = new Error('No reply in ' + parameters.exchangeLifetime + 's')
-    req.emit('error', err)
-  }, parameters.exchangeLifetime * 1000)
+  req.on('response', cleanUp)
 
   return req
 }

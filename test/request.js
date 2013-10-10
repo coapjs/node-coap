@@ -48,6 +48,16 @@ describe('request', function() {
     })
   })
 
+  it('should send a confirmable message by default', function(done) {
+    var req = request('coap://localhost:' + port)
+    req.end(new Buffer('hello world'))
+
+    server.on('message', function(msg) {
+      expect(parse(msg).confirmable).to.be.true
+      done()
+    })
+  })
+
   it('should emit the errors in the req', function(done) {
     var req = request('coap://aaa.eee:' + 1234)
     req.end(new Buffer('hello world'))
@@ -151,9 +161,10 @@ describe('request', function() {
     })
   })
 
-  it('should emit a response', function(done) {
+  it('should emit a response with a piggyback CON message', function(done) {
     var req = request({
-      port: port
+        port: port
+      , confirmable: true
     })
 
     server.on('message', function(msg, rsinfo) {
@@ -162,6 +173,137 @@ describe('request', function() {
                        messageId: packet.messageId
                      , token: packet.token
                      , payload: new Buffer('42')
+                     , ack: true
+                     , code: '2.00'
+                   })
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+    })
+
+    req.on('response', function(res) {
+      res.pipe(bl(function(err, data) {
+        expect(data).to.eql(new Buffer('42'))
+        done()
+      }))
+    })
+
+    req.end()
+  })
+
+  it('should emit a response with a delayed CON message', function(done) {
+    var req = request({
+        port: port
+      , confirmable: true
+    })
+
+    server.once('message', function(msg, rsinfo) {
+      var packet = parse(msg)
+        , toSend = generate({
+                       messageId: packet.messageId
+                     , token: packet.token
+                     , payload: new Buffer('')
+                     , ack: true
+                     , code: '0.00'
+                   })
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+
+      toSend = generate({
+          token: packet.token
+        , payload: new Buffer('42')
+        , confirmable: true
+        , code: '2.00'
+      })
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+    })
+
+    req.on('response', function(res) {
+      res.pipe(bl(function(err, data) {
+        expect(data).to.eql(new Buffer('42'))
+        done()
+      }))
+    })
+
+    req.end()
+  })
+
+
+  it('should send an ACK back after receiving a CON response', function(done) {
+    var req = request({
+        port: port
+      , confirmable: true
+    })
+
+    server.once('message', function(msg, rsinfo) {
+      var packet = parse(msg)
+        , toSend = generate({
+                       messageId: packet.messageId
+                     , token: packet.token
+                     , payload: new Buffer('')
+                     , ack: true
+                     , code: '0.00'
+                   })
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+
+      toSend = generate({
+          token: packet.token
+        , payload: new Buffer('42')
+        , confirmable: true
+        , code: '2.00'
+      })
+
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+
+      server.once('message', function(msg, rsinfo) {
+        packet = parse(msg)
+        expect(packet.code).to.eql('0.00')
+        expect(packet.ack).to.be.true
+        expect(packet.messageId).to.eql(parse(toSend).messageId)
+        done()
+      })
+    })
+
+    req.end()
+  })
+
+  it('should not emit a response with an ack', function(done) {
+    var req = request({
+        port: port
+      , confirmable: true
+    })
+
+    server.on('message', function(msg, rsinfo) {
+      var packet = parse(msg)
+        , toSend = generate({
+                       messageId: packet.messageId
+                     , token: packet.token
+                     , ack: true
+                     , code: '0.00'
+                   })
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+      setTimeout(function() {
+        done()
+      }, 20)
+    })
+
+    req.on('response', function(res) {
+      done(new Error('Unexpected response'))
+    })
+
+    req.end()
+  })
+
+  it('should emit a response with a NON message', function(done) {
+    var req = request({
+        port: port
+      , confirmable: false
+    })
+
+    server.on('message', function(msg, rsinfo) {
+      var packet = parse(msg)
+        , toSend = generate({
+                       messageId: packet.messageId
+                     , token: packet.token
+                     , payload: new Buffer('42')
+                     , code: '2.00'
                    })
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
     })
@@ -388,7 +530,7 @@ describe('request', function() {
     req.end()
   })
 
-  describe('retries', function() {
+  describe('non-confirmable retries', function() {
     var clock
 
     beforeEach(function() {
@@ -399,6 +541,13 @@ describe('request', function() {
       clock.restore()
     })
 
+    function doReq() {
+      return request({
+          port: port
+        , confirmable: false
+      }).end()
+    }
+
     function fastForward(increase, max) {
       clock.tick(increase)
       if (increase < max)
@@ -406,22 +555,20 @@ describe('request', function() {
     }
 
     it('should error after ~247 seconds', function(done) {
-      var req = request('coap://localhost:' + port)
-      req.end()
+      var req = doReq()
 
       req.on('error', function(err) {
         expect(err).to.have.property('message', 'No reply in 247s')
         done()
       })
 
-      clock.tick(247 * 1000)
+      fastForward(1000, 247 * 1000)
     })
 
     it('should retry four times before erroring', function(done) {
-      var req = request('coap://localhost:' + port)
+      var req = doReq()
         , messages = 0
 
-      req.end()
       server.on('message', function(msg) {
         messages++
       })
@@ -436,10 +583,9 @@ describe('request', function() {
     })
 
     it('should retry four times before 45s', function(done) {
-      var req = request('coap://localhost:' + port)
+      var req = doReq()
         , messages = 0
 
-      req.end()
       server.on('message', function(msg) {
         messages++
       })
@@ -447,6 +593,127 @@ describe('request', function() {
       setTimeout(function() {
         // original one plus 4 retries
         expect(messages).to.eql(5)
+        done()
+      }, 45 * 1000)
+
+      fastForward(100, 45 * 1000)
+    })
+
+    it('should stop retrying if it receives a message', function(done) {
+      var req = doReq()
+        , messages = 0
+
+      server.on('message', function(msg, rsinfo) {
+        messages++
+        var packet  = parse(msg)
+          , toSend  = generate({
+                          messageId: packet.messageId
+                        , token: packet.token
+                        , code: '2.00'
+                        , ack: true
+                        , payload: new Buffer(5)
+                      })
+        
+        server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+      })
+
+      setTimeout(function() {
+        expect(messages).to.eql(1)
+        done()
+      }, 45 * 1000)
+
+      fastForward(100, 45 * 1000)
+    })
+  })
+
+  describe('confirmable retries', function() {
+    var clock
+
+    beforeEach(function() {
+      clock = sinon.useFakeTimers()
+    })
+
+    afterEach(function() {
+      clock.restore()
+    })
+
+    function doReq() {
+      return request({
+          port: port
+        , confirmable: true
+      }).end()
+    }
+
+    function fastForward(increase, max) {
+      clock.tick(increase)
+      if (increase < max)
+        setImmediate(fastForward.bind(null, increase, max - increase))
+    }
+
+    it('should error after ~247 seconds', function(done) {
+      var req = doReq()
+
+      req.on('error', function(err) {
+        expect(err).to.have.property('message', 'No reply in 247s')
+        done()
+      })
+
+      fastForward(1000, 247 * 1000)
+    })
+
+    it('should retry four times before erroring', function(done) {
+      var req = doReq()
+        , messages = 0
+
+      server.on('message', function(msg) {
+        messages++
+      })
+
+      req.on('error', function(err) {
+        // original one plus 4 retries
+        expect(messages).to.eql(5)
+        done()
+      })
+
+      fastForward(100, 247 * 1000)
+    })
+
+    it('should retry four times before 45s', function(done) {
+      var req = doReq()
+        , messages = 0
+
+      server.on('message', function(msg) {
+        messages++
+      })
+
+      setTimeout(function() {
+        // original one plus 4 retries
+        expect(messages).to.eql(5)
+        done()
+      }, 45 * 1000)
+
+      fastForward(100, 45 * 1000)
+    })
+
+    it('should stop retrying if it receives an ack', function(done) {
+      var req = doReq()
+        , messages = 0
+
+      server.on('message', function(msg, rsinfo) {
+        messages++
+        var packet  = parse(msg)
+          , toSend  = generate({
+                          messageId: packet.messageId
+                        , token: packet.token
+                        , code: '0.00'
+                        , ack: true
+                      })
+        
+        server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+      })
+
+      setTimeout(function() {
+        expect(messages).to.eql(1)
         done()
       }, 45 * 1000)
 

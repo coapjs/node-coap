@@ -6,6 +6,7 @@ const coap      = require('../')
     , bl        = require('bl')
     , request   = coap.request
     , tk        = require('timekeeper')
+    , sinon     = require('sinon')
     , params    = require('../lib/parameters')
 
 describe('server', function() {
@@ -423,6 +424,154 @@ describe('server', function() {
         expect(parse(msg).code).to.eql('5.00')
         done()
       })
+    })
+  })
+
+  describe('with a confirmable message', function() {
+    var packet = {
+        confirmable: true
+      , messageId: 4242
+      , token: new Buffer(5)
+    }
+
+    var clock
+
+    beforeEach(function() {
+      clock = sinon.useFakeTimers()
+    })
+
+    afterEach(function() {
+      clock.restore()
+    })
+
+    function fastForward(increase, max) {
+      clock.tick(increase)
+      if (increase < max)
+        setImmediate(fastForward.bind(null, increase, max - increase))
+    }
+
+    it('should reply in piggyback', function(done) {
+      send(generate(packet))
+      server.on('request', function(req, res) {
+        res.end('42')
+      })
+
+      client.on('message', function(msg) {
+        var response = parse(msg)
+        expect(response.ack).to.be.true
+        expect(response.messageId).to.eql(packet.messageId)
+        expect(response.payload).to.eql(new Buffer('42'))
+        done()
+      })
+    })
+
+    it('should ack the message if it does not reply in 50ms', function(done) {
+      send(generate(packet))
+
+      client.once('message', function(msg) {
+        var response = parse(msg)
+        expect(response.ack).to.be.true
+        expect(response.code).to.eql('0.00')
+        expect(response.messageId).to.eql(packet.messageId)
+        expect(response.payload).to.eql(new Buffer(0))
+        done()
+      })
+
+      fastForward(10, 1000)
+    })
+
+    it('should reply with a confirmable after an ack', function(done) {
+      send(generate(packet))
+      server.on('request', function(req, res) {
+        setTimeout(function() {
+          res.end('42')
+        }, 200)
+      })
+
+      client.once('message', function(msg) {
+        var response = parse(msg)
+        expect(response.ack).to.be.true
+
+        client.once('message', function(msg) {
+
+          var response = parse(msg)
+
+          expect(response.confirmable).to.be.true
+          expect(response.messageId).not.to.eql(packet.messageId)
+          done()
+        })
+      })
+
+      fastForward(100, 1000)
+    })
+
+    it('should retry sending the response if it does not receive an ack four times before 45s', function(done) {
+      var messages = 0
+
+      send(generate(packet))
+      server.on('request', function(req, res) {
+        setTimeout(function() {
+          res.end('42')
+        }, 200)
+      })
+
+      client.once('message', function(msg) {
+        client.on('message', function(msg) {
+          messages++
+        })
+      })
+
+      setTimeout(function() {
+        // original one plus 4 retries
+        expect(messages).to.eql(5)
+        done()
+      }, 45 * 1000)
+
+      fastForward(100, 45 * 1000)
+    })
+
+    it('should stop resending after it receives an ack', function(done) {
+      var messages = 0
+
+      send(generate(packet))
+      server.on('request', function(req, res) {
+        setTimeout(function() {
+          res.end('42')
+        }, 200)
+      })
+
+      client.once('message', function(msg) {
+        client.on('message', function(msg) {
+          var res = parse(msg)
+          send(generate({
+              code: '0.00'
+            , messageId: res.messageId
+            , ack: true }))
+          messages++
+        })
+      })
+
+      setTimeout(function() {
+        expect(messages).to.eql(1)
+        done()
+      }, 45 * 1000)
+
+      fastForward(100, 45 * 1000)
+    })
+
+    it('should error if it does not receive an ack four times before ~247s', function(done) {
+      var messages = 0
+
+      send(generate(packet))
+      server.on('request', function(req, res) {
+        res.end('42')
+
+        res.on('error', function() {
+          done()
+        })
+      })
+
+      fastForward(100, 248 * 1000)
     })
   })
 })
