@@ -15,12 +15,15 @@ module.exports.request = function(url) {
   var req, sender
 
     , cleanUp = function() {
-                  client.close()
                   sender.reset()
+                  client.close()
                 }
 
     , client  = dgram.createSocket('udp4', function(msg, rsinfo) {
-                  req.emit('response', new IncomingMessage(parse(msg), rsinfo))
+                  var packet = parse(msg)
+                  sender.reset()
+                  if (packet.code !== '0.00')
+                    req.emit('response', new IncomingMessage(packet, rsinfo))
                 })
 
   if (typeof url === 'string')
@@ -30,6 +33,10 @@ module.exports.request = function(url) {
 
   req = new OutgoingMessage({}, function(packet) {
     var buf
+
+    if (url.confirmable !== false) {
+      packet.confirmable = true
+    }
 
     try {
       buf = generate(packet)
@@ -42,6 +49,7 @@ module.exports.request = function(url) {
 
   req.statusCode = url.method || 'GET'
 
+
   urlPropertyToPacketOption(url, req, 'pathname', 'Uri-Path', '/')
   urlPropertyToPacketOption(url, req, 'query', 'Uri-Query', '&')
 
@@ -49,6 +57,7 @@ module.exports.request = function(url) {
   sender.on('error', req.emit.bind(req, 'error'))
 
   req.on('error', cleanUp)
+  req.on('response', cleanUp)
 
   return req
 }
