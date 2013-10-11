@@ -79,7 +79,10 @@ server.listen(function() {
   * <a href="#outgoing"><code>OutgoingMessage</b></code></a>
   * <a href="#registerOption"><code>coap.registerOption()</b></code></a>
   * <a href="#registerFormat"><code>coap.registerFormat()</b></code></a>
+  * <a href="#observeread"><code>ObserveReadStream</b></code></a>
+  * <a href="#observewrite"><code>ObserveWriteStream</b></code></a>
 
+-------------------------------------------------------
 <a name="request"></a>
 ### request(url)
 
@@ -124,6 +127,7 @@ will return an instance of
 Which represent the updates coming from the server, according to the
 [observe spec](http://tools.ietf.org/html/draft-ietf-core-observe-10).
 
+-------------------------------------------------------
 <a name="createServer"></a>
 ### createServer([requestListener])
 
@@ -164,6 +168,7 @@ Closes the server.
 This function is synchronous, but it provides an asynchronous callback
 for convenience.
 
+-------------------------------------------------------
 <a name="outgoing"></a>
 ### OutgoingMessage
 
@@ -212,6 +217,7 @@ See the
 [spec](http://tools.ietf.org/html/draft-ietf-core-coap-18#section-5.4)
 for all the possible options.
 
+-------------------------------------------------------
 <a name="incoming"></a>
 ### IncomingMessage
 
@@ -267,6 +273,7 @@ not in the '0.' range.
 The URL of the request, e.g.
 `'coap://localhost:12345/hello/world?a=b&b=c'`.
 
+-------------------------------------------------------
 <a name="registerOption"></a>
 ### coap.registerOption(name, toBinary, toString)
 
@@ -293,10 +300,11 @@ registerFormat('application/exi', 47)
 registerFormat('application/json', 50)
 ```
 
+-------------------------------------------------------
 <a name="observeread"></a>
 ### ObserveReadStream
 
-An `IncomingMessage` object is created by `coap.request` to handle
+An `ObserveReadStream` object is created by `coap.request` to handle
 _observe_ requests.
 It is passed as the first argument to the `'response'` event.
 It may be used to access response status, headers and data as they are
@@ -312,6 +320,7 @@ following additional methods, events and properties.
 
 Closes the stream.
 
+-------------------------------------------------------
 <a name="observewrite"></a>
 ### ObserveWriteStream
 
@@ -321,7 +330,7 @@ object.
 It may be used to set response status, headers and stream changing data
 to the client.
 
-__Each new `write()` call is a new message being sent to the client__.
+Each new `write()` call is a __new message__ being sent to the client.
 
 It implements the [Writable
 Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable)
