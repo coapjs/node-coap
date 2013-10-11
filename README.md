@@ -77,10 +77,10 @@ server.listen(function() {
   * <a href="#createServer"><code>coap.<b>createServer()</b></code></a>
   * <a href="#incoming"><code>IncomingMessage</b></code></a>
   * <a href="#outgoing"><code>OutgoingMessage</b></code></a>
-  * <a href="#registerOption"><code>coap.registerOption()</b></code></a>
-  * <a href="#registerFormat"><code>coap.registerFormat()</b></code></a>
   * <a href="#observeread"><code>ObserveReadStream</b></code></a>
   * <a href="#observewrite"><code>ObserveWriteStream</b></code></a>
+  * <a href="#registerOption"><code>coap.registerOption()</b></code></a>
+  * <a href="#registerFormat"><code>coap.registerFormat()</b></code></a>
 
 -------------------------------------------------------
 <a name="request"></a>
@@ -274,33 +274,6 @@ The URL of the request, e.g.
 `'coap://localhost:12345/hello/world?a=b&b=c'`.
 
 -------------------------------------------------------
-<a name="registerOption"></a>
-### coap.registerOption(name, toBinary, toString)
-
-Register a new option to be converted to string and added to the
-`message.headers`.
-`toBinary` is a function that accept a string and returns a `Buffer`.
-`toString` is a function that accept a `Buffer` and returns a `String`.
-
-<a name="registerFormat"></a>
-### coap.registerFormat(name, value)
-
-Register a new format to be interpreted and sent in CoAP
-`Content-Format` option.
-Each format is identified by a number, see the [Content-Format
-registry](http://tools.ietf.org/html/draft-ietf-core-coap-18#section-12.3).
-
-These are the defaults formats:
-```js
-registerFormat('text/plain', 0)
-registerFormat('application/link-format', 40)
-registerFormat('application/xml', 41)
-registerFormat('application/octet-stream', 42)
-registerFormat('application/exi', 47)
-registerFormat('application/json', 50)
-```
-
--------------------------------------------------------
 <a name="observeread"></a>
 ### ObserveReadStream
 
@@ -341,6 +314,34 @@ following additional methods and properties.
 
 Emitted when the client is not sending 'acks' anymore for the sent
 messages.
+
+-------------------------------------------------------
+<a name="registerOption"></a>
+### coap.registerOption(name, toBinary, toString)
+
+Register a new option to be converted to string and added to the
+`message.headers`.
+`toBinary` is a function that accept a string and returns a `Buffer`.
+`toString` is a function that accept a `Buffer` and returns a `String`.
+
+-------------------------------------------------------
+<a name="registerFormat"></a>
+### coap.registerFormat(name, value)
+
+Register a new format to be interpreted and sent in CoAP
+`Content-Format` option.
+Each format is identified by a number, see the [Content-Format
+registry](http://tools.ietf.org/html/draft-ietf-core-coap-18#section-12.3).
+
+These are the defaults formats:
+```js
+registerFormat('text/plain', 0)
+registerFormat('application/link-format', 40)
+registerFormat('application/xml', 41)
+registerFormat('application/octet-stream', 42)
+registerFormat('application/exi', 47)
+registerFormat('application/json', 50)
+```
 
 <a name="contributing"></a>
 ## Contributing
