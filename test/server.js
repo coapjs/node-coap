@@ -28,6 +28,7 @@ describe('server', function() {
   })
 
   afterEach(function() {
+    client.close()
     server.close()
     tk.reset()
   })
@@ -571,7 +572,134 @@ describe('server', function() {
         })
       })
 
+      fastForward(100, 250 * 1000)
+    })
+  })
+
+  describe('observe', function() {
+    var token = new Buffer(3)
+      , clock
+
+    beforeEach(function() {
+      clock = sinon.useFakeTimers()
+    })
+
+    afterEach(function() {
+      clock.restore()
+    })
+
+    function fastForward(increase, max) {
+      clock.tick(increase)
+      if (increase < max)
+        setImmediate(fastForward.bind(null, increase, max - increase))
+    }
+
+    function doObserve(method) {
+      if (!method)
+        method = 'GET'
+      
+      send(generate({ 
+          code: method
+        , confirmable: true
+        , token: token
+        , options: [{ 
+              name: 'Observe'
+            , value: new Buffer(0)
+          }]
+      }))
+    }
+
+    ['PUT', 'POST', 'DELETE'].forEach(function(method) {
+      it('should return an error when try to observe in a ' + method, function(done) {
+        doObserve(method)
+        server.on('request', function() {
+          done(new Error('A request should not be emitted'))
+        })
+
+        client.on('message', function(msg) {
+          expect(parse(msg).code).to.eql('5.00')
+          done()
+        })
+      })
+    })
+
+    it('should emit a request with \'Observe\' in the headers', function(done) {
+      doObserve()
+      server.on('request', function(req, res) {
+        expect(req.headers).to.have.property('Observe')
+        res.end('hello')
+        done()
+      })
+    })
+
+    it('should send multiple messages for multiple writes', function(done) {
+      var now = Date.now()
+      doObserve()
+
+      server.on('request', function(req, res) {
+        res.write('hello')
+        setImmediate(function() {
+          res.end('world')
+        })
+      })
+
+      // the first one is an ack
+      client.once('message', function(msg) {
+        expect(parse(msg).payload.toString()).to.eql('hello')
+        expect(parse(msg).options[0].name).to.eql('Observe')
+        expect(parse(msg).options[0].value).to.eql(new Buffer([1]))
+        expect(parse(msg).token).to.eql(token)
+        expect(parse(msg).code).to.eql('2.05')
+        expect(parse(msg).ack).to.be.true
+
+        client.once('message', function(msg) {
+          expect(parse(msg).payload.toString()).to.eql('world')
+          expect(parse(msg).options[0].name).to.eql('Observe')
+          expect(parse(msg).options[0].value).to.eql(new Buffer([2]))
+          expect(parse(msg).token).to.eql(token)
+          expect(parse(msg).code).to.eql('2.05')
+          expect(parse(msg).ack).to.be.false
+          expect(parse(msg).confirmable).to.be.true
+
+          done()
+        })
+      })
+    })
+
+    it('should emit a \'finish\' if the client do not ack for ~247s', function(done) {
+      var now = Date.now()
+      doObserve()
+
+      server.on('request', function(req, res) {
+        res.write('hello')
+        res.on('finish', function() {
+          done()
+        })
+      })
+      
       fastForward(100, 248 * 1000)
+    })
+
+    it('should emit a \'finish\' if the client do a reset', function(done) {
+      var now = Date.now()
+      doObserve()
+
+      server.on('request', function(req, res) {
+        res.write('hello')
+        res.write('world')
+        res.on('finish', function() {
+          done()
+        })
+      })
+      
+      client.on('message', function(msg) {
+        var packet = parse(msg)
+        send(generate({
+            reset: true
+          , messageId: packet.messageId
+          , code: '0.00'
+        }))
+      })
     })
   })
 })

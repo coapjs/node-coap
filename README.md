@@ -23,6 +23,9 @@ to communicate interactively over the Internet. -  Wikipedia
 
 This library follows the
 [draft-18](http://tools.ietf.org/html/draft-ietf-core-coap-18) of the standard.
+Moreover, it supports the
+[observe-10](http://tools.ietf.org/html/draft-ietf-core-observe-10)
+specification.
 
 It does not parse the protocol but it use
 [CoAP-packet](http://github.com/mcollina/coap-packet) instead.
@@ -74,9 +77,12 @@ server.listen(function() {
   * <a href="#createServer"><code>coap.<b>createServer()</b></code></a>
   * <a href="#incoming"><code>IncomingMessage</b></code></a>
   * <a href="#outgoing"><code>OutgoingMessage</b></code></a>
+  * <a href="#observeread"><code>ObserveReadStream</b></code></a>
+  * <a href="#observewrite"><code>ObserveWriteStream</b></code></a>
   * <a href="#registerOption"><code>coap.registerOption()</b></code></a>
   * <a href="#registerFormat"><code>coap.registerFormat()</b></code></a>
 
+-------------------------------------------------------
 <a name="request"></a>
 ### request(url)
 
@@ -94,6 +100,8 @@ If it is an object:
   `'GET'`.
 - `confirmable`: send a CoAP confirmable message (CON), defaults to
   `true`.
+- `observe`: send a CoAP observe message, allowing the streaming of
+  updates from the server.
 - `pathname`: Request path. Defaults to `'/'`. Should not include query string
 - `query`: Query string. Defaults to `''`. Should not include the path,
   e.g. 'a=b&c=d'
@@ -113,6 +121,13 @@ Emitted when a response is received.
 an instance of <a
 href='#incoming'><code>IncomingMessage</code></a>.
 
+If the `observe` flag is specified, the `'response'` event
+will return an instance of
+ <a href='#observeread'><code>ObserveReadStream</code></a>.
+Which represent the updates coming from the server, according to the
+[observe spec](http://tools.ietf.org/html/draft-ietf-core-observe-10).
+
+-------------------------------------------------------
 <a name="createServer"></a>
 ### createServer([requestListener])
 
@@ -131,6 +146,11 @@ href='#incoming'><code>IncomingMessage</code></a> and `response` is
 an instance of <a
 href='#outgoing'><code>OutgoingMessage</code></a>.
 
+If the `observe` flag is specified, the `response` variable
+will return an instance of <a href='#observewrite'><code>ObserveWriteStream</code></a>.
+Each `write(data)` to the stream will cause a new observe message sent
+to the client.
+
 #### server.listen(port, [hostname], [callback])
 
 Begin accepting connections on the specified port and hostname.  If the
@@ -148,6 +168,7 @@ Closes the server.
 This function is synchronous, but it provides an asynchronous callback
 for convenience.
 
+-------------------------------------------------------
 <a name="outgoing"></a>
 ### OutgoingMessage
 
@@ -196,6 +217,7 @@ See the
 [spec](http://tools.ietf.org/html/draft-ietf-core-coap-18#section-5.4)
 for all the possible options.
 
+-------------------------------------------------------
 <a name="incoming"></a>
 ### IncomingMessage
 
@@ -251,6 +273,49 @@ not in the '0.' range.
 The URL of the request, e.g.
 `'coap://localhost:12345/hello/world?a=b&b=c'`.
 
+-------------------------------------------------------
+<a name="observeread"></a>
+### ObserveReadStream
+
+An `ObserveReadStream` object is created by `coap.request` to handle
+_observe_ requests.
+It is passed as the first argument to the `'response'` event.
+It may be used to access response status, headers and data as they are
+sent by the server.
+__Each new observe message from the server is a new `'data'` event__.
+
+It implements the [Readable
+Stream](http://nodejs.org/api/stream.html#stream_class_stream_readable)
+and [IncomingMessage](#incoming) interfaces, as well as the
+following additional methods, events and properties.
+
+#### close()
+
+Closes the stream.
+
+-------------------------------------------------------
+<a name="observewrite"></a>
+### ObserveWriteStream
+
+An `ObserveWriteStream` object is 
+emitted by the `coap.createServer` `'response'` event as a response
+object.
+It may be used to set response status, headers and stream changing data
+to the client.
+
+Each new `write()` call is a __new message__ being sent to the client.
+
+It implements the [Writable
+Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable)
+and [OutgoingMessage](#outgoing) interfaces, as well as the
+following additional methods and properties.
+
+#### Event: 'finish'
+
+Emitted when the client is not sending 'acks' anymore for the sent
+messages.
+
+-------------------------------------------------------
 <a name="registerOption"></a>
 ### coap.registerOption(name, toBinary, toString)
 
@@ -259,6 +324,7 @@ Register a new option to be converted to string and added to the
 `toBinary` is a function that accept a string and returns a `Buffer`.
 `toString` is a function that accept a `Buffer` and returns a `String`.
 
+-------------------------------------------------------
 <a name="registerFormat"></a>
 ### coap.registerFormat(name, value)
 
@@ -266,15 +332,6 @@ Register a new format to be interpreted and sent in CoAP
 `Content-Format` option.
 Each format is identified by a number, see the [Content-Format
 registry](http://tools.ietf.org/html/draft-ietf-core-coap-18#section-12.3).
-
-<a name="contributing"></a>
-## Contributing
-
-__node-coap__ is an **OPEN Open Source Project**. This means that:
-
-> Individuals making significant and valuable contributions are given commit-access to the project to contribute as they see fit. This project is more like an open wiki than a standard guarded open source project.
-
-See the [CONTRIBUTING.md](https://github.com/mcollina/node-coap/blob/master/CONTRIBUTING.md) file for more details.
 
 These are the defaults formats:
 ```js
@@ -286,14 +343,20 @@ registerFormat('application/exi', 47)
 registerFormat('application/json', 50)
 ```
 
+<a name="contributing"></a>
+## Contributing
+
+__node-coap__ is an **OPEN Open Source Project**. This means that:
+
+> Individuals making significant and valuable contributions are given commit-access to the project to contribute as they see fit. This project is more like an open wiki than a standard guarded open source project.
+
+See the [CONTRIBUTING.md](https://github.com/mcollina/node-coap/blob/master/CONTRIBUTING.md) file for more details.
+
 ## Limitations
 
 The maximum packet size is 1280, as the
 [blockwise](http://datatracker.ietf.org/doc/draft-ietf-core-block/) is
 not supported yet.
-
-The [observe](http://datatracker.ietf.org/doc/draft-ietf-core-observe/)
-support is planned too.
 
 ## Contributors
 

@@ -7,12 +7,13 @@ const bl              = require('bl')
     , Server          = require('./lib/server')
     , IncomingMessage = require('./lib/incoming_message')
     , OutgoingMessage = require('./lib/outgoing_message')
+    , ObserveStream   = require('./lib/observe_read_stream')
     , parameters      = require('./lib/parameters')
     , optionsConv     = require('./lib/option_converter')
     , RetrySend       = require('./lib/retry_send')
 
 module.exports.request = function(url) {
-  var req, sender
+  var req, sender, response
 
     , closing = false
     , acking  = false
@@ -45,8 +46,20 @@ module.exports.request = function(url) {
 
                   sender.reset()
 
-                  if (packet.code !== '0.00')
-                    req.emit('response', new IncomingMessage(packet, rsinfo))
+                  if (packet.code == '0.00')
+                    return
+
+                  if (url.observe && response)
+                    return response.append(packet)
+
+                  if (url.observe) {
+                    response = new ObserveStream(packet, rsinfo)
+                    response.on('close', cleanUp)
+                  } else
+                    response = new IncomingMessage(packet, rsinfo)
+
+                  req.emit('response', response)
+
                 })
 
   if (typeof url === 'string')
@@ -54,7 +67,7 @@ module.exports.request = function(url) {
 
   sender = new RetrySend(client, url.port, url.hostname || url.host)
 
-  req = new OutgoingMessage({}, function(packet) {
+  req = new OutgoingMessage({}, function(req, packet) {
     var buf
 
     if (url.confirmable !== false) {
@@ -80,7 +93,11 @@ module.exports.request = function(url) {
   sender.on('error', req.emit.bind(req, 'error'))
 
   req.on('error', cleanUp)
-  req.on('response', cleanUp)
+
+  if (url.observe)
+    req.setOption('Observe', null)
+  else
+    req.on('response', cleanUp)
 
   return req
 }
