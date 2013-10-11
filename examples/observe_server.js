@@ -6,17 +6,10 @@ server.on('request', function(req, res) {
     return res.end(new Date().toISOString() + '\n')
 
   var interval = setInterval(function() {
-    console.log('aaaa')
     res.write(new Date().toISOString() + '\n')
   }, 1000)
 
-  res.on('error', function(err) {
-    console.log(err)
-    clearInterval(interval)
-  })
-
-  req.on('error', function(err) {
-    console.log(err)
+  res.on('finish', function(err) {
     clearInterval(interval)
   })
 })

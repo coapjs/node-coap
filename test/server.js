@@ -578,6 +578,21 @@ describe('server', function() {
 
   describe('observe', function() {
     var token = new Buffer(3)
+      , clock
+
+    beforeEach(function() {
+      clock = sinon.useFakeTimers()
+    })
+
+    afterEach(function() {
+      clock.restore()
+    })
+
+    function fastForward(increase, max) {
+      clock.tick(increase)
+      if (increase < max)
+        setImmediate(fastForward.bind(null, increase, max - increase))
+    }
 
     function doObserve(method) {
       if (!method)
@@ -648,6 +663,42 @@ describe('server', function() {
 
           done()
         })
+      })
+    })
+
+    it('should emit a \'finish\' if the client do not ack for ~247s', function(done) {
+      var now = Date.now()
+      doObserve()
+
+      server.on('request', function(req, res) {
+        res.write('hello')
+        res.on('finish', function() {
+          done()
+        })
+      })
+      
+      fastForward(100, 248 * 1000)
+    })
+
+    it('should emit a \'finish\' if the client do a reset', function(done) {
+      var now = Date.now()
+      doObserve()
+
+      server.on('request', function(req, res) {
+        res.write('hello')
+        res.write('world')
+        res.on('finish', function() {
+          done()
+        })
+      })
+      
+      client.on('message', function(msg) {
+        var packet = parse(msg)
+        send(generate({
+            reset: true
+          , messageId: packet.messageId
+          , code: '0.00'
+        }))
       })
     })
   })
