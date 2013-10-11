@@ -577,6 +577,7 @@ describe('server', function() {
   })
 
   describe('observe', function() {
+    var token = new Buffer(3)
 
     function doObserve(method) {
       if (!method)
@@ -585,6 +586,7 @@ describe('server', function() {
       send(generate({ 
           code: method
         , confirmable: true
+        , token: token
         , options: [{ 
               name: 'Observe'
             , value: new Buffer(0)
@@ -615,19 +617,6 @@ describe('server', function() {
       })
     })
 
-    it('should ack the request straight away', function(done) {
-      var now = Date.now()
-      doObserve()
-
-      client.once('message', function(msg) {
-        var response = parse(msg)
-        expect(response.ack).to.be.true
-        expect(response.code).to.eql('0.00')
-        expect(Date.now() - now).to.be.at.most(20)
-        done()
-      })
-    })
-
     it('should send multiple messages for multiple writes', function(done) {
       var now = Date.now()
       doObserve()
@@ -639,19 +628,25 @@ describe('server', function() {
         })
       })
 
+      // the first one is an ack
       client.once('message', function(msg) {
-        // the first one is an ack
-        client.once('message', function(msg) {
-          expect(parse(msg).payload.toString()).to.eql('hello')
-          expect(parse(msg).options[0].name).to.eql('Observe')
-          expect(parse(msg).options[0].value).to.eql(new Buffer([1]))
+        expect(parse(msg).payload.toString()).to.eql('hello')
+        expect(parse(msg).options[0].name).to.eql('Observe')
+        expect(parse(msg).options[0].value).to.eql(new Buffer([1]))
+        expect(parse(msg).token).to.eql(token)
+        expect(parse(msg).code).to.eql('2.05')
+        expect(parse(msg).ack).to.be.true
 
-          client.once('message', function(msg) {
-            expect(parse(msg).payload.toString()).to.eql('world')
-            expect(parse(msg).options[0].name).to.eql('Observe')
-            expect(parse(msg).options[0].value).to.eql(new Buffer([2]))
-            done()
-          })
+        client.once('message', function(msg) {
+          expect(parse(msg).payload.toString()).to.eql('world')
+          expect(parse(msg).options[0].name).to.eql('Observe')
+          expect(parse(msg).options[0].value).to.eql(new Buffer([2]))
+          expect(parse(msg).token).to.eql(token)
+          expect(parse(msg).code).to.eql('2.05')
+          expect(parse(msg).ack).to.be.false
+          expect(parse(msg).confirmable).to.be.true
+
+          done()
         })
       })
     })
