@@ -1,6 +1,6 @@
 {
   "name": "coap",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "A CoAP library for node modelled after 'http'",
   "main": "index.js",
   "scripts": {
@@ -19,7 +19,8 @@
     "iot",
     "client",
     "server",
-    "udp"
+    "udp",
+    "observe"
   ],
   "author": "Matteo Collina <hello@matteocollina.com>",
   "license": "MIT",
