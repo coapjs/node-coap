@@ -720,4 +720,96 @@ describe('request', function() {
       fastForward(100, 45 * 1000)
     })
   })
+
+  describe('observe', function() {
+
+    function doObserve() {
+      server.on('message', function(msg, rsinfo) {
+        var packet = parse(msg)
+
+        if (packet.ack)
+          return
+        
+        ssend(rsinfo, {
+            messageId: packet.messageId
+          , token: packet.token
+          , payload: new Buffer('42')
+          , ack: true
+          , options: [{
+                name: 'Observe'
+              , value: new Buffer([1])
+            }]
+          , code: '2.05'
+        })
+
+        ssend(rsinfo, {
+            token: packet.token
+          , payload: new Buffer('24')
+          , confirmable: true
+          , options: [{
+                name: 'Observe'
+              , value: new Buffer([2])
+            }]
+          , code: '2.05'
+        })
+      })
+
+      return request({
+          port: port
+        , observe: true
+      }).end()
+    }
+
+    function ssend(rsinfo, packet) {
+      var toSend = generate(packet)
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+    }
+
+    it('should emit data elements as they are send by the server', function(done) {
+
+      var req = doObserve()
+
+      req.on('response', function(res) {
+        res.once('data', function(data) {
+          expect(data.toString()).to.eql('42')
+
+          res.once('data', function(data) {
+            expect(data.toString()).to.eql('24')
+            done()
+          })
+        })
+      })
+    })
+
+    it('should emit any more data after close', function(done) {
+
+      var req = doObserve()
+
+      req.on('response', function(res) {
+        res.once('data', function(data) {
+          expect(data.toString()).to.eql('42')
+          res.close()
+          done()
+
+          res.on('data', function(data) {
+            done(new Error('this should never happen'))
+          })
+        })
+      })
+    })
+
+    it('should send an empty Observe option', function(done) {
+      var req = request({
+          port: port
+        , observe: true
+      }).end()
+
+      server.on('message', function(msg, rsinfo) {
+        var packet = parse(msg)
+        expect(packet.options[0].name).to.eql('Observe')
+        expect(packet.options[0].value).to.eql(new Buffer(0))
+        done()
+      })
+    })
+  })
 })
