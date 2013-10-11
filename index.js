@@ -54,7 +54,7 @@ module.exports.request = function(url) {
 
   sender = new RetrySend(client, url.port, url.hostname || url.host)
 
-  req = new OutgoingMessage({}, function(packet) {
+  req = new OutgoingMessage({}, function(req, packet) {
     var buf
 
     if (url.confirmable !== false) {
