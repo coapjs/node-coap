@@ -31,6 +31,28 @@ describe('end-to-end', function() {
     })
   })
 
+  it('should support observing', function(done) {
+    var req = coap.request({
+        port: port
+      , observe: true
+    }).end()
+
+    req.on('response', function(res) {
+      res.once('data', function(data) {
+        expect(data.toString()).to.eql('hello')
+        res.once('data', function(data) {
+          expect(data.toString()).to.eql('world')
+          done()
+        })
+      })
+    })
+
+    server.on('request', function(req, res) {
+      res.write('hello')
+      res.end('world')
+    })
+  })
+
   describe('formats', function() {
     var formats = [ 'text/plain', 'application/link-format',
       'application/xml', 'application/octet-stream',
