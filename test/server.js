@@ -701,5 +701,66 @@ describe('server', function() {
         }))
       })
     })
+
+    it('should correctly generate two-byte long sequence numbers', function(done) {
+      var now = Date.now()
+        , buf = new Buffer(2)
+      doObserve()
+
+      server.on('request', function(req, res) {
+        // hack to override the message counter
+        res._counter = 4242
+
+        res.write('hello')
+        setImmediate(function() {
+          res.end('world')
+        })
+      })
+
+      // the first one is an ack
+      client.once('message', function(msg) {
+        buf.writeUInt16BE(4243, 0)
+        expect(parse(msg).options[0].value).to.eql(buf)
+
+        client.once('message', function(msg) {
+          buf.writeUInt16BE(4244, 0)
+          expect(parse(msg).options[0].value).to.eql(buf)
+
+          done()
+        })
+      })
+    })
+
+    it('should correctly generate three-byte long sequence numbers', function(done) {
+      var now = Date.now()
+        , buf = new Buffer(3)
+
+      buf.writeUInt8(1, 0)
+
+      doObserve()
+
+      server.on('request', function(req, res) {
+        // hack to override the message counter
+        res._counter = 65535
+
+        res.write('hello')
+        setImmediate(function() {
+          res.end('world')
+        })
+      })
+
+      // the first one is an ack
+      client.once('message', function(msg) {
+        buf.writeUInt16BE(1, 1)
+        expect(parse(msg).options[0].value).to.eql(buf)
+
+        client.once('message', function(msg) {
+          buf.writeUInt16BE(2, 1)
+          expect(parse(msg).options[0].value).to.eql(buf)
+
+          done()
+        })
+      })
+    })
   })
 })
