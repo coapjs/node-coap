@@ -102,4 +102,38 @@ describe('end-to-end', function() {
       })
     })
   })
+
+  it('should set and parse \'Location-Path\'', function(done) {
+    var req = coap.request({
+        port: port
+      , method: 'PUT'
+    }).end()
+
+    req.on('response', function(res) {
+      expect(res.headers).to.have.property('Location-Path', '/hello')
+      done()
+    })
+
+    server.on('request', function(req, res) {
+      res.setOption('Location-Path', '/hello')
+      res.end('hello')
+    })
+  })
+
+  it('should set and parse \'Location-Query\'', function(done) {
+    var req = coap.request({
+        port: port
+      , method: 'PUT'
+    }).end()
+
+    req.on('response', function(res) {
+      expect(res.headers).to.have.property('Location-Query', 'a=b')
+      done()
+    })
+
+    server.on('request', function(req, res) {
+      res.setOption('Location-Query', 'a=b')
+      res.end('hello')
+    })
+  })
 })
