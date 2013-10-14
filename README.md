@@ -196,7 +196,8 @@ See <a href='#registerOption'><code>registerOption</code></a>
 Use an array of buffers
 if you need to send multiple options with the same name.
 
-If you need to pass a custom option, pass a string containing a 
+If you need to pass a custom option, pass a string containing a
+a number as key and a `Buffer` as value.
 
 Example:
 
