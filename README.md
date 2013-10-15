@@ -110,10 +110,10 @@ If it is an object:
 - `observe`: send a CoAP observe message, allowing the streaming of
   updates from the server.
 - `agent`: Controls [`Agent`](#agent) behavior. Possible values:
-  * undefined (default): use global Agent (single socket for all
-    requests)
-  * Agent object: explicitly use the passed in Agent.
-  * false: opts out of socket reuse with an Agent, each request uses a
+  * `undefined` (default): use [`globalAgent`](#globalAgent), a single socket for all
+    concurrent requests.
+  * [`Agent`](#agent) object: explicitly use the passed in [`Agent`](#agent).
+  * `false`: opts out of socket reuse with an [`Agent`](#agent), each request uses a
     new UDP socket.
 
 `coap.request()` returns an instance of <a
