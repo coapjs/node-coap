@@ -24,7 +24,7 @@ to communicate interactively over the Internet. -  Wikipedia
 This library follows the
 [draft-18](http://tools.ietf.org/html/draft-ietf-core-coap-18) of the standard.
 Moreover, it supports the
-[observe-10](http://tools.ietf.org/html/draft-ietf-core-observe-10)
+[observe-11](http://tools.ietf.org/html/draft-ietf-core-observe-11)
 specification.
 
 It does not parse the protocol but it use
@@ -135,7 +135,7 @@ If the `observe` flag is specified, the `'response'` event
 will return an instance of
  <a href='#observeread'><code>ObserveReadStream</code></a>.
 Which represent the updates coming from the server, according to the
-[observe spec](http://tools.ietf.org/html/draft-ietf-core-observe-10).
+[observe spec](http://tools.ietf.org/html/draft-ietf-core-observe-11).
 
 -------------------------------------------------------
 <a name="createServer"></a>
