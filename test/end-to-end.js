@@ -162,7 +162,7 @@ describe('end-to-end', function() {
     ;[req1, req2].forEach(function(req) {
       var local = 2
       req.on('response', function(res) {
-        res.on('data', function() {
+        res.on('data', function(data) {
           if (--local == 0)
             --completed
 
@@ -170,6 +170,30 @@ describe('end-to-end', function() {
             done()
         })
       })
+    })
+  })
+
+  it('should reuse the same socket for two concurrent requests', function(done) {
+    var req1  = coap.request({
+                    port: port
+                  , method: 'GET'
+                  , pathname: '/a'
+                }).end()
+      , req2  = coap.request({
+                    port: port
+                  , method: 'GET'
+                  , pathname: '/b'
+                }).end()
+      , first
+
+    server.on('request', function(req, res) {
+      res.end('hello')
+      if (!first)
+        first = req.rsinfo
+      else {
+        expect(req.rsinfo).to.eql(first)
+        done()
+      }
     })
   })
 })
