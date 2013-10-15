@@ -94,6 +94,17 @@ describe('server', function() {
     })
   })
 
+  it('should include a rsinfo', function(done) {
+    send(generate())
+    server.on('request', function(req, res) {
+      expect(req).to.have.property('rsinfo')
+      expect(req.rsinfo).to.have.property('address')
+      expect(req.rsinfo).to.have.property('port')
+      res.end('hello')
+      done()
+    })
+  })
+
   ;['GET', 'POST', 'PUT', 'DELETE'].forEach(function(method) {
     it('should include the \'' + method + '\' method', function(done) {
       send(generate({ code: method }))
@@ -620,6 +631,17 @@ describe('server', function() {
           expect(parse(msg).code).to.eql('5.00')
           done()
         })
+      })
+    })
+
+    it('should include a rsinfo', function(done) {
+      doObserve()
+      server.on('request', function(req, res) {
+        expect(req).to.have.property('rsinfo')
+        expect(req.rsinfo).to.have.property('address')
+        expect(req.rsinfo).to.have.property('port')
+        res.end('hello')
+        done()
       })
     })
 

@@ -136,4 +136,64 @@ describe('end-to-end', function() {
       res.end('hello')
     })
   })
+
+  it('should support multiple observe to the same destination', function(done) {
+    var req1  = coap.request({
+                    port: port
+                  , method: 'GET'
+                  , observe: true
+                  , pathname: '/a'
+                }).end()
+      , req2  = coap.request({
+                    port: port
+                  , method: 'GET'
+                  , observe: true
+                  , pathname: '/b'
+                }).end()
+      , completed = 2
+
+    server.on('request', function(req, res) {
+      res.write('hello')
+      setTimeout(function() {
+        res.end('world')
+      }, 10)
+    })
+
+    ;[req1, req2].forEach(function(req) {
+      var local = 2
+      req.on('response', function(res) {
+        res.on('data', function(data) {
+          if (--local == 0)
+            --completed
+
+          if (completed === 0)
+            done()
+        })
+      })
+    })
+  })
+
+  it('should reuse the same socket for two concurrent requests', function(done) {
+    var req1  = coap.request({
+                    port: port
+                  , method: 'GET'
+                  , pathname: '/a'
+                }).end()
+      , req2  = coap.request({
+                    port: port
+                  , method: 'GET'
+                  , pathname: '/b'
+                }).end()
+      , first
+
+    server.on('request', function(req, res) {
+      res.end('hello')
+      if (!first)
+        first = req.rsinfo
+      else {
+        expect(req.rsinfo).to.eql(first)
+        done()
+      }
+    })
+  })
 })
