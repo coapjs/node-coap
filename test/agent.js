@@ -113,7 +113,7 @@ describe('Agent', function() {
   it('should discard the request after receiving the payload', function(done) {
     var req = doReq()
 
-    // it is needed to keen the agent open
+    // it is needed to keep the agent open
     doReq()
 
     server.once('message', function(msg, rsinfo) {
