@@ -79,8 +79,10 @@ server.listen(function() {
   * <a href="#outgoing"><code>OutgoingMessage</b></code></a>
   * <a href="#observeread"><code>ObserveReadStream</b></code></a>
   * <a href="#observewrite"><code>ObserveWriteStream</b></code></a>
-  * <a href="#registerOption"><code>coap.registerOption()</b></code></a>
-  * <a href="#registerFormat"><code>coap.registerFormat()</b></code></a>
+  * <a href="#registerOption"><code>coap.<b>registerOption()</b></code></a>
+  * <a href="#registerFormat"><code>coap.<b>registerFormat()</b></code></a>
+  * <a href="#agent"><code>coap.<b>Agent</b></code></a>
+  * <a href="#globalAgent"><code>coap.<b>globalAgent</b></code></a>
 
 -------------------------------------------------------
 <a name="request"></a>
@@ -105,6 +107,14 @@ If it is an object:
 - `pathname`: Request path. Defaults to `'/'`. Should not include query string
 - `query`: Query string. Defaults to `''`. Should not include the path,
   e.g. 'a=b&c=d'
+- `observe`: send a CoAP observe message, allowing the streaming of
+  updates from the server.
+- `agent`: Controls [`Agent`](#agent) behavior. Possible values:
+  * undefined (default): use global Agent (single socket for all
+    requests)
+  * Agent object: explicitly use the passed in Agent.
+  * false: opts out of socket reuse with an Agent, each request uses a
+    new UDP socket.
 
 `coap.request()` returns an instance of <a
 href='#incoming'><code>IncomingMessage</code></a>.
@@ -348,6 +358,23 @@ registerFormat('application/octet-stream', 42)
 registerFormat('application/exi', 47)
 registerFormat('application/json', 50)
 ```
+
+-------------------------------------------------------
+<a name="agent"></a>
+### coap.Agent()
+
+An Agent encapsulate an UDP Socket. It uses a combination of `messageId`
+and `token` to distinguish between the different exchanges.
+The socket will auto-close itself when no more exchange are in place.
+
+By default, no UDP socket are open, and it is opened on demand to send
+the messages.
+
+-------------------------------------------------------
+<a name="globalAgent"></a>
+### coap.globalAgent
+
+The default [`Agent`](#agent).
 
 <a name="contributing"></a>
 ## Contributing
