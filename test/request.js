@@ -236,8 +236,6 @@ describe('request', function() {
       var packet = parse(msg)
         , toSend = generate({
                        messageId: packet.messageId
-                     , token: packet.token
-                     , payload: new Buffer('')
                      , ack: true
                      , code: '0.00'
                    })
@@ -274,7 +272,6 @@ describe('request', function() {
       var packet = parse(msg)
         , toSend = generate({
                        messageId: packet.messageId
-                     , token: packet.token
                      , ack: true
                      , code: '0.00'
                    })
@@ -704,7 +701,6 @@ describe('request', function() {
         var packet  = parse(msg)
           , toSend  = generate({
                           messageId: packet.messageId
-                        , token: packet.token
                         , code: '0.00'
                         , ack: true
                       })
