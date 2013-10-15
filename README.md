@@ -274,6 +274,11 @@ not in the '0.' range.
 The URL of the request, e.g.
 `'coap://localhost:12345/hello/world?a=b&b=c'`.
 
+#### message.rsinfo
+
+The sender informations, as emitted by the socket.
+See [the `dgram` docs](http://nodejs.org/api/dgram.html#dgram_event_message) for details
+
 -------------------------------------------------------
 <a name="observeread"></a>
 ### ObserveReadStream
