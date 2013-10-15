@@ -20,7 +20,9 @@
     "client",
     "server",
     "udp",
-    "observe"
+    "observe",
+    "internet of things",
+    "messaging"
   ],
   "author": "Matteo Collina <hello@matteocollina.com>",
   "license": "MIT",
