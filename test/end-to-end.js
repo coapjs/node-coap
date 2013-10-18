@@ -196,4 +196,38 @@ describe('end-to-end', function() {
       }
     })
   })
+
+  it('should create two sockets for two subsequent requests', function(done) {
+
+    var agent = new coap.Agent()
+      , req1  = coap.request({
+                    port: port
+                  , method: 'GET'
+                  , pathname: '/a'
+                  , agent: agent
+                }).end()
+      , req2
+      , first
+     
+
+    server.on('request', function(req, res) {
+      res.end('hello')
+      if (!first)
+        first = req.rsinfo
+      else {
+        expect(req.rsinfo).not.to.eql(first)
+        done()
+      }
+    })
+
+    req1.on('response', function() {
+      setImmediate(function() {
+        req2 = coap.request({
+            port: port
+          , method: 'GET'
+          , pathname: '/b'
+        }).end()
+      })
+    })
+  })
 })
