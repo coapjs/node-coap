@@ -571,12 +571,36 @@ describe('server', function() {
       fastForward(100, 45 * 1000)
     })
 
-    it('should error if it does not receive an ack four times before ~247s', function(done) {
+    it('should not resend with a piggyback response', function(done) {
       var messages = 0
 
       send(generate(packet))
       server.on('request', function(req, res) {
         res.end('42')
+      })
+
+      client.on('message', function(msg) {
+        messages++
+      })
+
+      setTimeout(function() {
+        expect(messages).to.eql(1)
+        done()
+      }, 45 * 1000)
+
+      fastForward(100, 45 * 1000)
+    })
+
+    it('should error if it does not receive an ack four times before ~247s', function(done) {
+      var messages = 0
+
+      send(generate(packet))
+      server.on('request', function(req, res) {
+
+        // needed to avoid sending a piggyback response
+        setTimeout(function() {
+          res.end('42')
+        }, 200)
 
         res.on('error', function() {
           done()
@@ -693,7 +717,13 @@ describe('server', function() {
       doObserve()
 
       server.on('request', function(req, res) {
+        // the first is the current status
+        // it's in piggyback on the ack
         res.write('hello')
+
+        // the second status is on the observe
+        res.write('hello2')
+
         res.on('finish', function() {
           done()
         })
