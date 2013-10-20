@@ -47,6 +47,27 @@ describe('Agent', function() {
     })
   })
 
+  it('should calculate the messageIds module 16 bytes', function(done) {
+    var total = 2
+
+    doReq()
+
+    agent._lastMessageId = Math.pow(2, 16) - 1
+    doReq()
+
+    server.on('message', function(msg, rsinfo) {
+      console.log(parse(msg))
+      if (total === 2) {
+        // nothing to do
+      } else if (total === 1) {
+        expect(parse(msg).messageId).to.eql(1)
+        done()
+      }
+
+      total--
+    })
+  })
+
   it('should differentiate two requests with different tokens', function(done) {
     var firstToken
 
