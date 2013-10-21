@@ -23,11 +23,14 @@ describe('Agent', function() {
     server.close()
   })
 
-  function doReq() {
+  function doReq(confirmable) {
+    if (!confirmable)
+      confirmable = false
+
     return request({
         port: port
       , agent: agent
-      , confirmable: false
+      , confirmable: confirmable
     }).end()
   }
 
@@ -56,7 +59,6 @@ describe('Agent', function() {
     doReq()
 
     server.on('message', function(msg, rsinfo) {
-      console.log(parse(msg))
       if (total === 2) {
         // nothing to do
       } else if (total === 1) {
@@ -131,7 +133,7 @@ describe('Agent', function() {
     })
   })
 
-  it('should discard the request after receiving the payload', function(done) {
+  it('should discard the request after receiving the payload for NON requests', function(done) {
     var req = doReq()
 
     // it is needed to keep the agent open
@@ -148,8 +150,101 @@ describe('Agent', function() {
           })
       
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+
       // duplicate, as there was some retransmission
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+    })
+
+    req.on('response', function(res) {
+      // fails if it emits 'response' twice
+      done()
+    })
+  })
+
+  it('should discard the request after receiving the payload for piggyback CON requests', function(done) {
+    var req = doReq(true)
+
+    // it is needed to keep the agent open
+    doReq(true)
+
+    server.once('message', function(msg, rsinfo) {
+      var packet  = parse(msg)
+        , toSend  = generate({
+              messageId: packet.messageId
+            , token: packet.token
+            , code: '2.00'
+            , confirmable: false
+            , ack: true
+            , payload: new Buffer(5)
+          })
+      
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+
+      // duplicate, as there was some retransmission
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+    })
+
+    req.on('response', function(res) {
+      // fails if it emits 'response' twice
+      done()
+    })
+  })
+
+  it('should discard the request after receiving the payload for piggyback CON requests with observe request', function(done) {
+    var req = request({
+        port: port
+      , agent: agent
+      , observe: true
+      , confirmable: true
+    }).end()
+
+    function sendObserve(opts) {
+      var toSend  = generate({
+              messageId: opts.messageId
+            , token: opts.token
+            , code: '2.05'
+            , confirmable: opts.confirmable
+            , ack: opts.ack
+            , payload: new Buffer(5)
+            , options: [{
+                  name: 'Observe'
+                , value: new Buffer([opts.num])
+              }]
+          })
+      
+      server.send(toSend, 0, toSend.length, opts.rsinfo.port, opts.rsinfo.address)
+    }
+
+    server.once('message', function(msg, rsinfo) {
+      var packet  = parse(msg)
+
+      sendObserve({
+          num: 1
+        , messageId: packet.messageId
+        , token: packet.token
+        , confirmable: false
+        , ack: true
+        , rsinfo: rsinfo
+      })
+
+      // duplicate, as there was some retransmission
+      sendObserve({
+          num: 1
+        , messageId: packet.messageId
+        , token: packet.token
+        , confirmable: false
+        , ack: true
+        , rsinfo: rsinfo
+      })
+
+      // some more data
+      sendObserve({
+          num: 2
+        , token: packet.token
+        , confirmable: true
+        , ack: false
+        , rsinfo: rsinfo
+      })
     })
 
     req.on('response', function(res) {
