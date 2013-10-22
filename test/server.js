@@ -14,8 +14,10 @@ describe('server', function() {
     , port
     , clientPort
     , client
+    , clock
 
   beforeEach(function(done) {
+    clock = sinon.useFakeTimers()
     port = nextPort()
     server = coap.createServer()
     server.listen(port, done)
@@ -28,6 +30,7 @@ describe('server', function() {
   })
 
   afterEach(function() {
+    clock.restore()
     client.close()
     server.close()
     tk.reset()
@@ -35,6 +38,12 @@ describe('server', function() {
 
   function send(message) {
     client.send(message, 0, message.length, port, '127.0.0.1')
+  }
+
+  function fastForward(increase, max) {
+    clock.tick(increase)
+    if (increase < max)
+      setImmediate(fastForward.bind(null, increase, max - increase))
   }
 
   it('should receive a CoAP message', function(done) {
@@ -263,7 +272,7 @@ describe('server', function() {
       })
     }
 
-    it('should reply with a payload to a non-con message', function(done) {
+    it('should reply with a payload to a NON message', function(done) {
       sendAndRespond()
       client.on('message', function(msg) {
         expect(parse(msg).payload).to.eql(new Buffer('42'))
@@ -389,6 +398,7 @@ describe('server', function() {
       server.once('request', function(req, res) {
         res.end('42')
 
+        clock.restore()
         tk.travel(now + params.exchangeLifetime * 1000)
 
         server.on('request', function(req, res) {
@@ -437,6 +447,26 @@ describe('server', function() {
         done()
       })
     })
+
+    it('should not retry sending the response', function(done) {
+      var messages = 0
+
+      send(generate(packet))
+      server.on('request', function(req, res) {
+        res.end('42')
+      })
+
+      client.on('message', function(msg) {
+        messages++
+      })
+
+      setTimeout(function() {
+        expect(messages).to.eql(1)
+        done()
+      }, 45 * 1000)
+
+      fastForward(100, 45 * 1000)
+    })
   })
 
   describe('with a confirmable message', function() {
@@ -444,22 +474,6 @@ describe('server', function() {
         confirmable: true
       , messageId: 4242
       , token: new Buffer(5)
-    }
-
-    var clock
-
-    beforeEach(function() {
-      clock = sinon.useFakeTimers()
-    })
-
-    afterEach(function() {
-      clock.restore()
-    })
-
-    function fastForward(increase, max) {
-      clock.tick(increase)
-      if (increase < max)
-        setImmediate(fastForward.bind(null, increase, max - increase))
     }
 
     it('should reply in piggyback', function(done) {
@@ -613,21 +627,6 @@ describe('server', function() {
 
   describe('observe', function() {
     var token = new Buffer(3)
-      , clock
-
-    beforeEach(function() {
-      clock = sinon.useFakeTimers()
-    })
-
-    afterEach(function() {
-      clock.restore()
-    })
-
-    function fastForward(increase, max) {
-      clock.tick(increase)
-      if (increase < max)
-        setImmediate(fastForward.bind(null, increase, max - increase))
-    }
 
     function doObserve(method) {
       if (!method)
