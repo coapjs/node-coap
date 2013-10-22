@@ -675,6 +675,26 @@ describe('request', function() {
       fastForward(100, 247 * 1000)
     })
 
+    it('should retry with the same message id', function(done) {
+      var req = doReq()
+        , messageId
+
+      server.on('message', function(msg) {
+        var packet = parse(msg)
+
+        if (!messageId)
+          messageId = packet.messageId
+
+        expect(packet.messageId).to.eql(messageId)
+      })
+
+      req.on('error', function(err) {
+        done()
+      })
+
+      fastForward(100, 247 * 1000)
+    })
+
     it('should retry four times before 45s', function(done) {
       var req = doReq()
         , messages = 0
@@ -761,17 +781,28 @@ describe('request', function() {
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
     }
 
-    it('should emit data elements as they are send by the server', function(done) {
+    it('should ack the update', function(done) {
+
+      var req = doObserve()
+
+      server.on('message', function(msg) {
+        if (parse(msg).ack)
+          done()
+      })
+    })
+
+    it('should emit any more data after close', function(done) {
 
       var req = doObserve()
 
       req.on('response', function(res) {
         res.once('data', function(data) {
           expect(data.toString()).to.eql('42')
+          res.close()
+          done()
 
-          res.once('data', function(data) {
-            expect(data.toString()).to.eql('24')
-            done()
+          res.on('data', function(data) {
+            done(new Error('this should never happen'))
           })
         })
       })

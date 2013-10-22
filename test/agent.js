@@ -42,7 +42,7 @@ describe('Agent', function() {
 
     server.on('message', function(msg, rsinfo) {
       if (firstRsinfo) {
-        expect(rsinfo).to.eql(firstRsinfo);
+        expect(rsinfo.port).to.eql(firstRsinfo.port);
         done()
       } else {
         firstRsinfo = rsinfo
@@ -190,13 +190,37 @@ describe('Agent', function() {
     })
   })
 
-  it('should discard the request after receiving the payload for piggyback CON requests with observe request', function(done) {
-    var req = request({
-        port: port
-      , agent: agent
-      , observe: true
-      , confirmable: true
-    }).end()
+  it('should close the socket if there are no pending requests', function(done) {
+    var firstRsinfo
+      , req = doReq()
+
+    server.on('message', function(msg, rsinfo) {
+      var packet  = parse(msg)
+        , toSend  = generate({
+              messageId: packet.messageId
+            , token: packet.token
+            , code: '2.00'
+            , confirmable: false
+            , ack: true
+            , payload: new Buffer(5)
+          })
+      
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+
+      if (firstRsinfo) {
+        expect(rsinfo.port).not.to.eql(firstRsinfo.port);
+        done()
+      } else {
+        firstRsinfo = rsinfo
+      }
+    })
+
+    req.on('response', function(res) {
+      setImmediate(doReq)
+    })
+  })
+
+  describe('observe problems', function() {
 
     function sendObserve(opts) {
       var toSend  = generate({
@@ -215,41 +239,90 @@ describe('Agent', function() {
       server.send(toSend, 0, toSend.length, opts.rsinfo.port, opts.rsinfo.address)
     }
 
-    server.once('message', function(msg, rsinfo) {
-      var packet  = parse(msg)
-
-      sendObserve({
-          num: 1
-        , messageId: packet.messageId
-        , token: packet.token
-        , confirmable: false
-        , ack: true
-        , rsinfo: rsinfo
-      })
-
-      // duplicate, as there was some retransmission
-      sendObserve({
-          num: 1
-        , messageId: packet.messageId
-        , token: packet.token
-        , confirmable: false
-        , ack: true
-        , rsinfo: rsinfo
-      })
-
-      // some more data
-      sendObserve({
-          num: 2
-        , token: packet.token
+    it('should discard the request after receiving the payload for piggyback CON requests with observe request', function(done) {
+      var req = request({
+          port: port
+        , agent: agent
+        , observe: true
         , confirmable: true
-        , ack: false
-        , rsinfo: rsinfo
+      }).end()
+
+      server.once('message', function(msg, rsinfo) {
+        var packet  = parse(msg)
+
+        sendObserve({
+            num: 1
+          , messageId: packet.messageId
+          , token: packet.token
+          , confirmable: false
+          , ack: true
+          , rsinfo: rsinfo
+        })
+
+        // duplicate, as there was some retransmission
+        sendObserve({
+            num: 1
+          , messageId: packet.messageId
+          , token: packet.token
+          , confirmable: false
+          , ack: true
+          , rsinfo: rsinfo
+        })
+
+        // some more data
+        sendObserve({
+            num: 2
+          , token: packet.token
+          , confirmable: true
+          , ack: false
+          , rsinfo: rsinfo
+        })
+      })
+
+      req.on('response', function(res) {
+        // fails if it emits 'response' twice
+        done()
       })
     })
 
-    req.on('response', function(res) {
-      // fails if it emits 'response' twice
-      done()
+    it('should close the socket if there are no pending requests', function(done) {
+      var firstRsinfo
+
+        , req = request({
+              port: port
+            , agent: agent
+            , observe: true
+            , confirmable: true
+          }).end()
+
+      server.once('message', function(msg, rsinfo) {
+        var packet  = parse(msg)
+
+        sendObserve({
+            num: 1
+          , messageId: packet.messageId
+          , token: packet.token
+          , confirmable: false
+          , ack: true
+          , rsinfo: rsinfo
+        })
+      })
+
+      server.on('message', function(msg, rsinfo) {
+        if (firstRsinfo) {
+          expect(rsinfo.port).not.to.eql(firstRsinfo.port);
+          done()
+        } else {
+          firstRsinfo = rsinfo
+        }
+      })
+
+      req.on('response', function(res) {
+        res.close()
+
+        console.log(agent._requests)
+        setImmediate(doReq)
+      })
     })
   })
 })
