@@ -1,4 +1,3 @@
-
 const coap      = require('../')
     , parse     = require('coap-packet').parse
     , generate  = require('coap-packet').generate
@@ -27,6 +26,16 @@ describe('request', function() {
     server = server2 = null
   })
 
+  function ackBack(msg, rsinfo) {
+    var packet = parse(msg)
+      , toSend = generate({
+                     messageId: packet.messageId
+                   , ack: true
+                   , code: '0.00'
+                 })
+    server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+  }
+
   it('should return a pipeable stream', function(done) {
     var req = request('coap://localhost:' + port)
       , stream = bl()
@@ -42,7 +51,8 @@ describe('request', function() {
     var req = request('coap://localhost:' + port)
     req.end(new Buffer('hello world'))
 
-    server.on('message', function(msg) {
+    server.on('message', function(msg, rsinfo) {
+      ackBack(msg, rsinfo)
       expect(parse(msg).payload.toString()).to.eql('hello world')
       done()
     })
@@ -52,7 +62,8 @@ describe('request', function() {
     var req = request('coap://localhost:' + port)
     req.end(new Buffer('hello world'))
 
-    server.on('message', function(msg) {
+    server.on('message', function(msg, rsinfo) {
+      ackBack(msg, rsinfo)
       expect(parse(msg).confirmable).to.be.true
       done()
     })
@@ -84,7 +95,8 @@ describe('request', function() {
       request('coap://localhost').end()
     })
 
-    server2.on('message', function(msg) {
+    server2.on('message', function(msg, rsinfo) {
+      ackBack(msg, rsinfo)
       done()
     })
   })
@@ -93,10 +105,13 @@ describe('request', function() {
     var req = request('coap://localhost:' + port + '/hello')
     req.end(new Buffer('hello world'))
 
-    server.on('message', function(msg) {
+    server.on('message', function(msg, rsinfo) {
+      ackBack(msg, rsinfo)
+
       var packet = parse(msg)
       expect(packet.options[0].name).to.eql('Uri-Path')
       expect(packet.options[0].value).to.eql(new Buffer('hello'))
+
       done()
     })
   })
@@ -105,7 +120,9 @@ describe('request', function() {
     var req = request('coap://localhost:' + port + '/hello/world')
     req.end(new Buffer('hello world'))
 
-    server.on('message', function(msg) {
+    server.on('message', function(msg, rsinfo) {
+      ackBack(msg, rsinfo)
+
       var packet = parse(msg)
       expect(packet.options[0].name).to.eql('Uri-Path')
       expect(packet.options[0].value).to.eql(new Buffer('hello'))
@@ -124,7 +141,9 @@ describe('request', function() {
 
     req.end(new Buffer('hello world'))
 
-    server.on('message', function(msg) {
+    server.on('message', function(msg, rsinfo) {
+      ackBack(msg, rsinfo)
+
       var packet = parse(msg)
       expect(packet.options[0].name).to.eql('Uri-Path')
       expect(packet.options[0].value).to.eql(new Buffer('hello'))
@@ -138,7 +157,9 @@ describe('request', function() {
     var req = request('coap://localhost:' + port + '?a=b&c=d')
     req.end(new Buffer('hello world'))
 
-    server.on('message', function(msg) {
+    server.on('message', function(msg, rsinfo) {
+      ackBack(msg, rsinfo)
+
       var packet = parse(msg)
       expect(packet.options[0].name).to.eql('Uri-Query')
       expect(packet.options[0].value).to.eql(new Buffer('a=b'))
@@ -154,7 +175,9 @@ describe('request', function() {
       , method: 'POST'
     }).end()
 
-    server.on('message', function(msg) {
+    server.on('message', function(msg, rsinfo) {
+      ackBack(msg, rsinfo)
+
       var packet = parse(msg)
       expect(packet.code).to.eql('0.02')
       done()
@@ -269,13 +292,7 @@ describe('request', function() {
     })
 
     server.on('message', function(msg, rsinfo) {
-      var packet = parse(msg)
-        , toSend = generate({
-                       messageId: packet.messageId
-                     , ack: true
-                     , code: '0.00'
-                   })
-      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+      ackBack(msg, rsinfo)
       setTimeout(function() {
         done()
       }, 20)

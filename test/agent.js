@@ -320,7 +320,6 @@ describe('Agent', function() {
       req.on('response', function(res) {
         res.close()
 
-        console.log(agent._requests)
         setImmediate(doReq)
       })
     })
