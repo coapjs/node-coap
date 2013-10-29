@@ -193,11 +193,11 @@ will return an instance of <a href='#observewrite'><code>ObserveWriteStream</cod
 Each `write(data)` to the stream will cause a new observe message sent
 to the client.
 
-#### server.listen(port, [hostname], [callback])
+#### server.listen(port, [address], [callback])
 
 Begin accepting connections on the specified port and hostname.  If the
 hostname is omitted, the server will accept connections directed to any
-IPv4 address (`INADDR_ANY`).
+IPv4 or IPv6 address by passing `null` as the address to the underlining socket.
 
 To listen to a unix socket, supply a filename instead of port and hostname.
 
