@@ -43,7 +43,6 @@ describe('IPv6', function() {
 
   describe('request', function() {
     var server
-      , server2
       , port
 
     beforeEach(function(done) {
@@ -55,18 +54,44 @@ describe('IPv6', function() {
     afterEach(function() {
       server.close()
 
-      if (server2)
-        server2.close()
-
-      server = server2 = null
+      server = null
     })
 
     it('should send the data to the server', function(done) {
       var req = coap.request('coap://[::1]:' + port)
       req.end(new Buffer('hello world'))
 
-      server.on('message', function(msg) {
+      server.on('message', function(msg, rsinfo) {
+        var packet = parse(msg)
+          , toSend = generate({
+                         messageId: packet.messageId
+                       , token: packet.token
+                       , payload: new Buffer('42')
+                       , ack: true
+                       , code: '2.00'
+                     })
+        server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+
         expect(parse(msg).payload.toString()).to.eql('hello world')
+        done()
+      })
+    })
+  })
+
+  describe('end-to-end', function() {
+    var server
+      , port
+
+    beforeEach(function(done) {
+      port = nextPort()
+      server = coap.createServer({ type: 'udp6' })
+      server.listen(port, done)
+    })
+
+    it('should receive a request at a path with some query', function(done) {
+      coap.request('coap://[::1]:'+port + '/abcd/ef/gh/?foo=bar&beep=bop').end()
+      server.on('request', function(req) {
+        expect(req.url).to.eql('/abcd/ef/gh?foo=bar&beep=bop')
         done()
       })
     })

@@ -15,7 +15,7 @@ describe('end-to-end', function() {
     coap.request('coap://localhost:'+port + '/abcd/ef/gh/?foo=bar&beep=bop').end()
     server.on('request', function(req) {
       expect(req.url).to.eql('/abcd/ef/gh?foo=bar&beep=bop')
-      done()
+      setImmediate(done)
     })
   })
 
@@ -23,7 +23,7 @@ describe('end-to-end', function() {
     var req = coap.request('coap://localhost:'+port + '/abcd/ef/gh/?foo=bar&beep=bop').end()
     req.on('response', function(res) {
       expect(res.code).to.eql('2.05')
-      done()
+      setImmediate(done)
     })
 
     server.on('request', function(req, res) {
