@@ -73,6 +73,31 @@ server.listen(function() {
 })
 ```
 
+or on IPv6:
+
+```js
+const coap        = require('coap')
+    , server      = coap.createServer({ type: 'udp6' })
+
+server.on('request', function(req, res) {
+  res.end('Hello ' + req.url.split('/')[1] + '\n')
+})
+
+// the default CoAP port is 5683
+server.listen(function() {
+  var req = coap.request('coap://[::1]/Matteo')
+
+  req.on('response', function(res) {
+    res.pipe(process.stdout)
+    res.on('end', function() {
+      process.exit(0)
+    })
+  })
+
+  req.end()
+})
+```
+
 <a name="api"></a>
 ## API
 
@@ -86,6 +111,7 @@ server.listen(function() {
   * <a href="#registerFormat"><code>coap.<b>registerFormat()</b></code></a>
   * <a href="#agent"><code>coap.<b>Agent</b></code></a>
   * <a href="#globalAgent"><code>coap.<b>globalAgent</b></code></a>
+  * <a href="#globalAgentIPv6"><code>coap.<b>globalAgentIPv6</b></code></a>
 
 -------------------------------------------------------
 <a name="request"></a>
@@ -124,6 +150,9 @@ href='#incoming'><code>IncomingMessage</code></a>.
 If you need
 to add a payload, just `pipe` into it.
 Otherwise, you __must__ call `end` to submit the request.
+
+If `hostname` is a IPv6 address then the payload is sent through a
+IPv6 UDP socket, dubbed in node.js as `'udp6'`.
 
 #### Event: 'response'
 
@@ -364,7 +393,7 @@ registerFormat('application/json', 50)
 
 -------------------------------------------------------
 <a name="agent"></a>
-### coap.Agent()
+### coap.Agent([opts])
 
 An Agent encapsulate an UDP Socket. It uses a combination of `messageId`
 and `token` to distinguish between the different exchanges.
@@ -373,11 +402,22 @@ The socket will auto-close itself when no more exchange are in place.
 By default, no UDP socket are open, and it is opened on demand to send
 the messages.
 
+Opts is an optional object with the following optional properties:
+
+* `type`: `'udp4'` or `'udp6'` if we want an Agent on an IPv4 or IPv6
+  UDP socket.
+
 -------------------------------------------------------
 <a name="globalAgent"></a>
 ### coap.globalAgent
 
-The default [`Agent`](#agent).
+The default [`Agent`](#agent) for IPv4.
+
+-------------------------------------------------------
+<a name="globalAgentIPv6"></a>
+### coap.globalAgentIPv6
+
+The default [`Agent`](#agent) for IPv6.
 
 <a name="contributing"></a>
 ## Contributing
