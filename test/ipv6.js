@@ -41,4 +41,34 @@ describe('IPv6', function() {
     })
   })
 
+  describe('request', function() {
+    var server
+      , server2
+      , port
+
+    beforeEach(function(done) {
+      port = nextPort()
+      server = dgram.createSocket('udp6')
+      server.bind(port, done)
+    })
+
+    afterEach(function() {
+      server.close()
+
+      if (server2)
+        server2.close()
+
+      server = server2 = null
+    })
+
+    it('should send the data to the server', function(done) {
+      var req = coap.request('coap://[::1]:' + port)
+      req.end(new Buffer('hello world'))
+
+      server.on('message', function(msg) {
+        expect(parse(msg).payload.toString()).to.eql('hello world')
+        done()
+      })
+    })
+  })
 })
