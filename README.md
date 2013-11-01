@@ -13,6 +13,10 @@ __node-coap__ is an _highly experimental_ client and server library for CoAP mod
   * <a href="#contributing">Contributing</a>
   * <a href="#licence">Licence &amp; copyright</a>
 
+[![NPM](https://nodei.co/npm/coap.png)](https://nodei.co/npm/coap/)
+
+[![NPM](https://nodei.co/npm-dl/coap.png)](https://nodei.co/npm/coap/)
+
 <a name="intro"></a>
 ## Introduction
 
