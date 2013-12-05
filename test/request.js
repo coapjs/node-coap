@@ -573,6 +573,7 @@ describe('request', function() {
 
       req.on('error', function(err) {
         expect(err).to.have.property('message', 'No reply in 247s')
+        expect(err).to.have.property('retransmitTimeout', 247)
         done()
       })
 

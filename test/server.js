@@ -616,7 +616,8 @@ describe('server', function() {
           res.end('42')
         }, 200)
 
-        res.on('error', function() {
+        res.on('error', function(err) {
+          expect(err).to.have.property('retransmitTimeout', 247)
           done()
         })
       })
