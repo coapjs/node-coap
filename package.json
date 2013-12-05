@@ -35,8 +35,8 @@
   },
   "dependencies": {
     "coap-packet": "~0.1.8",
-    "bl": "~0.5.0",
+    "bl": "~0.6.0",
     "backoff": "~2.3.0",
-    "lru-cache": "~2.3.1"
+    "lru-cache": "~2.5.0"
   }
 }
