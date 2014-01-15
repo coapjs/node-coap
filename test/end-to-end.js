@@ -70,6 +70,24 @@ describe('end-to-end', function() {
     })
   })
 
+  it('should support a 4.04 observe request and emit an end event in the response', function(done) {
+    var req = coap.request({
+        port: port
+      , observe: true
+    }).end()
+
+    req.on('response', function(res) {
+      expect(res.code).to.eql('4.04')
+      res.on('end', done)
+      res.resume()
+    })
+
+    server.on('request', function(req, res) {
+      res.statusCode = '4.04'
+      res.end()
+    })
+  })
+
   describe('formats', function() {
     var formats = [ 'text/plain', 'application/link-format',
       'application/xml', 'application/octet-stream',
