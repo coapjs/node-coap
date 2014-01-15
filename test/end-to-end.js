@@ -1,5 +1,5 @@
 
-const coap      = require('../')
+const coap = require('../')
 
 describe('end-to-end', function() {
   var server
@@ -50,6 +50,23 @@ describe('end-to-end', function() {
     server.on('request', function(req, res) {
       res.write('hello')
       res.end('world')
+    })
+  })
+
+  it('should support a 4.04 observe request', function(done) {
+    var req = coap.request({
+        port: port
+      , observe: true
+    }).end()
+
+    req.on('response', function(res) {
+      expect(res.code).to.eql('4.04')
+      done()
+    })
+
+    server.on('request', function(req, res) {
+      res.statusCode = '4.04'
+      res.end()
     })
   })
 
