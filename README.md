@@ -130,7 +130,7 @@ If it is an object:
   Defaults to `'localhost'`.
 - `hostname`: To support `url.parse()` `hostname` is preferred over
   `host`
-- `port`: Port of remote server. Defaults to 5483.
+- `port`: Port of remote server. Defaults to 5683.
 - `method`: A string specifying the CoAP request method. Defaults to
   `'GET'`.
 - `confirmable`: send a CoAP confirmable message (CON), defaults to
