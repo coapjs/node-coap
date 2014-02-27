@@ -20,7 +20,7 @@ module.exports.request = function(url) {
   if (typeof url === 'string')
     url = URL.parse(url)
 
-  ipv6 = net.isIPv6(url.hostname)
+  ipv6 = net.isIPv6(url.hostname || url.host)
 
   if (url.agent)
     agent = url.agent
