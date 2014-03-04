@@ -57,25 +57,39 @@ describe('IPv6', function() {
       server = null
     })
 
-    it('should send the data to the server', function(done) {
-      var req = coap.request('coap://[::1]:' + port)
-      req.end(new Buffer('hello world'))
+    function createTest(createUrl) {
+      return function (done) {
+        var req = coap.request(createUrl())
+        req.end(new Buffer('hello world'))
 
-      server.on('message', function(msg, rsinfo) {
-        var packet = parse(msg)
-          , toSend = generate({
-                         messageId: packet.messageId
-                       , token: packet.token
-                       , payload: new Buffer('42')
-                       , ack: true
-                       , code: '2.00'
-                     })
-        server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+        server.on('message', function(msg, rsinfo) {
+          var packet = parse(msg)
+            , toSend = generate({
+                           messageId: packet.messageId
+                         , token: packet.token
+                         , payload: new Buffer('42')
+                         , ack: true
+                         , code: '2.00'
+                       })
+          server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
 
-        expect(parse(msg).payload.toString()).to.eql('hello world')
-        done()
-      })
-    })
+          expect(parse(msg).payload.toString()).to.eql('hello world')
+          done()
+        })
+      }
+    }
+
+    it('should send the data to the server (URL param)', createTest(function() {
+      return 'coap://[::1]:' + port
+    }))
+
+    it('should send the data to the server (hostname + port in object)', createTest(function() {
+      return  { hostname: '::1', port: port }
+    }))
+
+    it('should send the data to the server (host + port in object)', createTest(function() {
+      return  { host: '::1', port: port }
+    }))
   })
 
   describe('end-to-end', function() {
