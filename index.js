@@ -9,6 +9,7 @@
 const optionsConv     = require('./lib/option_converter')
     , Server          = require('./lib/server')
     , Agent           = require('./lib/agent')
+    , parameters      = require('./lib/parameters')
     , net             = require('net')
     , URL             = require('url')
     , globalAgent     = new Agent({ type: 'udp4' })
@@ -44,3 +45,5 @@ module.exports.globalAgentIPv6 = globalAgentV6
 
 module.exports.registerOption = optionsConv.registerOption
 module.exports.registerFormat = optionsConv.registerFormat
+
+module.exports.parameters = parameters
