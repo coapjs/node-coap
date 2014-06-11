@@ -13,27 +13,34 @@ const coap        = require('./..')
     , server      = coap.createServer()
     , payload     = new Buffer(10000)
 
-const maxBlock2   = 1024    //16, 32, 64, must <= 2**(6+4)
-var totalBlock    = Math.ceil(payload.length/maxBlock2)
-var numberBlock   = 0 
-var isLastBlock   = false
+var maxBlock2   = 64    //16, 32, 64, must <= 2**(6+4)
+var totalBlock
+var isLastBlock
 
 // server
-// play split up for blockwise 
+// plays split up for blockwise 
 server.on('request', function(req, res) {
-  if (++numberBlock == totalBlock) 
-    isLastBlock = true
-
   var requestedBlockOption = _parseBlock2(req.options) 
+
   // for the first request, block2 option may be missed
   if (!requestedBlockOption) 
     requestedBlockOption = {
       size: maxBlock2,
       num: 0
     }
+
   // block2 size should not bigger maxBlock2
   if (requestedBlockOption.size > maxBlock2) 
     requestedBlockOption.size = maxBlock2
+
+  // block number should have limit 
+  totalBlock = Math.ceil(payload.length/requestedBlockOption.size)
+  if (requestedBlockOption.num < totalBlock)
+    isLastBlock = false
+  else if (requestedBlockOption.num = totalBlock) 
+    isLastBlock = true
+  else
+    return res.end(500)
 
   console.log('--------------------------')
   console.log('req block2 ', requestedBlockOption)
@@ -42,7 +49,9 @@ server.on('request', function(req, res) {
   var block2 = _createBlock(requestedBlockOption, isLastBlock)
   console.log('return block2 = ', block2)
   res.setOption('Block2', block2)
-  res.end(payload.slice((requestedBlockOption.num)*maxBlock2, (requestedBlockOption.num+1)*maxBlock2))
+  // res.setOption('ETag', '123456')
+  res.setOption('Content-Format', 'application/json')
+  res.end(payload.slice((requestedBlockOption.num)*requestedBlockOption.size, (requestedBlockOption.num+1)*requestedBlockOption.size))
 })
 
 // the default CoAP port is 5683
@@ -70,7 +79,8 @@ server.listen(function() {
 function _createBlock(requestedBlock, isLastBlock) {
   var byte
   var szx = Math.log(requestedBlock.size)/Math.log(2) - 4
-  var m = (isLastBlock)?0:1
+  console.log(isLastBlock)
+  var m = ((isLastBlock==true)?0:1)
   var num = requestedBlock.num
   var extraNum
 
