@@ -13,7 +13,7 @@ const coap        = require('./..')
     , server      = coap.createServer()
     , payload     = new Buffer(10000)
 
-var maxBlock2   = 64    //16, 32, 64, must <= 2**(6+4)
+var maxBlock2   = 1024    //16, 32, 64, must <= 2**(6+4)
 var totalBlock
 var isLastBlock
 
@@ -49,7 +49,7 @@ server.on('request', function(req, res) {
   var block2 = _createBlock(requestedBlockOption, isLastBlock)
   console.log('return block2 = ', block2)
   res.setOption('Block2', block2)
-  // res.setOption('ETag', '123456')
+  res.setOption('ETag', '123456')
   res.setOption('Content-Format', 'application/json')
   res.end(payload.slice((requestedBlockOption.num)*requestedBlockOption.size, (requestedBlockOption.num+1)*requestedBlockOption.size))
 })
@@ -58,7 +58,7 @@ server.on('request', function(req, res) {
 server.listen(function() {
   var req = coap.request('coap://localhost/Matteo')
   // test early negotiation
-  req.setOption('Block2', new Buffer([0x0])) // block size of 1024
+  req.setOption('Block2', new Buffer([0x06])) // block size of 1024
   // test later negotiation (?)
   req.on('response', function(res) {
     // console.log(res)
