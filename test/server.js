@@ -181,17 +181,6 @@ describe('server', function() {
     })
   })
 
-  // it('should have res emitting an error if the message is too big', function(done) {
-  //   send(generate())
-  //   server.on('request', function(req, res) {
-  //     res.on('error', function() {
-  //       done()
-  //     })
-
-  //     res.end(new Buffer(1280))
-  //   })
-  // })
-
   it('should expose the options', function(done) {
     var options = [{
         name: '555'

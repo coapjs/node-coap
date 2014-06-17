@@ -36,7 +36,6 @@
   "dependencies": {
     "bl": "~0.7.0",
     "coap-packet": "~0.1.8",
-    "lru-cache": "~2.5.0",
-    "underscore": "^1.6.0"
+    "lru-cache": "~2.5.0"
   }
 }
