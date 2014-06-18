@@ -25,11 +25,12 @@ What is CoAP?
 intended to be used in very simple electronics devices that allows them
 to communicate interactively over the Internet. -  Wikipedia
 
-This library follows the
-[draft-18](http://tools.ietf.org/html/draft-ietf-core-coap-18) of the standard.
-Moreover, it supports the
-[observe-11](http://tools.ietf.org/html/draft-ietf-core-observe-11)
-specification.
+This library follows:
+* [draft-18](http://tools.ietf.org/html/draft-ietf-core-coap-18) of CoAP.
+* [observe-11](http://tools.ietf.org/html/draft-ietf-core-observe-11)
+  for the observe specification.
+* [block-14](http://tools.ietf.org/id/draft-ietf-core-block-14.txt) for
+  the blockwise specification.
 
 It does not parse the protocol but it use
 [CoAP-packet](http://github.com/mcollina/coap-packet) instead.
@@ -258,7 +259,11 @@ new Buffer('ghi')]);
 compatibility.
 
 Also, `'Content-Type'` is aliased to `'Content-Format'` for HTTP
-compatibility.
+compatibility.gg
+
+Since v0.7.0, this library supports blockwise transfers, you can trigger
+them by adding a `req.setOption('Block2', new Buffer([0x2]))` to the
+output of [request](#request).
 
 See the
 [spec](http://tools.ietf.org/html/draft-ietf-core-coap-18#section-5.4)
