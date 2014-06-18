@@ -3,6 +3,7 @@ node-coap
 
 [![Build
 Status](https://travis-ci.org/mcollina/node-coap.png)](https://travis-ci.org/mcollina/node-coap)
+[![gitter](https://badges.gitter.im/mcollina/node-coap.png)](https://gitter.im/mcollina/node-coap)
 
 __node-coap__ is an _highly experimental_ client and server library for CoAP modelled after the `http` module.
 
