@@ -53,6 +53,17 @@ describe('server', function() {
     })
   })
 
+  it('should listen when listen() has no argument ', function(done) {
+    port = 5683
+    server.close()        // refresh
+    server = coap.createServer()
+    server.on('request', function(req, res) {
+      done()
+    })
+    server.listen()
+    send(generate())
+  })
+
   it('should listen by default to 5683', function(done) {
     server.close() // we need to change port
     server = coap.createServer()
