@@ -14,11 +14,6 @@ describe('IPv6', function() {
 
     beforeEach(function(done) {
       port = nextPort()
-      server = coap.createServer({ type: 'udp6' })
-      server.listen(port, done)
-    })
-
-    beforeEach(function(done) {
       clientPort = nextPort()
       client = dgram.createSocket('udp6')
       client.bind(clientPort, done)
@@ -33,10 +28,23 @@ describe('IPv6', function() {
       client.send(message, 0, message.length, port, '::1')
     }
 
-    it('should receive a CoAP message', function(done) {
-      send(generate())
-      server.on('request', function(req, res) {
-        done()
+    it('should receive a CoAP message specifying the type', function(done) {
+      server = coap.createServer({ type: 'udp6' }, done)
+      server.listen(port, function() {
+        send(generate())
+        server.on('request', function(req, res) {
+          done()
+        })
+      })
+    })
+
+    it('should automatically discover the type based on the host', function(done) {
+      server = coap.createServer()
+      server.listen(port, '::1', function() {
+        send(generate())
+        server.on('request', function(req, res) {
+          done()
+        })
       })
     })
   })
