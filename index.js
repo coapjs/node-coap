@@ -6,14 +6,14 @@
  * See the included LICENSE file for more details.
  */
 
-const optionsConv     = require('./lib/option_converter')
-    , Server          = require('./lib/server')
-    , Agent           = require('./lib/agent')
-    , parameters      = require('./lib/parameters')
-    , net             = require('net')
-    , URL             = require('url')
-    , globalAgent     = new Agent({ type: 'udp4' })
-    , globalAgentV6   = new Agent({ type: 'udp6' })
+var optionsConv     = require('./lib/option_converter')
+  , Server          = require('./lib/server')
+  , Agent           = require('./lib/agent')
+  , parameters      = require('./lib/parameters')
+  , net             = require('net')
+  , URL             = require('url')
+  , globalAgent     = new Agent({ type: 'udp4' })
+  , globalAgentV6   = new Agent({ type: 'udp6' })
 
 module.exports.request = function(url) {
   var agent, req, ipv6

@@ -1,5 +1,5 @@
 
-const coap = require('../')
+var coap = require('../')
 
 describe('end-to-end', function() {
   var server

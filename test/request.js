@@ -1,10 +1,10 @@
-const coap      = require('../')
-    , parse     = require('coap-packet').parse
-    , generate  = require('coap-packet').generate
-    , dgram     = require('dgram')
-    , bl        = require('bl')
-    , sinon     = require('sinon')
-    , request   = coap.request
+var coap      = require('../')
+  , parse     = require('coap-packet').parse
+  , generate  = require('coap-packet').generate
+  , dgram     = require('dgram')
+  , bl        = require('bl')
+  , sinon     = require('sinon')
+  , request   = coap.request
 
 describe('request', function() {
   var server

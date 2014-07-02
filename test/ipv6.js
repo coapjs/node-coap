@@ -1,7 +1,7 @@
-const coap      = require('../')
-    , parse     = require('coap-packet').parse
-    , generate  = require('coap-packet').generate
-    , dgram     = require('dgram')
+var coap      = require('../')
+  , parse     = require('coap-packet').parse
+  , generate  = require('coap-packet').generate
+  , dgram     = require('dgram')
 
 describe('IPv6', function() {
 

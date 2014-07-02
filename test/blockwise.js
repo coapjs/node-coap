@@ -1,5 +1,5 @@
 
-const coap = require('../')
+var coap = require('../')
 
 describe('blockwise2', function() {
   var server

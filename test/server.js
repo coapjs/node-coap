@@ -1,13 +1,13 @@
 
-const coap      = require('../')
-    , parse     = require('coap-packet').parse
-    , generate  = require('coap-packet').generate
-    , dgram     = require('dgram')
-    , bl        = require('bl')
-    , request   = coap.request
-    , tk        = require('timekeeper')
-    , sinon     = require('sinon')
-    , params    = require('../lib/parameters')
+var coap      = require('../')
+  , parse     = require('coap-packet').parse
+  , generate  = require('coap-packet').generate
+  , dgram     = require('dgram')
+  , bl        = require('bl')
+  , request   = coap.request
+  , tk        = require('timekeeper')
+  , sinon     = require('sinon')
+  , params    = require('../lib/parameters')
 
 describe('server', function() {
   var server
