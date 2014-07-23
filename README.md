@@ -454,8 +454,5 @@ __node-coap__ is only possible due to the excellent work of the following contri
 </tbody></table>
 
 ## LICENSE
-Copyright (c) 2013-2014 node-coap contributors (listed above).
 
-node-coap is licensed under an MIT +no-false-attribs license.
-All rights not explicitly granted in the MIT license are reserved.
-See the included LICENSE file for more details.
+MIT, see LICENSE.md file.
