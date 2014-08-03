@@ -142,8 +142,6 @@ If it is an object:
 - `pathname`: Request path. Defaults to `'/'`. Should not include query string
 - `query`: Query string. Defaults to `''`. Should not include the path,
   e.g. 'a=b&c=d'
-- `observe`: send a CoAP observe message, allowing the streaming of
-  updates from the server.
 - `agent`: Controls [`Agent`](#agent) behavior. Possible values:
   * `undefined` (default): use [`globalAgent`](#globalAgent), a single socket for all
     concurrent requests.
