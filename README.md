@@ -142,6 +142,10 @@ If it is an object:
 - `pathname`: Request path. Defaults to `'/'`. Should not include query string
 - `query`: Query string. Defaults to `''`. Should not include the path,
   e.g. 'a=b&c=d'
+- `options`: object that includes the CoAP options, for each key-value
+  pair the [setOption()](#setOption) will be called.
+- `headers`: alias for `options`, but it works only if `options` is
+  missing.
 - `agent`: Controls [`Agent`](#agent) behavior. Possible values:
   * `undefined` (default): use [`globalAgent`](#globalAgent), a single socket for all
     concurrent requests.
@@ -231,6 +235,7 @@ following additional methods and properties.
 The CoAP code ot the message.
 It is HTTP-compatible, as it can be passed `404`.
 
+<a name="setOption"></a>
 #### message.setOption(name, value)
 
 Sets a single option value.

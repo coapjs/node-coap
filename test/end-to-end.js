@@ -114,6 +114,39 @@ describe('end-to-end', function() {
           })
         })
 
+        it('should pass the \'' + option + ': ' + format + '\' option to the server if passed alongside the url', function(done) {
+          var req = {
+            port: port,
+            options: {}
+          };
+
+          req.options[option] = format
+
+          coap.request(req).end()
+
+          server.on('request', function(req) {
+            expect(req.options[0].name).to.eql(option)
+            expect(req.options[0].value).to.eql(format)
+            done()
+          })
+        })
+
+        it('should pass the \'' + option + ': ' + format + '\' headers to the server if passed alongside the url', function(done) {
+          var req = {
+            port: port,
+            headers: {}
+          };
+
+          req.headers[option] = format
+
+          coap.request(req).end()
+
+          server.on('request', function(req) {
+            expect(req.headers[option]).to.eql(format)
+            done()
+          })
+        })
+
         it('should pass the \'' + option + ': ' + format + '\' header to the server', function(done) {
           var req = coap.request('coap://localhost:'+port)
           req.setOption(option, format)
