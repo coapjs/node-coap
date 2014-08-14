@@ -3,7 +3,7 @@ const coap = require('../') // or coap
 
 coap.createServer(function(req, res) {
   if (req.headers['Accept'] != 'application/json') {
-    res.statusCode = '4.06'
+    res.code = '4.06'
     return res.end()
   }
 

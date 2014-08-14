@@ -230,10 +230,14 @@ It implements the [Writable
 Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable) interface, as well as the
 following additional methods and properties.
 
-#### message.statusCode
+#### message.code
 
 The CoAP code ot the message.
 It is HTTP-compatible, as it can be passed `404`.
+
+#### message.statusCode
+
+(same as message.code)
 
 <a name="setOption"></a>
 #### message.setOption(name, value)

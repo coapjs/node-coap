@@ -38,6 +38,36 @@ describe('end-to-end', function() {
     })
   })
 
+  it('should return code using res.code attribute', function(done) {
+    coap
+      .request('coap://localhost:'+port)
+      .on('response', function(res) {
+        expect(res.code).to.eql('4.04')
+        setImmediate(done)
+      })
+      .end()
+
+    server.on('request', function(req, res) {
+      res.code = '4.04'
+      res.end('hello')
+    })
+  })
+
+  it('should return code using res.statusCode attribute', function(done) {
+    coap
+      .request('coap://localhost:'+port)
+      .on('response', function(res) {
+        expect(res.code).to.eql('4.04')
+        setImmediate(done)
+      })
+      .end()
+
+    server.on('request', function(req, res) {
+      res.statusCode = '4.04'
+      res.end('hello')
+    })
+  })
+
   it('should support observing', function(done) {
     var req = coap.request({
         port: port
