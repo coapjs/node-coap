@@ -19,6 +19,10 @@ describe('blockwise2', function() {
     server.listen(port, done)
   })
 
+  afterEach(function() {
+    server.close()
+  })
+
   it('should server not use blockwise in response when payload fit in one packet', function(done) {
     var payload   = new Buffer(100)         // default max packet is 1280
     var req = coap.request({
