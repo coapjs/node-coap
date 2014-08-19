@@ -260,8 +260,7 @@ Example:
 
 or
 
-    message.setOption("555", [new Buffer('abcde',
-new Buffer('ghi')]);
+    message.setOption("555", [new Buffer('abcde'),new Buffer('ghi')]);
 
 `setOption` is also aliased as `setHeader` for HTTP API
 compatibility.
