@@ -552,7 +552,7 @@ describe('request', function() {
     req.end()
   })
 
-  it('should include original socket information in the response', function(done) {
+  it('should include original and destination socket information in the response', function(done) {
     var req = request({
       port: port
     })
@@ -568,10 +568,10 @@ describe('request', function() {
     })
 
     req.on('response', function(res) {
-      expect(res).to.have.property('_rsinfo')
-      expect(res._rsinfo).to.have.property('localAddress')
-      expect(res._rsinfo.localAddress).to.have.property('address')
-      expect(res._rsinfo.localAddress).to.have.property('port')
+      expect(res).to.have.property('rsinfo')
+      expect(res).to.have.property('outSocket')
+      expect(res.outSocket).to.have.property('address')
+      expect(res.outSocket).to.have.property('port')
       done()
     })
 
