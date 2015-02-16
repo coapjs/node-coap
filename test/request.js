@@ -552,6 +552,31 @@ describe('request', function() {
     req.end()
   })
 
+  it('should include original socket information in the response', function(done) {
+    var req = request({
+      port: port
+    })
+
+    server.on('message', function(msg, rsinfo) {
+      var packet  = parse(msg)
+          , toSend  = generate({
+            messageId: packet.messageId
+            , token: packet.token
+            , options: []
+          })
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+    })
+
+    req.on('response', function(res) {
+      expect(res).to.have.property('_rsinfo')
+      expect(res._rsinfo).to.have.property('address')
+      expect(res._rsinfo).to.have.property('port')
+      done()
+    })
+
+    req.end()
+  })
+
   describe('non-confirmable retries', function() {
     var clock
 
