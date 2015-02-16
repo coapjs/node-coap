@@ -860,6 +860,22 @@ describe('request', function() {
       })
     })
 
+    it('should send origin and destination socket data along with the response', function(done) {
+
+      var req = doObserve()
+
+      req.on('response', function(res) {
+        res.once('data', function(data) {
+          expect(res).to.have.property('rsinfo')
+          expect(res).to.have.property('outSocket')
+          expect(res.outSocket).to.have.property('address')
+          expect(res.outSocket).to.have.property('port')
+          res.close()
+          done()
+        })
+      })
+    })
+
     it('should emit any more data after close', function(done) {
 
       var req = doObserve()
