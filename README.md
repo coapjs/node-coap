@@ -337,6 +337,11 @@ The URL of the request, e.g.
 The sender informations, as emitted by the socket.
 See [the `dgram` docs](http://nodejs.org/api/dgram.html#dgram_event_message) for details
 
+#### message.outSocket
+
+Information about the socket used for the communication (address and port).
+
+
 -------------------------------------------------------
 <a name="observeread"></a>
 ### ObserveReadStream
@@ -356,6 +361,15 @@ following additional methods, events and properties.
 #### close()
 
 Closes the stream.
+
+#### message.rsinfo
+
+The sender informations, as emitted by the socket.
+See [the `dgram` docs](http://nodejs.org/api/dgram.html#dgram_event_message) for details
+
+#### message.outSocket
+
+Information about the socket used for the communication (address and port).
 
 -------------------------------------------------------
 <a name="observewrite"></a>
