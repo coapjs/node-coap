@@ -276,6 +276,9 @@ See the
 [spec](http://tools.ietf.org/html/draft-ietf-core-coap-18#section-5.4)
 for all the possible options.
 
+#### message.reset()
+Returns a Reset COAP Message to the sender. The RST message will appear as an empty message with code `0.00` and the
+reset flag set to `true` to the caller. This action ends the interaction with the caller.
 -------------------------------------------------------
 <a name="incoming"></a>
 ### IncomingMessage
