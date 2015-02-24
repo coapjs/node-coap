@@ -16,7 +16,7 @@ var coap      = require('../')
   , sinon     = require('sinon')
   , params    = require('../lib/parameters')
 
-describe.only('server', function() {
+describe('server', function() {
   var server
     , port
     , clientPort
@@ -215,7 +215,6 @@ describe.only('server', function() {
     })
   })
 
-  // TODO
   it('should include a reset() function in the response', function(done) {
     var buf = new Buffer(25)
     send(generate({ payload: buf }))
