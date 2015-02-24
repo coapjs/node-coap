@@ -382,6 +382,10 @@ following additional methods and properties.
 Emitted when the client is not sending 'acks' anymore for the sent
 messages.
 
+#### reset()
+Returns a Reset COAP Message to the sender. The RST message will appear as an empty message with code `0.00` and the
+reset flag set to `true` to the caller. This action ends the interaction with the caller.
+
 -------------------------------------------------------
 <a name="registerOption"></a>
 ### coap.registerOption(name, toBinary, toString)
