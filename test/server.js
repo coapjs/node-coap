@@ -778,6 +778,25 @@ describe.only('server', function() {
       })
     })
 
+    it('should send a \'RST\' to the client if the msg.reset() method is invoked', function(done) {
+      var now = Date.now()
+      doObserve()
+
+      server.on('request', function(req, res) {
+        res.reset()
+      })
+
+      client.on('message', function(msg) {
+        var result = parse(msg)
+        expect(result.code).to.eql('0.00')
+        expect(result.reset).to.eql(true)
+        expect(result.ack).to.eql(false)
+        expect(result.payload.length).to.eql(0)
+
+        done();
+      })
+    })
+
     it('should correctly generate two-byte long sequence numbers', function(done) {
       var now = Date.now()
         , buf = new Buffer(2)
