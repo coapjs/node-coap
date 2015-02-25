@@ -276,6 +276,9 @@ See the
 [spec](http://tools.ietf.org/html/draft-ietf-core-coap-18#section-5.4)
 for all the possible options.
 
+#### message.reset()
+Returns a Reset COAP Message to the sender. The RST message will appear as an empty message with code `0.00` and the
+reset flag set to `true` to the caller. This action ends the interaction with the caller.
 -------------------------------------------------------
 <a name="incoming"></a>
 ### IncomingMessage
@@ -393,6 +396,10 @@ following additional methods and properties.
 Emitted when the client is not sending 'acks' anymore for the sent
 messages.
 
+#### reset()
+Returns a Reset COAP Message to the sender. The RST message will appear as an empty message with code `0.00` and the
+reset flag set to `true` to the caller. This action ends the interaction with the caller.
+
 -------------------------------------------------------
 <a name="registerOption"></a>
 ### coap.registerOption(name, toBinary, toString)
@@ -471,6 +478,7 @@ __node-coap__ is only possible due to the excellent work of the following contri
 <table><tbody>
 <tr><th align="left">Matteo Collina</th><td><a href="https://github.com/mcollina">GitHub/mcollina</a></td><td><a href="https://twitter.com/matteocollina">Twitter/@matteocollina</a></td></tr>
 <tr><th align="left">Nguyen Quoc Dinh</th><td><a href="https://github.com/nqd">GitHub/nqd</a></td><td><a href="https://twitter.com/nqdinh">Twitter/@nqdinh</a></td></tr>
+<tr><th align="left">Daniel Moran Jimenez</th><td><a href="https://github.com/dmoranj">GitHub/nqd</a></td><td><a href="https://twitter.com/erzeneca">Twitter/@erzeneca</a></td></tr>
 </tbody></table>
 
 ## LICENSE

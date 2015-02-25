@@ -215,6 +215,22 @@ describe('server', function() {
     })
   })
 
+  it('should include a reset() function in the response', function(done) {
+    var buf = new Buffer(25)
+    send(generate({ payload: buf }))
+    client.on('message', function(msg, rinfo) {
+      var result = parse(msg)
+      expect(result.code).to.eql('0.00')
+      expect(result.reset).to.eql(true)
+      expect(result.ack).to.eql(false)
+      expect(result.payload.length).to.eql(0)
+      done()
+    });
+    server.on('request', function(req, res) {
+      res.reset()
+    })
+  })
+
   var formatsString = {
       'text/plain': new Buffer([0])
     , 'application/link-format': new Buffer([40])
@@ -758,6 +774,25 @@ describe('server', function() {
           , messageId: packet.messageId
           , code: '0.00'
         }))
+      })
+    })
+
+    it('should send a \'RST\' to the client if the msg.reset() method is invoked', function(done) {
+      var now = Date.now()
+      doObserve()
+
+      server.on('request', function(req, res) {
+        res.reset()
+      })
+
+      client.on('message', function(msg) {
+        var result = parse(msg)
+        expect(result.code).to.eql('0.00')
+        expect(result.reset).to.eql(true)
+        expect(result.ack).to.eql(false)
+        expect(result.payload.length).to.eql(0)
+
+        done();
       })
     })
 
