@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 node-coap contributors.
+ * Copyright (c) 2013-2015 node-coap contributors.
  *
  * node-coap is licensed under an MIT +no-false-attribs license.
  * All rights not explicitly granted in the MIT license are reserved.
@@ -212,6 +212,22 @@ describe('server', function() {
     server.on('request', function(req, res) {
       expect(req.options).to.eql(options)
       done()
+    })
+  })
+
+  it('should include a reset() function in the response', function(done) {
+    var buf = new Buffer(25)
+    send(generate({ payload: buf }))
+    client.on('message', function(msg, rinfo) {
+      var result = parse(msg)
+      expect(result.code).to.eql('0.00')
+      expect(result.reset).to.eql(true)
+      expect(result.ack).to.eql(false)
+      expect(result.payload.length).to.eql(0)
+      done()
+    });
+    server.on('request', function(req, res) {
+      res.reset()
     })
   })
 
@@ -758,6 +774,25 @@ describe('server', function() {
           , messageId: packet.messageId
           , code: '0.00'
         }))
+      })
+    })
+
+    it('should send a \'RST\' to the client if the msg.reset() method is invoked', function(done) {
+      var now = Date.now()
+      doObserve()
+
+      server.on('request', function(req, res) {
+        res.reset()
+      })
+
+      client.on('message', function(msg) {
+        var result = parse(msg)
+        expect(result.code).to.eql('0.00')
+        expect(result.reset).to.eql(true)
+        expect(result.ack).to.eql(false)
+        expect(result.payload.length).to.eql(0)
+
+        done();
       })
     })
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 node-coap contributors.
+ * Copyright (c) 2013-2015 node-coap contributors.
  *
  * node-coap is licensed under an MIT +no-false-attribs license.
  * All rights not explicitly granted in the MIT license are reserved.
@@ -552,6 +552,32 @@ describe('request', function() {
     req.end()
   })
 
+  it('should include original and destination socket information in the response', function(done) {
+    var req = request({
+      port: port
+    })
+
+    server.on('message', function(msg, rsinfo) {
+      var packet  = parse(msg)
+          , toSend  = generate({
+            messageId: packet.messageId
+            , token: packet.token
+            , options: []
+          })
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+    })
+
+    req.on('response', function(res) {
+      expect(res).to.have.property('rsinfo')
+      expect(res).to.have.property('outSocket')
+      expect(res.outSocket).to.have.property('address')
+      expect(res.outSocket).to.have.property('port')
+      done()
+    })
+
+    req.end()
+  })
+
   describe('non-confirmable retries', function() {
     var clock
 
@@ -830,6 +856,22 @@ describe('request', function() {
           res.on('data', function(data) {
             done(new Error('this should never happen'))
           })
+        })
+      })
+    })
+
+    it('should send origin and destination socket data along with the response', function(done) {
+
+      var req = doObserve()
+
+      req.on('response', function(res) {
+        res.once('data', function(data) {
+          expect(res).to.have.property('rsinfo')
+          expect(res).to.have.property('outSocket')
+          expect(res.outSocket).to.have.property('address')
+          expect(res.outSocket).to.have.property('port')
+          res.close()
+          done()
         })
       })
     })
