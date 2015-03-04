@@ -109,4 +109,39 @@ describe('proxy', function() {
       done()
     })
   })
+
+  describe('with a proxied request initiated by an agent', function() {
+    it('should forward the request to the URI specified in proxyUri ', function(done) {
+      var request = coap.request({
+        host: 'localhost',
+        port: port,
+        proxyUri: 'coap://localhost:' + targetPort,
+        query: 'a=b'
+      })
+
+      target.on('request', function(req, res) {
+        done()
+      })
+
+      request.end()
+    })
+    it('should forward the response to the request back to the agent', function(done) {
+      var request = coap.request({
+        host: 'localhost',
+        port: port,
+        proxyUri: 'coap://localhost:' + targetPort,
+        query: 'a=b'
+      })
+
+      target.on('request', function(req, res) {
+        res.end()
+      })
+
+      request.on('response', function() {
+        done()
+      })
+
+      request.end()
+    })
+  })
 })
