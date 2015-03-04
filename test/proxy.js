@@ -88,4 +88,23 @@ describe('proxy', function() {
       }]
     }))
   })
+
+  it('should return the target response to the original requestor', function(done) {
+    send(generate({
+      options: [{
+        name: 'Proxy-Uri'
+        , value: new Buffer('coap://localhost:' + targetPort + '/the/path')
+      }]
+    }))
+
+    target.on('request', function(req, res) {
+      res.end('The response')
+    })
+
+    client.on('message', function(msg) {
+      var package = parse(msg)
+      expect(package.payload.toString()).to.eql('The response')
+      done()
+    })
+  })
 })
