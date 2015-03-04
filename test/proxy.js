@@ -29,7 +29,9 @@ describe('proxy', function() {
   beforeEach(function(done) {
     clock = sinon.useFakeTimers()
     port = nextPort()
-    server = coap.createServer()
+    server = coap.createServer({
+      proxy: true
+    })
     server.listen(port, function() {
       clientPort = nextPort()
       client = dgram.createSocket('udp4')
