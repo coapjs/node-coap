@@ -152,6 +152,9 @@ If it is an object:
   * [`Agent`](#agent) object: explicitly use the passed in [`Agent`](#agent).
   * `false`: opts out of socket reuse with an [`Agent`](#agent), each request uses a
     new UDP socket.
+- `proxyUri`: adds the Proxy-Uri option to the request, so if the request is sent to a
+  proxy (or a server with proxy features) the request will be forwarded to the selected URI.
+  The expected value is the URI of the target. E.g.: 'coap://192.168.5.13:6793'
 
 `coap.request()` returns an instance of <a
 href='#incoming'><code>OutgoingMessage</code></a>.
@@ -179,12 +182,19 @@ Which represent the updates coming from the server, according to the
 
 -------------------------------------------------------
 <a name="createServer"></a>
-### createServer([requestListener])
+### createServer([options], [requestListener])
 
 Returns a new CoAP Server object.
 
 The `requestListener` is a function which is automatically
 added to the `'request'` event.
+
+The constructor can be given an optional options object, containing one of the following options:
+* `type`: indicates if the server should create IPv4 connections (`udp4`) or IPv6 connections (`udp6`). Defaults
+  to `udp4`.
+* `proxy`: indicates that the server should behave like a proxy for incoming requests containing the `Proxy-Uri` header.
+  Defaults to `false`.
+
 
 #### Event: 'request'
 
