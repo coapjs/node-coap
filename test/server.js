@@ -277,6 +277,30 @@ describe('server', function() {
     }
   })
 
+  describe('with the \'Content-Format\' header and a wrong value in the request', function() {
+    it('should return a 5.00 error to the cliend', function(done) {
+      send(generate({
+        options: [{
+          name: 'Content-Format'
+          , value: new Buffer([1541])
+        }]
+      }))
+
+      client.on('message', function(msg) {
+        var response = parse(msg);
+
+        expect(response.code).to.equal('5.00')
+        expect(response.payload.toString()).to.equal('No matching format found')
+
+        done()
+      })
+
+      server.on('request', function(req) {
+        assert(false, 'This should not happen')
+      })
+    })
+  })
+
   describe('with a non-confirmable message', function() {
     var packet = {
         confirmable: false
