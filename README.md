@@ -193,7 +193,7 @@ The constructor can be given an optional options object, containing one of the f
 * `type`: indicates if the server should create IPv4 connections (`udp4`) or IPv6 connections (`udp6`). Defaults
   to `udp4`.
 * `proxy`: indicates that the server should behave like a proxy for incoming requests containing the `Proxy-Uri` header.
-  Defaults to `false`.
+  An example of how the proxy feature works, refer to the example in the `/examples` folder. Defaults to `false`.
 
 
 #### Event: 'request'
