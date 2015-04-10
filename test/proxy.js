@@ -147,7 +147,7 @@ describe('proxy', function() {
   })
 
   describe('with a proxied request with a wrong destination', function() {
-    it('should forward the request to the URI specified in proxyUri ', function(done) {
+    it('should return an error to the caller', function(done) {
       var request = coap.request({
         host: 'localhost',
         port: port,
