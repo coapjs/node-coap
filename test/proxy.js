@@ -134,14 +134,41 @@ describe('proxy', function() {
       })
 
       target.on('request', function(req, res) {
-        res.end()
+        res.end('This is the response')
       })
 
-      request.on('response', function() {
+      request.on('response', function(res) {
+        expect(res.payload.toString()).to.eql('This is the response');
         done()
       })
 
       request.end()
+    })
+  })
+
+  describe('with a proxied request with a wrong destination', function() {
+    it('should forward the request to the URI specified in proxyUri ', function(done) {
+      var request = coap.request({
+        host: 'localhost',
+        port: port,
+        proxyUri: 'coap://unexistentCOAPUri:7968',
+        query: 'a=b'
+      })
+
+      target.on('request', function(req, res) {
+        console.log('should not get here')
+      })
+
+      server.on('error', function(req, res) {
+      })
+
+      request
+          .on('response', function(res) {
+            expect(res.code).to.eql('5.00');
+            expect(res.payload.toString()).to.eql('getaddrinfo ENOTFOUND');
+            done()
+          })
+          .end()
     })
   })
 })
