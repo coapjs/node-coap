@@ -165,7 +165,7 @@ describe('proxy', function() {
       request
           .on('response', function(res) {
             expect(res.code).to.eql('5.00');
-            expect(res.payload.toString()).to.eql('getaddrinfo ENOTFOUND');
+            expect(res.payload.toString()).to.contain('ENOTFOUND');
             done()
           })
           .end()
