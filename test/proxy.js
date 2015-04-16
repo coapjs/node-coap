@@ -15,7 +15,6 @@ var coap      = require('../')
   , tk        = require('timekeeper')
   , sinon     = require('sinon')
   , params    = require('../lib/parameters')
-  , async     = require('async')
 
 describe('proxy', function() {
   var server
