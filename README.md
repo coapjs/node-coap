@@ -10,6 +10,7 @@ __node-coap__ is a client and server library for CoAP modelled after the `http` 
   * <a href="#intro">Introduction</a>
   * <a href="#install">Installation</a>
   * <a href="#basic">Basic Example</a>
+  * <a href="#proxy">Proxy features</a>
   * <a href="#api">API</a>
   * <a href="#contributing">Contributing</a>
   * <a href="#licence">Licence &amp; copyright</a>
@@ -57,8 +58,8 @@ The following example opens a UDP server and sends a
 CoAP message to it:
 
 ```js
-const coap        = require('coap')
-    , server      = coap.createServer()
+var coap        = require('coap')
+  , server      = coap.createServer()
 
 server.on('request', function(req, res) {
   res.end('Hello ' + req.url.split('/')[1] + '\n')
@@ -82,8 +83,8 @@ server.listen(function() {
 or on IPv6:
 
 ```js
-const coap        = require('coap')
-    , server      = coap.createServer({ type: 'udp6' })
+var coap        = require('coap')
+  , server      = coap.createServer({ type: 'udp6' })
 
 server.on('request', function(req, res) {
   res.end('Hello ' + req.url.split('/')[1] + '\n')
@@ -103,6 +104,23 @@ server.listen(function() {
   req.end()
 })
 ```
+<a name="proxy"></a>
+## Proxy features
+The library now comes with the ability to behave as a COAP proxy for other COAP endpoints. In order to activate the
+proxy features, create the server with the `proxy` option activated.
+
+A proxy-enabled service behaves as usual for all requests, except for those coming with the `Proxy-Uri` option. This
+requests will be redirected to the URL specified in the option, and the response from this option will, in turn,  be
+redirected to the caller. In this case, the proxy server handler is not called at all (redirection is automatic).
+
+You can find an example of how this mechanism works in `examples/proxy.js`. This example features one target server
+that writes all the information it receives along with the origin port and a proxy server. Once the servers are up:
+
+- Ten requests are sent directly to the server (without reusing ports)
+- Ten requests are sent through the proxy (without reusing ports)
+
+The example shows that the target server sees the last ten requests as coming from the same port (the proxy), while the
+first ten come from different ports.
 
 <a name="api"></a>
 ## API
@@ -152,6 +170,9 @@ If it is an object:
   * [`Agent`](#agent) object: explicitly use the passed in [`Agent`](#agent).
   * `false`: opts out of socket reuse with an [`Agent`](#agent), each request uses a
     new UDP socket.
+- `proxyUri`: adds the Proxy-Uri option to the request, so if the request is sent to a
+  proxy (or a server with proxy features) the request will be forwarded to the selected URI.
+  The expected value is the URI of the target. E.g.: 'coap://192.168.5.13:6793'
 
 `coap.request()` returns an instance of <a
 href='#incoming'><code>OutgoingMessage</code></a>.
@@ -179,12 +200,19 @@ Which represent the updates coming from the server, according to the
 
 -------------------------------------------------------
 <a name="createServer"></a>
-### createServer([requestListener])
+### createServer([options], [requestListener])
 
 Returns a new CoAP Server object.
 
 The `requestListener` is a function which is automatically
 added to the `'request'` event.
+
+The constructor can be given an optional options object, containing one of the following options:
+* `type`: indicates if the server should create IPv4 connections (`udp4`) or IPv6 connections (`udp6`). Defaults
+  to `udp4`.
+* `proxy`: indicates that the server should behave like a proxy for incoming requests containing the `Proxy-Uri` header.
+  An example of how the proxy feature works, refer to the example in the `/examples` folder. Defaults to `false`.
+
 
 #### Event: 'request'
 
