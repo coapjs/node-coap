@@ -58,8 +58,8 @@ The following example opens a UDP server and sends a
 CoAP message to it:
 
 ```js
-const coap        = require('coap')
-    , server      = coap.createServer()
+var coap        = require('coap')
+  , server      = coap.createServer()
 
 server.on('request', function(req, res) {
   res.end('Hello ' + req.url.split('/')[1] + '\n')
@@ -83,8 +83,8 @@ server.listen(function() {
 or on IPv6:
 
 ```js
-const coap        = require('coap')
-    , server      = coap.createServer({ type: 'udp6' })
+var coap        = require('coap')
+  , server      = coap.createServer({ type: 'udp6' })
 
 server.on('request', function(req, res) {
   res.end('Hello ' + req.url.split('/')[1] + '\n')
