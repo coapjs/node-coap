@@ -170,4 +170,30 @@ describe('proxy', function() {
           .end()
     })
   })
+
+  describe('with a non-proxied request', function() {
+    it('should call the handler as usual', function(done) {
+      var request = coap.request({
+        host: 'localhost',
+        port: port,
+        query: 'a=b'
+      })
+
+      target.on('request', function(req, res) {
+        console.log('should not get here')
+      })
+
+      server.on('request', function(req, res) {
+        res.end('Standard response')
+      })
+
+      request
+          .on('response', function(res) {
+            expect(res.payload.toString()).to.contain('Standard response');
+            done()
+          })
+          .end()
+    })
+  })
+
 })
