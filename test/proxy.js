@@ -196,4 +196,68 @@ describe('proxy', function() {
     })
   })
 
+  describe('with an observe request to a proxied server', function() {
+    it('should call the handler as usual', function(done) {
+      var request = coap.request({
+        host: 'localhost',
+        port: port,
+        observe: true,
+        query: 'a=b'
+      })
+
+      target.on('request', function(req, res) {
+        console.log('should not get here')
+      })
+
+      server.on('request', function(req, res) {
+        res.end('Standard response')
+      })
+
+      request
+        .on('response', function(res) {
+          expect(res.payload.toString()).to.contain('Standard response');
+          done()
+        })
+        .end()
+    })
+    it('should allow all the responses', function(done) {
+      var request = coap.request({
+          host: 'localhost',
+          port: port,
+          observe: true,
+          query: 'a=b'
+        }),
+        count = 0;
+
+      target.on('request', function(req, res) {
+        console.log('should not get here')
+      })
+
+      server.on('request', function(req, res) {
+        res.setOption('Observe', 1);
+        res.write('This is the first response');
+
+        setTimeout(function() {
+          res.setOption('Observe', 1);
+          res.write('And this is the second');
+        }, 200);
+      })
+
+      request
+        .on('response', function(res) {
+          res.on('data', function(chunk) {
+            count++;
+
+            if (count === 1) {
+              expect(chunk.toString('utf8')).to.contain('This is the first response');
+              clock.tick(300);
+            } else if (count === 2) {
+              expect(chunk.toString('utf8')).to.contain('And this is the second');
+              done()
+            }
+          })
+        })
+        .end()
+    })
+  })
 })
