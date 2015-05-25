@@ -55,6 +55,29 @@ describe('proxy', function() {
     client.send(message, 0, message.length, port, '127.0.0.1')
   }
 
+  function ssend(rsinfo, packet) {
+    var toSend = generate(packet)
+    target.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+  }
+
+  function sendObservation(message) {
+    target.on('request', function(req, res) {
+      res.setOption('Observe', 1);
+      res.write('Pruebas');
+
+      setTimeout(function() {
+        res.write('Pruebas2');
+        res.end('Last msg');
+      }, 500)
+    })
+
+    return request({
+      port: port
+      , observe: true
+      ,  proxyUri: 'coap://localhost:' + targetPort + '/the/path'
+    }).end()
+  }
+
   function fastForward(increase, max) {
     clock.tick(increase)
     if (increase < max)
@@ -71,6 +94,24 @@ describe('proxy', function() {
 
     target.on('request', function(req, res) {
       done()
+    })
+  })
+
+  it('should resend notifications in an observe connection', function(done) {
+    var counter = 0,
+        req;
+
+    req = sendObservation()
+
+    req.on('response', function(res) {
+      res.on('data', function(msg) {
+        if (counter === 2)
+          done()
+        else
+          counter++;
+
+        clock.tick(600);
+      })
     })
   })
 
