@@ -29,7 +29,7 @@ describe('IPv6', function() {
     }
 
     it('should receive a CoAP message specifying the type', function(done) {
-      server = coap.createServer({ type: 'udp6' }, done)
+      server = coap.createServer({ type: 'udp6' })
       server.listen(port, function() {
         send(generate())
         server.on('request', function(req, res) {

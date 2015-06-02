@@ -71,6 +71,16 @@ describe('server', function() {
     send(generate())
   })
 
+  it('should use the listener passed as a parameter in the creation', function(done) {
+    port = 5683
+    server.close()        // refresh
+    server = coap.createServer({}, function(req, res) {
+      done()
+    })
+    server.listen()
+    send(generate())
+  })
+
   it('should listen by default to 5683', function(done) {
     server.close() // we need to change port
     server = coap.createServer()
