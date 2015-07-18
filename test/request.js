@@ -614,6 +614,20 @@ describe('request', function() {
       fastForward(1000, 247 * 1000)
     })
 
+    it('should timeout after ~247 seconds', function(done) {
+      var req = doReq()
+
+      req.on('error', function() {})
+
+      req.on('timeout', function(err) {
+        expect(err).to.have.property('message', 'No reply in 247s')
+        expect(err).to.have.property('retransmitTimeout', 247)
+        done()
+      })
+
+      fastForward(1000, 247 * 1000)
+    })
+
     it('should retry four times before erroring', function(done) {
       var req = doReq()
         , messages = 0
