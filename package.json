@@ -1,6 +1,6 @@
 {
   "name": "coap",
-  "version": "0.10.3",
+  "version": "0.10.4",
   "description": "A CoAP library for node modelled after 'http'",
   "main": "index.js",
   "scripts": {
