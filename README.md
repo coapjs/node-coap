@@ -508,7 +508,6 @@ __node-coap__ is only possible due to the excellent work of the following contri
 <tr><th align="left">Nguyen Quoc Dinh</th><td><a href="https://github.com/nqd">GitHub/nqd</a></td><td><a href="https://twitter.com/nqdinh">Twitter/@nqdinh</a></td></tr>
 <tr><th align="left">Daniel Moran Jimenez</th><td><a href="https://github.com/dmoranj">GitHub/nqd</a></td><td><a href="https://twitter.com/erzeneca">Twitter/@erzeneca</a></td></tr>
 <tr><th align="left">Ignacio Martín</th><td><a href="https://github.com/neich">GitHub/neich</a></td><td><a href="https://twitter.com/natxupitxu">Twitter/@natxupitxu</a></td></tr>
-
 </tbody></table>
 
 ## LICENSE
