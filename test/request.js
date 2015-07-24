@@ -419,6 +419,43 @@ describe('request', function() {
     })
   })
 
+  it('should not crash with two CON responses with the same messageId & token', function (done) {
+    var req = request({
+      port: port
+      , confirmable: true
+    })
+
+    server.once('message', function (msg, rsinfo) {
+      var packet = parse(msg)
+        , toSend = generate({
+          token: packet.token
+          , messageId: packet.messageId
+          , payload: new Buffer('42')
+          , confirmable: true
+          , code: '2.00'
+        })
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+
+      toSend = generate({
+        token: packet.token
+        , messageId: packet.messageId
+        , payload: new Buffer('42')
+        , confirmable: true
+        , code: '2.00'
+      })
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+    })
+
+    req.on('response', function (res) {
+      res.pipe(bl(function (err, data) {
+        expect(data).to.eql(new Buffer('42'))
+        done()
+      }))
+    })
+
+    req.end()
+  })
+
   var formatsString = {
     'text/plain': new Buffer([0])
     , 'application/link-format': new Buffer([40])
