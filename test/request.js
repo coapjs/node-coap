@@ -356,6 +356,23 @@ describe('request', function() {
     })
   })
 
+
+  it('should attempt to normalize option case', function (done) {
+    var req = request({
+        port: port
+      })
+      , buf = new Buffer(3)
+
+    req.setOption('content-type', buf)
+    req.end()
+
+    server.on('message', function (msg) {
+      expect(parse(msg).options[0].name).to.eql('Content-Format')
+      expect(parse(msg).options[0].value).to.eql(buf)
+      done()
+    })
+  })
+
   it('should overwrite the option', function (done) {
     var req = request({
         port: port
