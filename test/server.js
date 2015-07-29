@@ -890,5 +890,20 @@ describe('server', function() {
         })
       })
     })
+
+    it('should only close once', function(done){
+      server.close(function(){
+        server.close(done)
+      })
+    })
+
+    it('should not overwrite existing socket', function(done){
+      var initial_sock = server._sock
+      server.listen(server._port+1, function(err){
+        expect(err.message).to.eql('Already listening')
+        expect(server._sock).to.eql(initial_sock)
+        done()
+      })
+    })
   })
 })
