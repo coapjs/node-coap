@@ -208,6 +208,34 @@ describe('end-to-end', function() {
     })
   })
 
+  it('should allow encoding with \'Content-Format\'', function(done) {
+    var req = coap.request('coap://localhost:' + port)
+
+    req.setOption('Content-Format', 'application/json; charset=utf8')
+    req.end()
+
+    server.on('request', function(req) {
+      expect(req.options[0].name).to.equal('Content-Format')
+      expect(req.options[0].value).to.equal('application/json')
+      done()
+    })
+  })
+
+  it('should provide a writeHead() method', function(done) {
+    var req = coap.request('coap://localhost:' + port)
+    req.end();
+    req.on('response', function(res) {
+      expect(res.headers['Content-Format']).to.equal('application/json')
+      done()
+    })
+
+    server.on('request', function(req, res) {
+      res.writeHead(200, {'Content-Format': 'application/json'})
+      res.write(JSON.stringify({}))
+      res.end()
+    })
+  })
+
   it('should set and parse \'Location-Path\'', function(done) {
     var req = coap.request({
         port: port
