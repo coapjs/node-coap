@@ -309,7 +309,8 @@ Returns a Reset COAP Message to the sender. The RST message will appear as an em
 reset flag set to `true` to the caller. This action ends the interaction with the caller.
 
 #### message.writeHead(code, headers)
-Functions somewhat like `http`'s `writeHead()` function.  If `code` is does not match the CoAP code mask of `#.##`, it is coerced into this mask.  `headers` is an object with keys being the header names, and values being the header values.   
+Functions somewhat like `http`'s `writeHead()` function.  If `code` is does not match the CoAP code mask of `#.##`, it is coerced into this mask.  `headers` is an object with keys being the header names, and values being the header values.
+
 -------------------------------------------------------
 <a name="incoming"></a>
 ### IncomingMessage
