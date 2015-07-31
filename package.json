@@ -35,6 +35,7 @@
   },
   "dependencies": {
     "bl": "~0.9.0",
+    "capitalize": "^1.0.0",
     "coap-packet": "~0.1.12",
     "fastseries": "^1.1.0",
     "lru-cache": "~2.5.0",
