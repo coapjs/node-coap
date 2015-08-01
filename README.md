@@ -42,8 +42,6 @@ If you need a command line interface for CoAP, check out
 
 **node-coap** is an **OPEN Open Source Project**, see the <a href="#contributing">Contributing</a> section to find out what this means.
 
-This has been tested only on node v0.10.
-
 <a name="install"></a>
 ## Installation
 
