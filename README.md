@@ -508,7 +508,7 @@ __node-coap__ is only possible due to the excellent work of the following contri
 <table><tbody>
 <tr><th align="left">Matteo Collina</th><td><a href="https://github.com/mcollina">GitHub/mcollina</a></td><td><a href="https://twitter.com/matteocollina">Twitter/@matteocollina</a></td></tr>
 <tr><th align="left">Nguyen Quoc Dinh</th><td><a href="https://github.com/nqd">GitHub/nqd</a></td><td><a href="https://twitter.com/nqdinh">Twitter/@nqdinh</a></td></tr>
-<tr><th align="left">Daniel Moran Jimenez</th><td><a href="https://github.com/dmoranj">GitHub/nqd</a></td><td><a href="https://twitter.com/erzeneca">Twitter/@erzeneca</a></td></tr>
+<tr><th align="left">Daniel Moran Jimenez</th><td><a href="https://github.com/dmoranj">GitHub/dmoranj</a></td><td><a href="https://twitter.com/erzeneca">Twitter/@erzeneca</a></td></tr>
 <tr><th align="left">Ignacio Martín</th><td><a href="https://github.com/neich">GitHub/neich</a></td><td><a href="https://twitter.com/natxupitxu">Twitter/@natxupitxu</a></td></tr>
 <tr><th align="left">Christopher Hiller</th><td><a href="https://github.com/boneskull">GitHub/boneskull</a></td><td><a href="https://twitter.com/b0neskull">Twitter/@b0neskull</a></td></tr>
 </tbody></table>
