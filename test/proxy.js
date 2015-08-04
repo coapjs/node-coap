@@ -45,9 +45,21 @@ describe('proxy', function() {
 
   afterEach(function() {
     clock.restore()
-    client.close()
-    server.close()
-    target.close()
+    try {
+      client.close()
+    } catch (ignored) {
+      // ignored
+    }
+    try {
+      server.close()
+    } catch (ignored) {
+      // ignored
+    }
+    try {
+      target.close()
+    } catch (ignored) {
+      // ignored
+    }
     tk.reset()
   })
 
