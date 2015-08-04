@@ -373,10 +373,10 @@ describe('end-to-end', function() {
                 , agent:agent
               }).end()
 
-     server.on('request', function(req, res){
-	res.end('hello');
-	expect(req.rsinfo.port).eql(3636);
-	done();
-    });
+      server.on('request', function(req, res){
+        res.end('hello');
+        expect(req.rsinfo.port).eql(3636);
+        done();
+      });
   });
 })
