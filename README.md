@@ -130,6 +130,7 @@ first ten come from different ports.
   * <a href="#observeread"><code>ObserveReadStream</b></code></a>
   * <a href="#observewrite"><code>ObserveWriteStream</b></code></a>
   * <a href="#registerOption"><code>coap.<b>registerOption()</b></code></a>
+  * <a href="#ignoreOption"><code>coap.<b>ignoreOption()</b></code></a>
   * <a href="#registerFormat"><code>coap.<b>registerFormat()</b></code></a>
   * <a href="#agent"><code>coap.<b>Agent</b></code></a>
   * <a href="#globalAgent"><code>coap.<b>globalAgent</b></code></a>
@@ -438,6 +439,13 @@ Register a new option to be converted to string and added to the
 `message.headers`.
 `toBinary` is a function that accept a string and returns a `Buffer`.
 `toString` is a function that accept a `Buffer` and returns a `String`.
+
+-------------------------------------------------------
+<a name="ignoreOption"></a>
+### coap.ignoreOption(name)
+
+Explicitly ignore an option; useful for compatibility with `http`-based
+modules.
 
 -------------------------------------------------------
 <a name="registerFormat"></a>
