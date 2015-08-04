@@ -364,19 +364,30 @@ describe('end-to-end', function() {
     })
   })
 
-  it("should use the port binded in the agent", function(done){
-    var agent = new coap.Agent({port: 3636})
-      , req = coap.request({
-                  port:port
-                , method:'GET'
-                , pathname :'a'
-                , agent:agent
-              }).end()
+  it("should use the port binded in the agent", function(done) {
+    var agent = new coap.Agent({ port: 3636 })
+        , req = coap.request({port: port
+          , method: 'GET'
+          , pathname: 'a'
+          , agent: agent
+        }).end()
 
-      server.on('request', function(req, res){
-        res.end('hello');
-        expect(req.rsinfo.port).eql(3636);
-        done();
-      });
-  });
+    server.on('request', function(req, res) {
+      res.end('hello');
+      expect(req.rsinfo.port).eql(3636);
+      done();
+    });
+  })
+
+  it('should ignore ignored options', function() {
+    var req = coap.request('coap://localhost:' + port)
+    req.setOption('Cache-Control', 'private')
+    req.end()
+
+    server.on('request', function(req) {
+      expect(req.headers).not.to.have.property('Cache-Control')
+      done()
+    })
+
+  })
 })

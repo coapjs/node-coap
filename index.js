@@ -45,5 +45,6 @@ module.exports.globalAgentIPv6 = globalAgentV6
 
 module.exports.registerOption = optionsConv.registerOption
 module.exports.registerFormat = optionsConv.registerFormat
+module.exports.ignoreOption = optionsConv.ignoreOption
 
 module.exports.parameters = parameters
