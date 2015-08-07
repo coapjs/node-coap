@@ -698,6 +698,23 @@ describe('server', function() {
     })
   })
 
+  describe('close', function() {
+    it('should emit "close" event when closed', function() {
+      var stub = sinon.stub()
+      server.on('close', stub)
+      server.close()
+      expect(stub.callCount).to.equal(1)
+    })
+
+    it('should only emit "close" if the server has not already been closed', function() {
+      var stub = sinon.stub()
+      server.on('close', stub)
+      server.close()
+      server.close()
+      expect(stub.callCount).to.equal(1)
+    })
+  })
+
   describe('observe', function() {
     var token = new Buffer(3)
 
