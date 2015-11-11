@@ -172,10 +172,10 @@ If it is an object:
 - `proxyUri`: adds the Proxy-Uri option to the request, so if the request is sent to a
   proxy (or a server with proxy features) the request will be forwarded to the selected URI.
   The expected value is the URI of the target. E.g.: 'coap://192.168.5.13:6793'
-- `multicast`: If set to `true`, forces request to be multicast. Several `response` events
+- `multicast`: If set to `true`, it forces request to be multicast. Several `response` events
   will be emitted for each received response. It's user's responsibility to set proper multicast `host` parameter
   in request configuration. Default `false`.
-- `multicastTimout`: time to wait for multicast reponses in milliseconds. It is only applicable in case if `multicast` is `true`. Default `20000 ms`.
+- `multicastTimeout`: time to wait for multicast reponses in milliseconds. It is only applicable in case if `multicast` is `true`. Default `20000 ms`.
 
 
 `coap.request()` returns an instance of <a
