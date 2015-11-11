@@ -923,4 +923,43 @@ describe('server', function() {
       })
     })
   })
+
+  describe('multicast', function() {
+    var port = nextPort()
+    , reqCount = 0
+    , reqCb = function(done) {
+      if (++reqCount == 2) {
+        done()
+      }
+    }
+
+    it('receive CoAp message', function(done) {
+
+      var server = coap.createServer({
+        multicastAddress: '224.0.1.2'
+      })
+      , server2 = coap.createServer({
+        multicastAddress: '224.0.1.2'
+      })
+
+      server.listen(port)
+      server2.listen(port)
+
+      server.on('request', function(msg) {
+        reqCb(done)
+      })
+
+      server2.on('request', function(msg) {
+        reqCb(done)
+      })
+
+      var req = request({
+        host: '224.0.1.2'
+        , port: port
+        , multicast: true
+      }).end()
+    })
+  
+  })
+
 })

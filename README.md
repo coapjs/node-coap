@@ -174,7 +174,7 @@ If it is an object:
   The expected value is the URI of the target. E.g.: 'coap://192.168.5.13:6793'
 - `multicast`: If set to `true`, forces request to be multicast. Several `response` events
   will be emitted for each received response. It's user's responsibility to set proper multicast `host` parameter
-  in request configuration. Default 'false'.
+  in request configuration. Default `false`.
 - `multicastTimout`: time to wait for multicast reponses in milliseconds. It is only applicable in case if `multicast` is `true`. Default `20000 ms`.
 
 
@@ -216,6 +216,10 @@ The constructor can be given an optional options object, containing one of the f
   to `udp4`.
 * `proxy`: indicates that the server should behave like a proxy for incoming requests containing the `Proxy-Uri` header.
   An example of how the proxy feature works, refer to the example in the `/examples` folder. Defaults to `false`.
+* `multicastAddress`: Optional. Use this in order to force server to listen on multicast address
+* `multicastInterface`: Optional. Use this in order to force server to listen on multicast interface. This is only applicable 
+  if `multicastAddress` is set. If absent, server will try to listen `multicastAddress` on all available interfaces
+  
 
 
 #### Event: 'request'
