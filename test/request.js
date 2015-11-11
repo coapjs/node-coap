@@ -1057,7 +1057,12 @@ describe('request', function() {
 
     beforeEach(function (done) {
       server2 = dgram.createSocket('udp4')
-      server2.bind(port, done)
+      server2.bind(port, function ()
+      {
+        server2.addMembership('224.0.1.187')
+        server.addMembership('224.0.1.187')
+        done()
+      })
     })
 
     afterEach(function () {
