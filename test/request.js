@@ -1055,19 +1055,6 @@ describe('request', function() {
 
   describe('multicast', function () {
 
-    beforeEach(function (done) {
-      server2 = dgram.createSocket('udp4')
-      server2.bind(port, function ()
-      {
-        server2.addMembership('224.0.1.187')
-        server.addMembership('224.0.1.187')
-        done()
-      })
-    })
-
-    afterEach(function () {
-    })
-
     function doReq() {
       return request({
         host: '224.0.0.1'
@@ -1086,7 +1073,7 @@ describe('request', function() {
       });
     })
 
-    it('should be responsed with the same token (1 server)', function (done) {
+    it('should be responsed with the same token', function (done) {
       var req = doReq()
       , token
 
@@ -1112,102 +1099,7 @@ describe('request', function() {
         expect(packet.token).to.eql(token)
         done()
       })
-    })
 
-    it('should be responsed with the same token (2 servers)', function (done) {
-      var req = doReq()
-      , token
-      , responseCout = 0
-
-      server.on('message', function(msg, rsinfo) {
-        var packet = parse(msg)
-        token = packet.token
-
-        var toSend = generate({
-          messageId: packet.messageId
-          , token: packet.token
-          , payload: new Buffer('42')
-          , ack: true
-          , code: '2.00'
-        })
-
-        server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
-      });
-
-      server2.on('message', function(msg, rsinfo) {
-        var packet = parse(msg)
-        token = packet.token
-
-        var toSend = generate({
-          messageId: packet.messageId
-          , token: packet.token
-          , payload: new Buffer('42')
-          , ack: true
-          , code: '2.00'
-        })
-
-        server2.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
-      });
-
-      req.on('response', function (res) {
-        var packet = res._packet
-        expect(packet).to.have.property('confirmable', false)
-        expect(packet).to.have.property('reset', false)
-        expect(packet.token).to.eql(token)
-
-        if (++responseCout == 2) {
-          done()
-        }
-      })
-
-    })
-
-    it('should be responsed with the same token (2 servers, 1 correct response)', function (done) {
-      var req = doReq()
-      , token
-      , responseCout = 0
-
-      server.on('message', function(msg, rsinfo) {
-        var packet = parse(msg)
-        token = packet.token
-
-        var toSend = generate({
-          messageId: packet.messageId
-          , token: packet.token
-          , payload: new Buffer('42')
-          , ack: true
-          , code: '2.00'
-        })
-
-        server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
-      });
-
-      server2.on('message', function(msg, rsinfo) {
-        var packet = parse(msg)
-        token = packet.token
-        token[0] ++;
-
-        var toSend = generate({
-          messageId: packet.messageId
-          , token: packet.token
-          , payload: new Buffer('42')
-          , ack: true
-          , code: '2.00'
-        })
-
-        server2.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
-      });
-
-      req.on('response', function (res) {
-        var packet = res._packet
-        expect(packet).to.have.property('confirmable', false)
-        expect(packet).to.have.property('reset', false)
-        expect(packet.token).to.eql(token)
-
-        if (++responseCout == 1) {
-          done()
-        }
-      })
     })
 
   })
