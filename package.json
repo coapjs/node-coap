@@ -10,9 +10,6 @@
     "type": "git",
     "url": "https://github.com/mcollina/node-coap.git"
   },
-  "pre-commit": [
-    "test"
-  ],
   "keywords": [
     "coap",
     "m2m",

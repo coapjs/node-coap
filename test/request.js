@@ -1051,4 +1051,58 @@ describe('request', function() {
 
 
   })
+
+
+  describe('multicast', function () {
+
+    function doReq() {
+      return request({
+        host: '224.0.0.1'
+        , port: port
+        , multicast: true
+      }).end()
+    }
+
+    it('should be non-confirmable', function (done) {
+      var req = doReq()
+
+      server.on('message', function(msg, rsinfo) {
+        var packet = parse(msg)
+        expect(packet).to.have.property('confirmable', false)
+        done()
+      });
+    })
+
+    it('should be responsed with the same token', function (done) {
+      var req = doReq()
+      , token
+
+      server.on('message', function(msg, rsinfo) {
+        var packet = parse(msg)
+        token = packet.token
+
+        var toSend = generate({
+          messageId: packet.messageId
+          , token: packet.token
+          , payload: new Buffer('42')
+          , ack: true
+          , code: '2.00'
+        })
+
+        server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+      });
+
+      req.on('response', function (res) {
+        var packet = res._packet
+        expect(packet).to.have.property('confirmable', false)
+        expect(packet).to.have.property('reset', false)
+        expect(packet.token).to.eql(token)
+        done()
+      })
+
+    })
+
+  })
+
+
 })
