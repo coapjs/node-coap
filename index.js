@@ -6,33 +6,35 @@
  * See the included LICENSE file for more details.
  */
 
-var optionsConv     = require('./lib/option_converter')
-  , Server          = require('./lib/server')
-  , Agent           = require('./lib/agent')
-  , parameters      = require('./lib/parameters')
-  , net             = require('net')
-  , URL             = require('url')
-  , globalAgent     = new Agent({ type: 'udp4' })
-  , globalAgentV6   = new Agent({ type: 'udp6' })
+var optionsConv = require('./lib/option_converter')
+var Server = require('./lib/server')
+var Agent = require('./lib/agent')
+var parameters = require('./lib/parameters')
+var net = require('net')
+var URL = require('url')
+var globalAgent = new Agent({ type: 'udp4' })
+var globalAgentV6 = new Agent({ type: 'udp6' })
 
-module.exports.request = function(url) {
-  var agent, req, ipv6
+module.exports.request = function (url) {
+  var agent, ipv6
 
-  if (typeof url === 'string')
+  if (typeof url === 'string') {
     url = URL.parse(url)
+  }
 
   ipv6 = net.isIPv6(url.hostname || url.host)
 
-  if (url.agent)
+  if (url.agent) {
     agent = url.agent
-  else if (url.agent === false && !ipv6)
+  } else if (url.agent === false && !ipv6) {
     agent = new Agent({ type: 'udp4' })
-  else if (url.agent === false && ipv6)
+  } else if (url.agent === false && ipv6) {
     agent = new Agent({ type: 'udp6' })
-  else if (ipv6)
+  } else if (ipv6) {
     agent = globalAgentV6
-  else
+  } else {
     agent = globalAgent
+  }
 
   return agent.request(url)
 }

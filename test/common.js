@@ -6,10 +6,9 @@
  * See the included LICENSE file for more details.
  */
 
-global.expect = require("chai").expect
+global.expect = require('chai').expect
 
 var portCounter = 9042
-global.nextPort = function() {
+global.nextPort = function () {
   return ++portCounter
 }
-
