@@ -23,6 +23,19 @@ describe('cache', function() {
     expect(result).to.eql(value)
   })
 
+  it('itemcount', function() {
+    //given
+    var key = 'key'
+    var value = 2390
+    cache.set(key, value)
+
+    //when
+    var result = cache.itemCount()
+
+    //then
+    expect(result).to.eql(1)
+  })
+
   it('get/peek value', function() {
     //given
     var key = 'key'
