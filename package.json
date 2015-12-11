@@ -28,16 +28,17 @@
   "author": "Matteo Collina <hello@matteocollina.com>",
   "license": "MIT",
   "devDependencies": {
-    "pre-commit": "0.0.9",
     "chai": "~1.9.1",
     "mocha": "~2.3.4",
-    "timekeeper": "0.0.4",
-    "sinon": "~1.7.3"
+    "pre-commit": "0.0.9",
+    "sinon": "~1.7.3",
+    "timekeeper": "0.0.4"
   },
   "dependencies": {
     "bl": "~0.9.0",
     "capitalize": "^1.0.0",
     "coap-packet": "~0.1.12",
+    "debug": "^2.2.0",
     "fastseries": "^1.1.0",
     "lru-cache": "~2.5.0",
     "readable-stream": "~1.0.33"
