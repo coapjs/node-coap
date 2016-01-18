@@ -1,6 +1,6 @@
 {
   "name": "coap",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "description": "A CoAP library for node modelled after 'http'",
   "main": "index.js",
   "scripts": {
@@ -13,6 +13,10 @@
   "pre-commit": [
     "test"
   ],
+  "engines": {
+    "node": ">= 0.10",
+    "iojs": ">= 1"
+  },
   "keywords": [
     "coap",
     "m2m",
@@ -34,7 +38,7 @@
     "sinon": "~1.7.3"
   },
   "dependencies": {
-    "bl": "~0.9.0",
+    "bl": "~1.0.0",
     "capitalize": "^1.0.0",
     "coap-packet": "~0.1.12",
     "fastseries": "^1.1.0",
