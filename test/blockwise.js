@@ -53,7 +53,6 @@ describe('blockwise2', function() {
     })
     .on('response', function(res) {
       var blockwiseResponse = false
-      console.log(JSON.stringify(res.options));
       for (var i in res.options) {
         if (res.options[i].name == 'Block2') {
           blockwiseResponse = true
