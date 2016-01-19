@@ -18,6 +18,15 @@ describe('end-to-end', function() {
     server.listen(port, done)
   })
 
+/*  afterEach(function(done) {
+    server.close(done)
+    server.on('error', function() {})
+  })*/
+
+  process.on('uncaughtException', function (err) {
+    console.log('Caught exception: ' + err);
+  });
+
   it('should receive a request at a path with some query', function(done) {
     coap.request('coap://localhost:'+port + '/abcd/ef/gh/?foo=bar&beep=bop').end()
     server.on('request', function(req) {
@@ -341,7 +350,7 @@ describe('end-to-end', function() {
                 }).end()
       , req2
       , first
-     
+
 
     server.on('request', function(req, res) {
       res.end('hello')

@@ -4,7 +4,8 @@
   "description": "A CoAP library for node modelled after 'http'",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --bail --reporter spec 2>&1"
+    "test": "./node_modules/.bin/mocha --bail --reporter spec 2>&1",
+    "testnobail": "./node_modules/.bin/mocha --reporter spec 2>&1"
   },
   "repository": {
     "type": "git",
@@ -37,6 +38,7 @@
     "bl": "~1.0.0",
     "capitalize": "^1.0.0",
     "coap-packet": "~0.1.12",
+    "debug": "^2.2.0",
     "fastseries": "^1.7.0",
     "lru-cache": "~4.0.0",
     "readable-stream": "~2.0.5"
