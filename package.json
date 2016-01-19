@@ -38,7 +38,7 @@
     "capitalize": "^1.0.0",
     "coap-packet": "~0.1.12",
     "fastseries": "^1.7.0",
-    "lru-cache": "~3.2.0",
-    "readable-stream": "~1.0.33"
+    "lru-cache": "~4.0.0",
+    "readable-stream": "~2.0.5"
   }
 }
