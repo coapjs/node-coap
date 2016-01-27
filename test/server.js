@@ -951,7 +951,7 @@ describe('server', function() {
 
 })
 
-describe.only('piggyback timing option', function() {
+describe('piggyback timing option', function() {
   it('send message', function(done) {
     var piggyBackTimeout = 42
 
