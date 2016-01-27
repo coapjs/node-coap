@@ -721,12 +721,12 @@ describe('server', function() {
     function doObserve(method) {
       if (!method)
         method = 'GET'
-      
-      send(generate({ 
+
+      send(generate({
           code: method
         , confirmable: true
         , token: token
-        , options: [{ 
+        , options: [{
               name: 'Observe'
             , value: new Buffer(0)
           }]
@@ -817,7 +817,7 @@ describe('server', function() {
           done()
         })
       })
-      
+
       fastForward(100, 248 * 1000)
     })
 
@@ -832,7 +832,7 @@ describe('server', function() {
           done()
         })
       })
-      
+
       client.on('message', function(msg) {
         var packet = parse(msg)
         send(generate({
@@ -946,7 +946,20 @@ describe('server', function() {
         , multicast: true
       }).end()
     })
-  
+
+  })
+
+})
+
+describe.only('piggyback timing option', function() {
+  it('send message', function(done) {
+    var piggyBackTimeout = 42
+
+    var server = coap.createServer({ piggybackReplyMs: piggyBackTimeout })
+
+    expect(server._options.piggybackReplyMs).to.eql(piggyBackTimeout)
+    server.close()
+    done()
   })
 
 })
