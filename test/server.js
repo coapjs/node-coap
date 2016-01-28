@@ -952,13 +952,63 @@ describe('server', function() {
 })
 
 describe('piggyback timing option', function() {
-  it('send message', function(done) {
-    var piggyBackTimeout = 42
 
-    var server = coap.createServer({ piggybackReplyMs: piggyBackTimeout })
+  var server
+  var port
+  var client
+  var clientPort
 
-    expect(server._options.piggybackReplyMs).to.eql(piggyBackTimeout)
+  beforeEach(function(done) {
+    port = nextPort()
+    clientPort = nextPort()
+    client = dgram.createSocket('udp4')
+    client.bind(clientPort, done)
+  })
+
+  afterEach(function() {
+    client.close()
     server.close()
+  })
+
+  function send(message) {
+    client.send(message, 0, message.length, port, '127.0.0.1')
+  }
+
+
+  it('use custom piggyBackTimeout time', function(done) {
+    //GIVEN
+    var piggyBackTimeout = 10
+    var messages = 0;
+    server = coap.createServer({ piggybackReplyMs: piggyBackTimeout })
+    server.listen(port)
+    server.on('request', function(req, res) {
+      res.end('42')
+    })
+    client.on('message', function(msg) {
+      messages++
+    })
+
+    //WHEN
+    send(new Buffer(3))
+
+    //THEN
+    setTimeout(function() {
+      expect(messages).to.eql(1)
+      expect(server._options.piggybackReplyMs).to.eql(piggyBackTimeout)
+      done()
+    }, piggyBackTimeout + 10)
+  })
+
+
+  it('use default piggyBackTimeout time (50ms)', function(done) {
+    server = coap.createServer()
+    expect(server._options.piggybackReplyMs).to.eql(50)
+    done()
+  })
+
+  it('ignore invalid piggyBackTimeout time and use default (50ms)', function(done) {
+    server = coap.createServer({ piggybackReplyMs: 'foo' })
+    expect(server._options.piggybackReplyMs).to.eql(50)
     done()
   })
 
