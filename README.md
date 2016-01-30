@@ -219,8 +219,8 @@ The constructor can be given an optional options object, containing one of the f
 * `multicastAddress`: Optional. Use this in order to force server to listen on multicast address
 * `multicastInterface`: Optional. Use this in order to force server to listen on multicast interface. This is only applicable 
   if `multicastAddress` is set. If absent, server will try to listen `multicastAddress` on all available interfaces
-  
-
+* `piggybackReplyMs`: set the number of milliseconds to wait for a
+  biggyback response. Default 50.
 
 #### Event: 'request'
 
