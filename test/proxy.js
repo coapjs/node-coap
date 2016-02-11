@@ -112,7 +112,7 @@ describe('proxy', function() {
   it('should resend notifications in an observe connection', function(done) {
     var counter = 0,
         req;
-
+    clock.restore()
     req = sendObservation()
 
     req.on('response', function(res) {
@@ -144,6 +144,12 @@ describe('proxy', function() {
   })
 
   it('should return the target response to the original requestor', function(done) {
+    var counter = 0;
+    clock.restore()
+    setTimeout( function() {      
+      done();
+    }, 300 );
+    
     send(generate({
       options: [{
         name: 'Proxy-Uri'
@@ -152,13 +158,14 @@ describe('proxy', function() {
     }))
 
     target.on('request', function(req, res) {
+      counter++;
+      expect(counter).to.eql(1);   
       res.end('The response')
     })
 
     client.on('message', function(msg) {
       var package = parse(msg)
       expect(package.payload.toString()).to.eql('The response')
-      done()
     })
   })
 
