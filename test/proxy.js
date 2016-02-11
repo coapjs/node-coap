@@ -112,7 +112,7 @@ describe('proxy', function() {
   it('should resend notifications in an observe connection', function(done) {
     var counter = 0,
         req;
-
+    clock.restore()
     req = sendObservation()
 
     req.on('response', function(res) {
