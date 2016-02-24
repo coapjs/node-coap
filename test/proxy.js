@@ -43,24 +43,26 @@ describe('proxy', function() {
     })
   })
 
-  afterEach(function() {
+  afterEach(function(done) {
+    function closeSocket(socketcToClose, callback) {
+      try {
+        socketToClose.on('close', callback)
+        socketcToClose.close()
+      } catch (ignored) {
+        callback()
+      }
+    }
+
     clock.restore()
-    try {
-      client.close()
-    } catch (ignored) {
-      // ignored
-    }
-    try {
-      server.close()
-    } catch (ignored) {
-      // ignored
-    }
-    try {
-      target.close()
-    } catch (ignored) {
-      // ignored
-    }
-    tk.reset()
+
+    closeSocket(client, function() {
+      closeSocket(server, function() {
+        closeSocket(target, function() {
+          tk.reset()
+          done()
+        })
+      })
+    });
   })
 
   function send(message) {
@@ -70,24 +72,6 @@ describe('proxy', function() {
   function ssend(rsinfo, packet) {
     var toSend = generate(packet)
     target.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
-  }
-
-  function sendObservation(message) {
-    target.on('request', function(req, res) {
-      res.setOption('Observe', 1);
-      res.write('Pruebas');
-
-      setTimeout(function() {
-        res.write('Pruebas2');
-        res.end('Last msg');
-      }, 500)
-    })
-
-    return request({
-      port: port
-      , observe: true
-      ,  proxyUri: 'coap://localhost:' + targetPort + '/the/path'
-    }).end()
   }
 
   function fastForward(increase, max) {
@@ -112,6 +96,26 @@ describe('proxy', function() {
   it('should resend notifications in an observe connection', function(done) {
     var counter = 0,
         req;
+
+    clock.restore()
+
+    function sendObservation(message) {
+      target.on('request', function(req, res) {
+        res.setOption('Observe', 1);
+        res.write('Pruebas');
+
+        setTimeout(function() {
+          res.write('Pruebas2');
+          res.end('Last msg');
+        }, 500)
+      })
+
+      return request({
+        port: port
+        , observe: true
+        ,  proxyUri: 'coap://localhost:' + targetPort + '/the/path'
+      }).end()
+    }
 
     req = sendObservation()
 
