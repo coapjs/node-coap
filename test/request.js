@@ -479,6 +479,7 @@ describe('request', function() {
     , 'application/octet-stream': new Buffer([42])
     , 'application/exi': new Buffer([47])
     , 'application/json': new Buffer([50])
+    , 'application/cbor': new Buffer([60])
   }
 
   describe('with the \'Content-Format\' header in the outgoing message', function () {
