@@ -137,7 +137,7 @@ describe('end-to-end', function() {
   describe('formats', function() {
     var formats = [ 'text/plain', 'application/link-format',
       'application/xml', 'application/octet-stream',
-      'application/exi', 'application/json' ]
+      'application/exi', 'application/json', 'application/cbor' ]
 
     ;['Accept', 'Content-Format'].forEach(function(option) {
       formats.forEach(function(format) {
