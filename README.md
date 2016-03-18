@@ -135,6 +135,8 @@ first ten come from different ports.
   * <a href="#agent"><code>coap.<b>Agent</b></code></a>
   * <a href="#globalAgent"><code>coap.<b>globalAgent</b></code></a>
   * <a href="#globalAgentIPv6"><code>coap.<b>globalAgentIPv6</b></code></a>
+  * <a href="#updateTiming"><code>coap.<b>updateTiming</b></code></a>
+  * <a href="#defaultTiming"><code>coap.<b>defaultTiming</b></code></a>
 
 -------------------------------------------------------
 <a name="request"></a>
@@ -217,7 +219,7 @@ The constructor can be given an optional options object, containing one of the f
 * `proxy`: indicates that the server should behave like a proxy for incoming requests containing the `Proxy-Uri` header.
   An example of how the proxy feature works, refer to the example in the `/examples` folder. Defaults to `false`.
 * `multicastAddress`: Optional. Use this in order to force server to listen on multicast address
-* `multicastInterface`: Optional. Use this in order to force server to listen on multicast interface. This is only applicable 
+* `multicastInterface`: Optional. Use this in order to force server to listen on multicast interface. This is only applicable
   if `multicastAddress` is set. If absent, server will try to listen `multicastAddress` on all available interfaces
 * `piggybackReplyMs`: set the number of milliseconds to wait for a
   biggyback response. Default 50.
@@ -226,7 +228,7 @@ The constructor can be given an optional options object, containing one of the f
 
 `function (request, response) { }`
 
-Emitted each time there is a request. 
+Emitted each time there is a request.
 `request` is an instance of <a
 href='#incoming'><code>IncomingMessage</code></a> and `response` is
 an instance of <a
@@ -418,7 +420,7 @@ Information about the socket used for the communication (address and port).
 <a name="observewrite"></a>
 ### ObserveWriteStream
 
-An `ObserveWriteStream` object is 
+An `ObserveWriteStream` object is
 emitted by the `coap.createServer` `'response'` event as a response
 object.
 It may be used to set response status, headers and stream changing data
@@ -502,6 +504,30 @@ The default [`Agent`](#agent) for IPv4.
 ### coap.globalAgentIPv6
 
 The default [`Agent`](#agent) for IPv6.
+
+-------------------------------------------------------
+<a name="updateTiming"></a>
+### coap.updateTiming
+
+You can update the CoAP timing settings, take a look at the examples:
+
+```js
+var coapTiming = {
+  ackTimeout:0.25,
+  ackRandomFactor: 1.0,
+  maxRetransmit: 3,
+  probingRate: 1,
+  maxLatency: 2,
+  piggybackReplyMs: 10
+};
+coap.updateTiming(coapTiming);
+```
+
+-------------------------------------------------------
+<a name="defaultTiming"></a>
+### coap.defaultTiming
+
+Reset the CoAP timings to the default values
 
 <a name="contributing"></a>
 ## Contributing
