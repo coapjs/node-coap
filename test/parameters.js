@@ -24,7 +24,6 @@ describe('Parameters', function() {
       ackTimeout: 1,
       ackRandomFactor: 2,
       maxRetransmit: 3,
-      probingRate: 4,
       maxLatency: 5,
       piggybackReplyMs: 6
     };

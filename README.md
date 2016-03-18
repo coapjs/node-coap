@@ -516,7 +516,6 @@ var coapTiming = {
   ackTimeout:0.25,
   ackRandomFactor: 1.0,
   maxRetransmit: 3,
-  probingRate: 1,
   maxLatency: 2,
   piggybackReplyMs: 10
 };
