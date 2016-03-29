@@ -48,3 +48,5 @@ module.exports.registerFormat = optionsConv.registerFormat
 module.exports.ignoreOption = optionsConv.ignoreOption
 
 module.exports.parameters = parameters
+module.exports.updateTiming = parameters.refreshTiming
+module.exports.defaultTiming = parameters.defaultTiming
