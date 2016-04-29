@@ -952,7 +952,7 @@ describe('server', function() {
 
 })
 
-describe('piggyback timing option', function() {
+describe('validate custom server options', function() {
 
   var server
   var port
@@ -975,6 +975,12 @@ describe('piggyback timing option', function() {
     client.send(message, 0, message.length, port, '127.0.0.1')
   }
 
+  function nonConfirmRequest() {
+    return request({
+      port: port
+      , confirmable: true
+    }).end()
+   }
 
   it('use custom piggyBackTimeout time', function(done) {
     //GIVEN
@@ -1013,4 +1019,27 @@ describe('piggyback timing option', function() {
     done()
   })
 
+  it('use default sendAcksForNonConfirmablePackets', function(done) {
+    server = coap.createServer()
+    expect(server._options.sendAcksForNonConfirmablePackets).to.eql(true)
+    done()
+  })
+
+  it('define sendAcksForNonConfirmablePackets: true', function(done) {
+    server = coap.createServer({ sendAcksForNonConfirmablePackets: true })
+    expect(server._options.sendAcksForNonConfirmablePackets).to.eql(true)
+    done()
+  })
+
+  it('define sendAcksForNonConfirmablePackets: false', function(done) {
+    server = coap.createServer({ sendAcksForNonConfirmablePackets: false })
+    expect(server._options.sendAcksForNonConfirmablePackets).to.eql(false)
+    done()
+  })
+
+  it('define invalid sendAcksForNonConfirmablePackets setting', function(done) {
+    server = coap.createServer({ sendAcksForNonConfirmablePackets: 'moo' })
+    expect(server._options.sendAcksForNonConfirmablePackets).to.eql(true)
+    done()
+  })
 })
