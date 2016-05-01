@@ -223,6 +223,7 @@ The constructor can be given an optional options object, containing one of the f
   if `multicastAddress` is set. If absent, server will try to listen `multicastAddress` on all available interfaces
 * `piggybackReplyMs`: set the number of milliseconds to wait for a
   biggyback response. Default 50.
+* `sendAcksForNonConfirmablePackets`: Optional. Use this to suppress sending ACK messages for non-confirmable packages
 
 #### Event: 'request'
 

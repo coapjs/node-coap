@@ -976,7 +976,6 @@ describe('validate custom server options', function() {
   }
 
   it('use custom piggyBackTimeout time', function(done) {
-    //GIVEN
     var piggyBackTimeout = 10
     var messages = 0;
     server = coap.createServer({ piggybackReplyMs: piggyBackTimeout })
@@ -987,11 +986,7 @@ describe('validate custom server options', function() {
     client.on('message', function(msg) {
       messages++
     })
-
-    //WHEN
     send(new Buffer(3))
-
-    //THEN
     setTimeout(function() {
       expect(messages).to.eql(1)
       expect(server._options.piggybackReplyMs).to.eql(piggyBackTimeout)
@@ -1055,7 +1050,6 @@ describe('validate custom server options', function() {
   }
 
   it('should send ACK for non-confirmable message, sendAcksForNonConfirmablePackets=true', function(done) {
-    //GIVEN
     var messages = 0;
     server = coap.createServer({ sendAcksForNonConfirmablePackets: true })
     server.listen(port)
@@ -1063,17 +1057,13 @@ describe('validate custom server options', function() {
       res.end('42')
     })
     client.on('message', function(msg) {
-      //THEN
       done()
     })
-
-    //WHEN
     sendNonConfirmableMessage()
 
   })
 
   it('should not send ACK for non-confirmable message, sendAcksForNonConfirmablePackets=false', function(done) {
-    //GIVEN
     var messages = 0;
     server = coap.createServer({ sendAcksForNonConfirmablePackets: false })
     server.listen(port)
@@ -1083,11 +1073,7 @@ describe('validate custom server options', function() {
     client.on('message', function(msg) {
       messages++
     })
-
-    //WHEN
     sendNonConfirmableMessage()
-
-    //THEN
     setTimeout(function() {
       expect(messages).to.eql(0)
       done()
@@ -1095,7 +1081,6 @@ describe('validate custom server options', function() {
   })
 
   it('should send ACK for confirmable message, sendAcksForNonConfirmablePackets=true', function(done) {
-    //GIVEN
     var messages = 0;
     server = coap.createServer({ sendAcksForNonConfirmablePackets: true })
     server.listen(port)
@@ -1103,11 +1088,8 @@ describe('validate custom server options', function() {
       res.end('42')
     })
     client.on('message', function(msg) {
-      //THEN
       done();
     })
-
-    //WHEN
     sendConfirmableMessage()
   })
 
