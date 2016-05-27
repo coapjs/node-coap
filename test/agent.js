@@ -227,6 +227,46 @@ describe('Agent', function() {
     })
   })
 
+  it('should send only RST for unrecognized CON', function(done) {
+    // In order to have a running agent, it must wait for something
+    var req = doReq(true)
+      , step = 0
+
+    server.on('message', function(msg, rsinfo) {
+      var packet  = parse(msg)
+
+      switch (++step) {
+        case 1:
+          // Request message from the client
+          // Ensure the message sent by the server does not match any
+          // current request.
+          var invalidMid = packet.messageId + 1
+            , invalidTkn = new Buffer( packet.token )
+          ++invalidTkn[0]
+
+          var toSend  = generate({
+                  messageId: invalidMid
+                , token: invalidTkn
+                , code: '2.00'
+                , confirmable: true
+                , ack: false
+                , payload: new Buffer(5)
+              })
+          server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+          break
+
+        case 2:
+          expect(packet.reset).to.be.true
+          done()
+          break
+
+        case 3:
+          done(Error('Got two answers'))
+          break
+      }
+    })
+  })
+
   describe('observe problems', function() {
 
     function sendObserve(opts) {
