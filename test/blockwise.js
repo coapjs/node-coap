@@ -6,22 +6,55 @@
  * See the included LICENSE file for more details.
  */
 
-var coap = require('../')
+var coap        = require('../')
+  , parse       = require('coap-packet').parse
+  , generate    = require('coap-packet').generate
+  , getOption   = require('../lib/helpers').getOption
+  , parseBlock2 = require('../lib/helpers').parseBlock2
+  , dgram       = require('dgram')
 
 describe('blockwise2', function() {
   var server
     , port
+    , clientPort
+    , client
+    , bufferVal
     , payload   = new Buffer(1300)
 
   beforeEach(function(done) {
+    bufferVal = 0
     port = nextPort()
     server = coap.createServer()
     server.listen(port, done)
   })
 
+  beforeEach(function(done) {
+    clientPort = nextPort()
+    client = dgram.createSocket('udp4')
+    client.bind(clientPort, done)
+  })
+
   afterEach(function() {
     server.close()
+    client.close()
   })
+
+  function send(message) {
+    client.send(message, 0, message.length, port, '127.0.0.1')
+  }
+
+  function nextBufferVal() {
+    if (bufferVal > 255)
+      bufferVal = 0
+    return bufferVal++
+  }
+
+  function fillPayloadBuffer(buffer) {
+    for (var i = 0; i < buffer.length; i++) {
+      buffer[i] = nextBufferVal()
+    }
+    return buffer
+  }
 
   it('should server not use blockwise in response when payload fit in one packet', function(done) {
     var payload   = new Buffer(100)         // default max packet is 1280
@@ -171,5 +204,149 @@ describe('blockwise2', function() {
     server.on('request', function(req, res) {
       res.end(payload)
     })
+  })
+
+  function sendNextBlock2(req_token, req_block2_num) {
+    var packet = {
+        messageId: 1100 + req_block2_num
+      , token: req_token
+      , options: [{
+            name: 'Block2'
+          , value: new Buffer([req_block2_num << 4])
+        }]
+    }
+    send(generate(packet))
+  }
+
+  function parallelBlock2Test(done, checkNReq, checkBlock2Message, checkNormalReq) {
+    var payload_len = 32+16+1
+    var payload_req1 = new Buffer(payload_len)
+    var payload_req2 = new Buffer(payload_len)
+    var req1_token = new Buffer(4)
+    var req1_done = false
+    var req2_done = false
+    var req1_block2_num = 0
+    var req_client2 = coap.request({
+        port: port
+    })
+
+    fillPayloadBuffer(payload_req1)
+    fillPayloadBuffer(payload_req2)
+    fillPayloadBuffer(req1_token)
+
+    var nreq = 1;
+    server.on('request', function(req, res) {
+      // only two request to upper level, blockwise transfer completed from cache
+      if (nreq == 1)
+        res.end(payload_req1)
+      else if (nreq == 2)
+        res.end(payload_req2)
+
+      checkNReq(nreq)
+
+      nreq++
+    })
+
+    // Send first request, initiate blockwise transfer from server
+    sendNextBlock2(req1_token, req1_block2_num)
+
+    client.on('message', function(msg, rinfo) {
+      checkBlock2Message(msg, payload_req1, req1_block2_num, payload_len)
+
+      var expectMore = (req1_block2_num + 1) * 16 <= payload_len
+      if (expectMore) {
+        // Request next block after 50 msec delay
+        req1_block2_num++
+
+        setTimeout(function() {
+          // Send next request, fetch next block of blockwise transfer from server
+          sendNextBlock2(req1_token, req1_block2_num)
+        }, 50)
+      } else {
+        // No more blocks, transfer completed.
+        req1_done = true
+        if (req1_done && req2_done)
+          setImmediate(done)
+        }
+    })
+
+    req_client2.setOption('Block2', new Buffer([0x10])) // request from block 1, with size = 16
+
+    // Delay second request so that first request gets first packet
+    setTimeout(function() {
+      req_client2.end()
+    }, 1)
+
+    req_client2.on('response', function(res) {
+      checkNormalReq(res, payload_req2)
+
+      req2_done = true
+      if (req1_done && req2_done)
+        setImmediate(done)
+    })
+  }
+
+  function checkNothing() {
+  }
+
+  it('should two parallel block2 requests should result only two requests to upper level', function(done) {
+    var checkNreq = function(nreq) {
+      expect(nreq).to.within(1,2)
+    }
+
+    parallelBlock2Test(done, checkNreq, checkNothing, checkNothing)
+  })
+
+  it('should have code 2.05 for all block2 messages of successful parallel requests', function(done) {
+    var checkBlock2Code = function(msg) {
+      var res = parse(msg)
+
+      // Have correct code?
+      expect(res.code).to.eql('2.05')
+    }
+
+    var checkNormalRespCode = function(res) {
+      // Have correct code?
+      expect(res.code).to.eql('2.05')
+    }
+
+    parallelBlock2Test(done, checkNothing, checkBlock2Code, checkNormalRespCode)
+  })
+
+  it('should have correct block2 option for parallel requests', function(done) {
+    var checkBlock2Option = function(msg, payload_req1, req1_block2_num, payload_len) {
+      var res = parse(msg)
+
+      // Have block2 option?
+      var block2Buff = getOption(res.options, 'Block2')
+      expect(block2Buff instanceof Buffer).to.eql(true)
+
+      var block2 = parseBlock2(block2Buff)
+      expect(block2).to.not.eql(null)
+
+      var expectMore = (req1_block2_num + 1) * 16 <= payload_len
+
+      // Have correct num / moreBlock2 fields?
+      expect(block2.num).to.eql(req1_block2_num)
+      expect(block2.moreBlock2).to.eql(expectMore)
+    }
+
+    parallelBlock2Test(done, checkNothing, checkBlock2Option, checkNothing)
+  })
+
+  it('should have correct payload in block2 messages for parallel requests', function(done) {
+    var checkBlock2Payload = function(msg, payload_req1, req1_block2_num) {
+      var res = parse(msg)
+
+      // Have correct payload?
+      expect(res.payload).to.eql(payload_req1.slice(req1_block2_num*16, req1_block2_num*16 + 16))
+    }
+
+    var checkNormalRespPayload = function(res, payload_req2) {
+      // Have correct payload?
+      expect(res.payload).to.eql(payload_req2.slice(1*16, payload.length+1))
+    }
+
+    parallelBlock2Test(done, checkNothing, checkBlock2Payload, checkNormalRespPayload)
   })
 })
