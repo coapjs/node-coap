@@ -538,11 +538,6 @@ __node-coap__ is an **OPEN Open Source Project**. This means that:
 
 See the [CONTRIBUTING.md](https://github.com/mcollina/node-coap/blob/master/CONTRIBUTING.md) file for more details.
 
-## Limitations
-
-The maximum packet size is 1280, as the
-[blockwise](http://datatracker.ietf.org/doc/draft-ietf-core-block/) is
-not supported yet.
 
 ## Contributors
 
