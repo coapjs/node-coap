@@ -230,6 +230,19 @@ describe('end-to-end', function() {
     })
   })
 
+  it('should allow option \'Max-Age\'', function(done) {
+    var req = coap.request('coap://localhost:' + port)
+
+    req.setOption('Max-Age', 26763)
+    req.end()
+
+    server.on('request', function(req) {
+      expect(req.options[0].name).to.equal('Max-Age')
+      expect(req.options[0].value).to.equal(26763)
+      done()
+    })
+  })
+
   it('should provide a writeHead() method', function(done) {
     var req = coap.request('coap://localhost:' + port)
     req.end();
