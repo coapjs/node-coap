@@ -134,6 +134,21 @@ describe('end-to-end', function() {
     })
   })
 
+  it('should normalize strings using NFC', function(done) {
+    var req = coap.request({
+        port: port
+        // U+210E (plank constant) becomes to U+0068 (h) in “compatible” normalizations (should not happen)
+        // U+0065 (e) U+0301 (combining acute accent) becomes U+00e9 (é) in “composed” normalizations (should happen)
+      , pathname: '/\u210e/\u0065\u0301'
+    }).end()
+
+    server.on('request', function(req, res) {
+      expect(req.url).to.equal('/\u210e/\u00e9')
+      done()
+      res.end()
+    })
+  })
+
   describe('formats', function() {
     var formats = [ 'text/plain', 'application/link-format',
       'application/xml', 'application/octet-stream',
