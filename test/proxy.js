@@ -221,7 +221,7 @@ describe('proxy', function() {
       request
           .on('response', function(res) {
             expect(res.code).to.eql('5.00');
-            expect(res.payload.toString()).to.contain('ENOTFOUND');
+            expect(res.payload.toString()).to.match(/ENOTFOUND|EAI_AGAIN/);
             done()
           })
           .end()
