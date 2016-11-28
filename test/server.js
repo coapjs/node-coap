@@ -1094,3 +1094,70 @@ describe('validate custom server options', function() {
   })
 
 })
+
+describe('server LRU', function() {
+  var server
+      , port
+      , clientPort
+      , client
+      , clock
+
+  var packet = {
+    confirmable: true
+    , messageId: 4242
+    , token: new Buffer(5)
+  }
+
+  beforeEach(function (done) {
+    clock = sinon.useFakeTimers()
+    port = nextPort()
+    server = coap.createServer()
+    server.listen(port, done)
+  })
+
+  beforeEach(function (done) {
+    clientPort = nextPort()
+    client = dgram.createSocket('udp4')
+    client.bind(clientPort, done)
+  })
+
+  afterEach(function () {
+    clock.restore()
+    client.close()
+    server.close()
+    tk.reset()
+  })
+
+  function send(message) {
+    client.send(message, 0, message.length, port, '127.0.0.1')
+  }
+
+  it('should remove old packets after exchangeLifetime x 1.5', function (done) {
+    var messages = 0
+
+    send(generate(packet))
+    server.on('request', function (req, res) {
+      var now = Date.now()
+      res.end()
+
+      expect(server._lru.itemCount, 1)
+
+      setImmediate(function () {
+        tk.travel(now + (params.exchangeLifetime * 500)
+
+        setImmediate(function () {
+          expect(server._lru.itemCount, 1)
+
+          tk.travel(now + (params.exchangeLifetime * 1000)
+
+          setTimeout(function () {
+            expect(server._lru.itemCount, 0)
+            done
+          }, 10)
+        })
+      })
+    })
+  })
+
+})
+
