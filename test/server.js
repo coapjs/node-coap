@@ -465,8 +465,8 @@ describe('server', function() {
     })
 
     it('should calculate the response twice after the interval', function(done) {
-//      clock.restore()
       var first = true
+      var delay = (params.exchangeLifetime * 1000)+1
 
       server.on('request', function(req, res) {
         var now = Date.now()
@@ -474,20 +474,18 @@ describe('server', function() {
         if (first) {
           res.end('42')
           first = false
-          fastForward(500, (params.exchangeLifetime * 1000)+1)
+          setTimeout(function() {
+            send(generate(packet))
+          }, delay)
+
+          fastForward(100, delay)
          } else {
           res.end('24')
           done()
-
         }
       })
 
       send(generate(packet))
-
-      setTimeout(function() {
-        send(generate(packet))
-      }, (params.exchangeLifetime * 1000))
-
     })
 
     it('should include \'ETag\' in the response options', function(done) {
@@ -1139,13 +1137,12 @@ describe('server LRU', function() {
     client.send(message, 0, message.length, port, '127.0.0.1')
   }
 
-  it('should remove old packets after exchangeLifetime x 1.5', function (done) {
+  it('should remove old packets after < exchangeLifetime x 1.5', function (done) {
     var messages = 0
 
     send(generate(packet))
     server.on('request', function (req, res) {
       var now = Date.now()
-      console.log('now', now)
       res.end()
 
       expect(server._lru.itemCount, 1)
@@ -1157,23 +1154,6 @@ describe('server LRU', function() {
       clock.tick(params.exchangeLifetime * 1000)
       expect(server._lru.itemCount, 0)
       done()
-
-
-
-      // setImmediate(function () {
-      //   tk.travel(now + (params.exchangeLifetime * 500))
-      //
-      //   setImmediate(function () {
-      //
-      //
-      //     tk.travel(now + (params.exchangeLifetime * 1000))
-      //
-      //     setTimeout(function () {
-      //       expect(server._lru.itemCount, 0)
-      //       done
-      //     }, 10)
-      //   })
-      // })
     })
   })
 
