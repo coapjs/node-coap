@@ -714,7 +714,7 @@ describe('request', function() {
         done()
       }, 45 * 1000)
 
-      fastForward(100, 45 * 1000)
+      fastForward(20, 45 * 1000)
     })
 
     it('should stop retrying if it receives a message', function (done) {
@@ -830,7 +830,7 @@ describe('request', function() {
         done()
       }, 45 * 1000)
 
-      fastForward(100, 45 * 1000)
+      fastForward(20, 45 * 1000)
     })
 
     it('should stop retrying if it receives an ack', function (done) {

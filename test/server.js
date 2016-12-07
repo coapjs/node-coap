@@ -465,22 +465,27 @@ describe('server', function() {
     })
 
     it('should calculate the response twice after the interval', function(done) {
-      var now = Date.now()
-      send(generate(packet))
+      var first = true
+      var delay = (params.exchangeLifetime * 1000)+1
 
-      server.once('request', function(req, res) {
-        res.end('42')
+      server.on('request', function(req, res) {
+        var now = Date.now()
 
-        clock.restore()
-        tk.travel(now + params.exchangeLifetime * 1000)
+        if (first) {
+          res.end('42')
+          first = false
+          setTimeout(function() {
+            send(generate(packet))
+          }, delay)
 
-        server.on('request', function(req, res) {
+          fastForward(100, delay)
+         } else {
           res.end('24')
           done()
-        })
-
-        send(generate(packet))
+        }
       })
+
+      send(generate(packet))
     })
 
     it('should include \'ETag\' in the response options', function(done) {
@@ -1094,3 +1099,63 @@ describe('validate custom server options', function() {
   })
 
 })
+
+describe('server LRU', function() {
+  var server
+      , port
+      , clientPort
+      , client
+      , clock
+
+  var packet = {
+    confirmable: true
+    , messageId: 4242
+    , token: new Buffer(5)
+  }
+
+  beforeEach(function (done) {
+    clock = sinon.useFakeTimers()
+    port = nextPort()
+    server = coap.createServer()
+    server.listen(port, done)
+  })
+
+  beforeEach(function (done) {
+    clientPort = nextPort()
+    client = dgram.createSocket('udp4')
+    client.bind(clientPort, done)
+  })
+
+  afterEach(function () {
+    clock.restore()
+    client.close()
+    server.close()
+    tk.reset()
+  })
+
+  function send(message) {
+    client.send(message, 0, message.length, port, '127.0.0.1')
+  }
+
+  it('should remove old packets after < exchangeLifetime x 1.5', function (done) {
+    var messages = 0
+
+    send(generate(packet))
+    server.on('request', function (req, res) {
+      var now = Date.now()
+      res.end()
+
+      expect(server._lru.itemCount, 1)
+
+      clock.tick(params.exchangeLifetime * 500)
+
+      expect(server._lru.itemCount, 1)
+
+      clock.tick(params.exchangeLifetime * 1000)
+      expect(server._lru.itemCount, 0)
+      done()
+    })
+  })
+
+})
+
