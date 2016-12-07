@@ -80,7 +80,7 @@ describe('request', function() {
   it('should emit the errors in the req', function (done) {
     var req = request('coap://aaa.eee:' + 1234)
 
-    req.on('error', function () {
+    req.once('error', function () {
       done()
     })
 
