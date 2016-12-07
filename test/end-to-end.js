@@ -161,7 +161,7 @@ describe('end-to-end', function() {
           req.setOption(option, format)
           req.end()
 
-          server.on('request', function(req) {
+          server.once('request', function(req) {
             expect(req.options[0].name).to.eql(option)
             expect(req.options[0].value).to.eql(format)
             done()
@@ -178,7 +178,7 @@ describe('end-to-end', function() {
 
           coap.request(req).end()
 
-          server.on('request', function(req) {
+          server.once('request', function(req) {
             expect(req.options[0].name).to.eql(option)
             expect(req.options[0].value).to.eql(format)
             done()
@@ -195,7 +195,7 @@ describe('end-to-end', function() {
 
           coap.request(req).end()
 
-          server.on('request', function(req) {
+          server.once('request', function(req) {
             expect(req.headers[option]).to.eql(format)
             done()
           })
@@ -206,7 +206,7 @@ describe('end-to-end', function() {
           req.setOption(option, format)
           req.end()
 
-          server.on('request', function(req) {
+          server.once('request', function(req) {
             expect(req.headers[option]).to.eql(format)
             done()
           })
@@ -219,7 +219,7 @@ describe('end-to-end', function() {
         var req = coap.request('coap://localhost:'+port)
         req.end()
 
-        server.on('request', function(req, res) {
+        server.once('request', function(req, res) {
           res.setOption('Content-Format', format)
           res.end()
         })
@@ -238,7 +238,7 @@ describe('end-to-end', function() {
     req.setOption('Content-Format', 'application/json; charset=utf8')
     req.end()
 
-    server.on('request', function(req) {
+    server.once('request', function(req) {
       expect(req.options[0].name).to.equal('Content-Format')
       expect(req.options[0].value).to.equal('application/json')
       done()
@@ -251,7 +251,7 @@ describe('end-to-end', function() {
     req.setOption('Max-Age', 26763)
     req.end()
 
-    server.on('request', function(req) {
+    server.once('request', function(req) {
       expect(req.options[0].name).to.equal('Max-Age')
       expect(req.options[0].value).to.equal(26763)
       done()
@@ -266,7 +266,7 @@ describe('end-to-end', function() {
       done()
     })
 
-    server.on('request', function(req, res) {
+    server.once('request', function(req, res) {
       res.writeHead(200, {'Content-Format': 'application/json'})
       res.write(JSON.stringify({}))
       res.end()

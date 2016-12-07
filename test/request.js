@@ -79,11 +79,12 @@ describe('request', function() {
 
   it('should emit the errors in the req', function (done) {
     var req = request('coap://aaa.eee:' + 1234)
-    req.end(new Buffer('hello world'))
 
     req.on('error', function () {
       done()
     })
+
+    req.end(new Buffer('hello world'))
   })
 
   it('should error if the message is too big', function (done) {
