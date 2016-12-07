@@ -32,7 +32,7 @@
     "chai": "^3.4.1",
     "mocha": "^3.2.0",
     "timekeeper": "^1.0.0",
-    "sinon": "^1.7.3"
+    "sinon": "~1.7.3"
   },
   "dependencies": {
     "bl": "^1.0.0",
