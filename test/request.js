@@ -657,18 +657,6 @@ describe('request', function() {
         setImmediate(fastForward.bind(null, increase, max - increase))
     }
 
-    it('should error after ~202 seconds', function (done) {
-      var req = doReq()
-
-      req.on('error', function (err) {
-        expect(err).to.have.property('message', 'No reply in 202s')
-        expect(err).to.have.property('retransmitTimeout', 202)
-        done()
-      })
-
-      fastForward(1000, 202*1000)
-    })
-
     it('should timeout after ~202 seconds', function (done) {
       var req = doReq()
 
@@ -684,7 +672,7 @@ describe('request', function() {
       fastForward(1000, 202 * 1000)
     })
 
-    it('should not retry before erroring', function (done) {
+    it('should not retry before timeout', function (done) {
       var req = doReq()
         , messages = 0
 
@@ -692,7 +680,7 @@ describe('request', function() {
         messages++
       })
 
-      req.on('error', function (err) {
+      req.on('timeout', function (err) {
         expect(messages).to.eql(1)
         done()
       })
