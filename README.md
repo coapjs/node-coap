@@ -494,6 +494,8 @@ Opts is an optional object with the following optional properties:
 * `type`: `'udp4'` or `'udp6'` if we want an Agent on an IPv4 or IPv6
   UDP socket.
 
+* `socket`: use existing socket instead of creating a new one.
+
 -------------------------------------------------------
 <a name="globalAgent"></a>
 ### coap.globalAgent

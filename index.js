@@ -30,9 +30,9 @@ module.exports.request = function(url) {
   else if (url.agent === false && ipv6)
     agent = new Agent({ type: 'udp6' })
   else if (ipv6)
-    agent = globalAgentV6
+    agent = exports.globalAgentIPv6
   else
-    agent = globalAgent
+    agent = exports.globalAgent
 
   return agent.request(url)
 }
