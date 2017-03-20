@@ -81,6 +81,7 @@ describe('request', function() {
     var req = request('coap://aaa.eee:' + 1234)
 
     req.once('error', function () {
+      coap.globalAgent.abort(req)
       done()
     })
 
@@ -533,6 +534,7 @@ describe('request', function() {
         var packet = parse(msg)
           , toSend = generate({
             messageId: packet.messageId
+            , code: '2.05'
             , token: packet.token
             , options: [{
               name: 'Content-Format'
@@ -590,6 +592,7 @@ describe('request', function() {
       var packet = parse(msg)
         , toSend = generate({
           messageId: packet.messageId
+          , code: '2.05'
           , token: packet.token
           , options: [{
             name: 'ETag'
@@ -616,6 +619,7 @@ describe('request', function() {
       var packet = parse(msg)
         , toSend = generate({
           messageId: packet.messageId
+          , code: '2.05'
           , token: packet.token
           , options: []
         })
