@@ -81,7 +81,7 @@ describe('request', function() {
     var req = request('coap://aaa.eee:' + 1234)
 
     req.once('error', function () {
-      coap.globalAgent.abort(req);
+      coap.globalAgent.abort(req)
       done()
     })
 
