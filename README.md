@@ -178,6 +178,7 @@ If it is an object:
   will be emitted for each received response. It's user's responsibility to set proper multicast `host` parameter
   in request configuration. Default `false`.
 - `multicastTimeout`: time to wait for multicast reponses in milliseconds. It is only applicable in case if `multicast` is `true`. Default `20000 ms`.
+- `retrySend`: overwrite the default maxRetransmit, useful when you want to use a custom retry count for a request
 
 
 `coap.request()` returns an instance of <a
