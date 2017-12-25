@@ -227,12 +227,14 @@ describe('server', function() {
 
   it('should include a reset() function in the response', function(done) {
     var buf = new Buffer(25)
-    send(generate({ payload: buf }))
+    var tok = new Buffer(4)
+    send(generate({ payload: buf, token: tok }))
     client.on('message', function(msg, rinfo) {
       var result = parse(msg)
       expect(result.code).to.eql('0.00')
       expect(result.reset).to.eql(true)
       expect(result.ack).to.eql(false)
+      expect(result.token.length).to.eql(0)
       expect(result.payload.length).to.eql(0)
       done()
     });

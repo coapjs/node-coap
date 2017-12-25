@@ -18,11 +18,13 @@ describe('request', function() {
   var server
     , server2
     , port
+    , clock
 
   beforeEach(function (done) {
     port = nextPort()
     server = dgram.createSocket('udp4')
     server.bind(port, done)
+    clock = sinon.useFakeTimers()
   })
 
   afterEach(function () {
@@ -32,7 +34,15 @@ describe('request', function() {
       server2.close()
 
     server = server2 = null
+
+    clock.restore()
   })
+
+  function fastForward(increase, max) {
+    clock.tick(increase)
+    if (increase < max)
+      setImmediate(fastForward.bind(null, increase, max - increase))
+  }
 
   function ackBack(msg, rsinfo) {
     var packet = parse(msg)
@@ -306,6 +316,7 @@ describe('request', function() {
       setTimeout(function () {
         done()
       }, 20)
+      fastForward(5, 25)
     })
 
     req.on('response', function (res) {
@@ -340,6 +351,99 @@ describe('request', function() {
     })
 
     req.end()
+  })
+
+  it('should emit a response on reset', function (done) {
+    var req = request({
+      port: port
+    })
+
+    server.on('message', function (msg, rsinfo) {
+      var packet = parse(msg)
+        , toSend = generate({
+          messageId: packet.messageId
+          , code: '0.00'
+          , ack: false
+          , reset: true
+        })
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+    })
+
+    req.on('response', function (res) {
+      if (res.code === '0.00') {
+        done()
+      } else {
+        done(new Error('Unexpected response'))
+      }
+    })
+
+    req.end()
+  })
+
+  it('should stop retrying on reset', function (done) {
+    var req = request({
+      port: port
+    })
+    var messages = 0
+
+    server.on('message', function (msg, rsinfo) {
+      var packet = parse(msg)
+        , toSend = generate({
+          messageId: packet.messageId
+          , code: '0.00'
+          , ack: false
+          , reset: true
+        })
+      messages++
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+    })
+
+    req.on('response', function (res) {
+      if (res.code !== '0.00') {
+        done(new Error('Unexpected response'))
+      }
+    })
+    req.end()
+
+    setTimeout(function () {
+      expect(messages).to.eql(1)
+      done()
+    }, 45 * 1000)
+
+    fastForward(100, 45 * 1000)
+  })
+
+  it('should not send response to invalid packets', function (done) {
+    var req = request({
+      port: port
+    })
+    var messages = 0
+
+    server.on('message', function (msg, rsinfo) {
+      var packet = parse(msg)
+        , toSend = generate({
+          messageId: packet.messageId
+          , code: '0.00'
+          , ack: true
+          , payload: 'this payload invalidates empty message'
+        })
+      expect(packet.code).to.be.eq('0.01');
+      messages++
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+    })
+
+    req.on('response', function (res) {
+      done(new Error('Unexpected response'))
+    })
+
+    req.end()
+
+    setTimeout(function () {
+      expect(messages).to.eql(5)
+      done()
+    }, 45 * 1000)
+
+    fastForward(100, 45 * 1000)
   })
 
   it('should allow to add an option', function (done) {
