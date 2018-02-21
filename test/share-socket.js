@@ -7,6 +7,7 @@
  */
 
 var coap = require('../')
+  , sinon = require('sinon')
 
 describe('share-socket', function() {
   var server
@@ -418,6 +419,25 @@ describe('share-socket', function() {
       expect(req.headers).not.to.have.property('Cache-Control')
       done()
     })
+  })
 
+  it('should error after ~247 seconds', function(done) {
+    var clock = sinon.useFakeTimers()
+      , req = coap.request('coap://localhost:'+(port+1))
+    req.end()
+
+    function fastForward(increase, max) {
+      clock.tick(increase)
+      if (increase < max)
+        setImmediate(fastForward.bind(null, increase, max - increase))
+    }
+
+    req.on('error', function (err) {
+      expect(err).to.have.property('message', 'No reply in 247s')
+      clock.restore()
+      done()
+    })
+
+    fastForward(1000, 247 * 1000)
   })
 })
