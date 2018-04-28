@@ -1160,9 +1160,11 @@ describe('request', function() {
       }).end()
     }
 
-    it('should be non-confirmable', function (done) {
-      server.addMembership(MULTICAST_ADDR)
+    beforeEach(function() {
+      server.addMembership(MULTICAST_ADDR)      
+    });
 
+    it('should be non-confirmable', function (done) {
       var req = doReq()
 
       server.on('message', function(msg, rsinfo) {
@@ -1173,8 +1175,6 @@ describe('request', function() {
     })
 
     it('should be responsed with the same token', function (done) {
-      server.addMembership(MULTICAST_ADDR)
-
       var req = doReq()
       , token
 
