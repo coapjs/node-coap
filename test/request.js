@@ -1150,16 +1150,19 @@ describe('request', function() {
 
 
   describe('multicast', function () {
+    var MULTICAST_ADDR = '224.0.0.1'
 
     function doReq() {
       return request({
-        host: '224.0.0.1'
+        host: MULTICAST_ADDR
         , port: port
         , multicast: true
       }).end()
     }
 
     it('should be non-confirmable', function (done) {
+      server.addMembership(MULTICAST_ADDR)
+
       var req = doReq()
 
       server.on('message', function(msg, rsinfo) {
@@ -1170,6 +1173,8 @@ describe('request', function() {
     })
 
     it('should be responsed with the same token', function (done) {
+      server.addMembership(MULTICAST_ADDR)
+
       var req = doReq()
       , token
 
