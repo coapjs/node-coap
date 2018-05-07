@@ -5,7 +5,7 @@ node-coap
 Status](https://travis-ci.org/mcollina/node-coap.png)](https://travis-ci.org/mcollina/node-coap)
 [![gitter](https://badges.gitter.im/mcollina/node-coap.png)](https://gitter.im/mcollina/node-coap)
 
-__node-coap__ is a client and server library for CoAP modelled after the `http` module.
+__node-coap__ is a client and server library for CoAP modeled after the `http` module.
 
   * <a href="#intro">Introduction</a>
   * <a href="#install">Installation</a>
@@ -13,7 +13,7 @@ __node-coap__ is a client and server library for CoAP modelled after the `http` 
   * <a href="#proxy">Proxy features</a>
   * <a href="#api">API</a>
   * <a href="#contributing">Contributing</a>
-  * <a href="#licence">Licence &amp; copyright</a>
+  * <a href="#license">License &amp; copyright</a>
 
 [![NPM](https://nodei.co/npm/coap.png)](https://nodei.co/npm/coap/)
 
@@ -223,7 +223,7 @@ The constructor can be given an optional options object, containing one of the f
 * `multicastInterface`: Optional. Use this in order to force server to listen on multicast interface. This is only applicable
   if `multicastAddress` is set. If absent, server will try to listen `multicastAddress` on all available interfaces
 * `piggybackReplyMs`: set the number of milliseconds to wait for a
-  biggyback response. Default 50.
+  piggyback response. Default 50.
 * `sendAcksForNonConfirmablePackets`: Optional. Use this to suppress sending ACK messages for non-confirmable packages
 
 #### Event: 'request'
@@ -247,7 +247,8 @@ Begin accepting connections on the specified port and hostname.  If the
 hostname is omitted, the server will accept connections directed to any
 IPv4 or IPv6 address by passing `null` as the address to the underlining socket.
 
-To listen to a unix socket, supply a filename instead of port and hostname.
+To listen
+ to a unix socket, supply a filename instead of port and hostname.
 
 This function is asynchronous.
 
@@ -306,7 +307,7 @@ or
 compatibility.
 
 Also, `'Content-Type'` is aliased to `'Content-Format'` for HTTP
-compatibility.gg
+compatibility.
 
 Since v0.7.0, this library supports blockwise transfers, you can trigger
 them by adding a `req.setOption('Block2', new Buffer([0x2]))` to the
@@ -418,7 +419,7 @@ Closes the stream.
 
 #### message.rsinfo
 
-The sender informations, as emitted by the socket.
+The sender's information, as emitted by the socket.
 See [the `dgram` docs](http://nodejs.org/api/dgram.html#dgram_event_message) for details
 
 #### message.outSocket
@@ -557,7 +558,8 @@ __node-coap__ is only possible due to the excellent work of the following contri
 <tr><th align="left">Matteo Collina</th><td><a href="https://github.com/mcollina">GitHub/mcollina</a></td><td><a href="https://twitter.com/matteocollina">Twitter/@matteocollina</a></td></tr>
 <tr><th align="left">Nguyen Quoc Dinh</th><td><a href="https://github.com/nqd">GitHub/nqd</a></td><td><a href="https://twitter.com/nqdinh">Twitter/@nqdinh</a></td></tr>
 <tr><th align="left">Daniel Moran Jimenez</th><td><a href="https://github.com/dmoranj">GitHub/dmoranj</a></td><td><a href="https://twitter.com/erzeneca">Twitter/@erzeneca</a></td></tr>
-<tr><th align="left">Ignacio Martín</th><td><a href="https://github.com/neich">GitHub/neich</a></td><td><a href="https://twitter.com/natxupitxu">Twitter/@natxupitxu</a></td></tr>
+<tr><th align="left">Ignacio Martín</th><td><a
+ href="https://github.com/neich">GitHub/neich</a></td><td><a href="https://twitter.com/natxupitxu">Twitter/@natxupitxu</a></td></tr>
 <tr><th align="left">Christopher Hiller</th><td><a href="https://github.com/boneskull">GitHub/boneskull</a></td><td><a href="https://twitter.com/b0neskull">Twitter/@b0neskull</a></td></tr>
 </tbody></table>
 
