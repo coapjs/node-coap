@@ -872,7 +872,6 @@ describe('server', function() {
 
     it('should correctly generate two-byte long sequence numbers', function(done) {
       var now = Date.now()
-        , buf = new Buffer(2)
       doObserve()
 
       server.on('request', function(req, res) {
@@ -887,13 +886,10 @@ describe('server', function() {
 
       // the first one is an ack
       client.once('message', function(msg) {
-        buf.writeUInt16BE(4243, 0)
-        expect(parse(msg).options[0].value).to.eql(buf)
+        expect(parse(msg).options[0].value).to.eql(Buffer.from([0x10, 0x93]))
 
         client.once('message', function(msg) {
-          buf.writeUInt16BE(4244, 0)
-          expect(parse(msg).options[0].value).to.eql(buf)
-
+          expect(parse(msg).options[0].value).to.eql(Buffer.from([0x10, 0x94]))
           done()
         })
       })
@@ -901,9 +897,6 @@ describe('server', function() {
 
     it('should correctly generate three-byte long sequence numbers', function(done) {
       var now = Date.now()
-        , buf = new Buffer(3)
-
-      buf.writeUInt8(1, 0)
 
       doObserve()
 
@@ -919,13 +912,10 @@ describe('server', function() {
 
       // the first one is an ack
       client.once('message', function(msg) {
-        buf.writeUInt16BE(1, 1)
-        expect(parse(msg).options[0].value).to.eql(buf)
+        expect(parse(msg).options[0].value).to.eql(Buffer.from([1, 0, 0]))
 
         client.once('message', function(msg) {
-          buf.writeUInt16BE(2, 1)
-          expect(parse(msg).options[0].value).to.eql(buf)
-
+          expect(parse(msg).options[0].value).to.eql(Buffer.from([1, 0, 1]))
           done()
         })
       })
