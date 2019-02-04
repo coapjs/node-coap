@@ -250,6 +250,13 @@ IPv4 or IPv6 address by passing `null` as the address to the underlining socket.
 To listen
  to a unix socket, supply a filename instead of port and hostname.
 
+A custom socket object can be passed as a `port` parameter. This custom socket
+must be an instance of `EventEmitter` which emits `message`, `error` and
+`close` events and implements `send(msg, offset, length, port, address, callback)`
+function, just like `dgram.Socket`.
+In such case, the custom socket must be pre-configured manually, i.e. CoAP server
+will not bind, add multicast groups or do any other configuration.
+
 This function is asynchronous.
 
 #### server.close([callback])

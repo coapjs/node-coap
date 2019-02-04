@@ -15,6 +15,7 @@ var coap      = require('../')
   , tk        = require('timekeeper')
   , sinon     = require('sinon')
   , params    = require('../lib/parameters')
+  , events    = require('events')
 
 describe('server', function() {
   var server
@@ -69,6 +70,23 @@ describe('server', function() {
     })
     server.listen()
     send(generate())
+  })
+
+  it('should use a custom socket passed to listen()', function(done) {
+    port = 5683
+    server.close()        // refresh
+    server = coap.createServer()
+    server.on('request', function(req, res) {
+      done()
+    })
+
+    let sock = new events.EventEmitter()
+    sock.send = function () { }
+
+    server.listen(sock, function() {
+      expect(server._sock).to.eql(sock)
+      sock.emit('message', generate(), { address: '127.0.0.1', port: nextPort() })
+    })
   })
 
   it('should use the listener passed as a parameter in the creation', function(done) {
@@ -251,7 +269,7 @@ describe('server', function() {
 
   it('should not overwrite existing socket', function(done){
     var initial_sock = server._sock
-    server.listen(server._port+1, function(err){
+    server.listen(nextPort(), function(err){
       expect(err.message).to.eql('Already listening')
       expect(server._sock).to.eql(initial_sock)
       done()
