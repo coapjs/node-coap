@@ -15,6 +15,7 @@ var coap      = require('../')
   , tk        = require('timekeeper')
   , sinon     = require('sinon')
   , params    = require('../lib/parameters')
+  , events    = require('events')
 
 describe('server', function() {
   var server
@@ -69,6 +70,23 @@ describe('server', function() {
     })
     server.listen()
     send(generate())
+  })
+
+  it('should use a custom socket passed to listen()', function(done) {
+    port = 5683
+    server.close()        // refresh
+    server = coap.createServer()
+    server.on('request', function(req, res) {
+      done()
+    })
+
+    let sock = new events.EventEmitter()
+    sock.send = function () { }
+
+    server.listen(sock, function() {
+      expect(server._sock).to.eql(sock)
+      sock.emit('message', generate(), { address: '127.0.0.1', port: nextPort() })
+    })
   })
 
   it('should use the listener passed as a parameter in the creation', function(done) {
@@ -251,7 +269,7 @@ describe('server', function() {
 
   it('should not overwrite existing socket', function(done){
     var initial_sock = server._sock
-    server.listen(server._port+1, function(err){
+    server.listen(nextPort(), function(err){
       expect(err.message).to.eql('Already listening')
       expect(server._sock).to.eql(initial_sock)
       done()
@@ -872,7 +890,6 @@ describe('server', function() {
 
     it('should correctly generate two-byte long sequence numbers', function(done) {
       var now = Date.now()
-        , buf = new Buffer(2)
       doObserve()
 
       server.on('request', function(req, res) {
@@ -887,13 +904,10 @@ describe('server', function() {
 
       // the first one is an ack
       client.once('message', function(msg) {
-        buf.writeUInt16BE(4243, 0)
-        expect(parse(msg).options[0].value).to.eql(buf)
+        expect(parse(msg).options[0].value).to.eql(Buffer.from([0x10, 0x93]))
 
         client.once('message', function(msg) {
-          buf.writeUInt16BE(4244, 0)
-          expect(parse(msg).options[0].value).to.eql(buf)
-
+          expect(parse(msg).options[0].value).to.eql(Buffer.from([0x10, 0x94]))
           done()
         })
       })
@@ -901,9 +915,6 @@ describe('server', function() {
 
     it('should correctly generate three-byte long sequence numbers', function(done) {
       var now = Date.now()
-        , buf = new Buffer(3)
-
-      buf.writeUInt8(1, 0)
 
       doObserve()
 
@@ -919,13 +930,10 @@ describe('server', function() {
 
       // the first one is an ack
       client.once('message', function(msg) {
-        buf.writeUInt16BE(1, 1)
-        expect(parse(msg).options[0].value).to.eql(buf)
+        expect(parse(msg).options[0].value).to.eql(Buffer.from([1, 0, 0]))
 
         client.once('message', function(msg) {
-          buf.writeUInt16BE(2, 1)
-          expect(parse(msg).options[0].value).to.eql(buf)
-
+          expect(parse(msg).options[0].value).to.eql(Buffer.from([1, 0, 1]))
           done()
         })
       })

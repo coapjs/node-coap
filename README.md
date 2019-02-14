@@ -250,6 +250,13 @@ IPv4 or IPv6 address by passing `null` as the address to the underlining socket.
 To listen
  to a unix socket, supply a filename instead of port and hostname.
 
+A custom socket object can be passed as a `port` parameter. This custom socket
+must be an instance of `EventEmitter` which emits `message`, `error` and
+`close` events and implements `send(msg, offset, length, port, address, callback)`
+function, just like `dgram.Socket`.
+In such case, the custom socket must be pre-configured manually, i.e. CoAP server
+will not bind, add multicast groups or do any other configuration.
+
 This function is asynchronous.
 
 #### server.close([callback])
@@ -269,7 +276,7 @@ It may be used to access response status, headers and data.
 
 It implements the [Writable
 Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable) interface, as well as the
-following additional methods and properties.
+following additional properties, methods and events.
 
 #### message.code
 
@@ -330,6 +337,14 @@ reset flag set to `true` to the caller. This action ends the interaction with th
 
 #### message.writeHead(code, headers)
 Functions somewhat like `http`'s `writeHead()` function.  If `code` is does not match the CoAP code mask of `#.##`, it is coerced into this mask.  `headers` is an object with keys being the header names, and values being the header values.
+
+#### message.on('timeout', function(err) { })
+Emitted when the request does not receive a response or acknowledgement within a transaction lifetime.
+`Error` object with message `No reply in XXXs` and `retransmitTimeout` property is provided as a parameter.
+
+#### message.on('error', function(err) { })
+Emitted when an error occurs. This can be due to socket error, confirmable message timeout or any other generic error.
+`Error` object is provided, that describes the error.
 
 -------------------------------------------------------
 <a name="incoming"></a>
