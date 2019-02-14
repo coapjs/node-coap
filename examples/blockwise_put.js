@@ -44,12 +44,15 @@ function TestGet () {
 */
 function TestPut () {
   coap.createServer(function (req, res) {
-    console.log("Server Received " + req.payload.length + " bytes")
-    console.log(req.payload.slice(0, containedData.length).toString('utf-8'))
-    console.log(req.payload.slice(-containedData.length).toString('utf-8'))
-    console.log("Sending back pleasantries")
-    res.end("Congratulations!")
-    console.log("Sent back")
+    setTimeout(() => {
+      console.log("Server Received " + req.payload.length + " bytes")
+      console.log(req.payload.slice(0, containedData.length*2).toString('utf-8'))
+      console.log(req.payload.slice(-containedData.length).toString('utf-8'))
+      console.log("Sending back pleasantries")
+      res.statusCode = "2.04";
+      res.end("Congratulations!")
+      console.log("Sent back")
+    }, 500);
   }).listen(function () {
     var request = coap.request({
       hostname: this.hostname,
@@ -61,6 +64,7 @@ function TestPut () {
 
     request.on('response', function (res) {
       console.log("Client Received Response: " + res.payload.toString('utf-8'))
+      console.log("Client Received Response: " + res.code)
       process.exit(0)
     })
     console.log("Sending large data from client...")
@@ -74,10 +78,13 @@ function TestPut () {
 */
 function TestServer () {
   coap.createServer(function (req, res) {
-    res.setOption('Block2', new Buffer([0x6]))
-    console.log("Sending Back Test Buffer")
-    res.end(testBuffer)
-    console.log("Sent Back")
+    console.log("Got request. Waiting 500ms");
+    setTimeout(() => {
+        res.setOption('Block2', new Buffer([0x6]))
+        console.log("Sending Back Test Buffer")
+        res.end(testBuffer)
+        console.log("Sent Back")
+    }, 500);
   }).listen()
 }
 
