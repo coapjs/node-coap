@@ -280,7 +280,7 @@ following additional properties, methods and events.
 
 #### message.code
 
-The CoAP code ot the message.
+The CoAP code of the message.
 It is HTTP-compatible, as it can be passed `404`.
 
 #### message.statusCode
