@@ -1303,6 +1303,8 @@ describe('request', function() {
 
   describe('multicast', function () {
     var MULTICAST_ADDR = '224.0.0.1'
+      , port2 = nextPort()
+      , sock = null
 
     function doReq() {
       return request({
@@ -1312,8 +1314,17 @@ describe('request', function() {
       }).end()
     }
 
-    beforeEach(function() {
-      server.addMembership(MULTICAST_ADDR)      
+    beforeEach(function(done) {
+      sock = dgram.createSocket('udp4')
+      sock.bind(port2, function() {
+        server.addMembership(MULTICAST_ADDR)
+        sock.addMembership(MULTICAST_ADDR)
+        done()
+      })
+    });
+
+    afterEach(function() {
+      sock.close()
     });
 
     it('should be non-confirmable', function (done) {
@@ -1353,6 +1364,37 @@ describe('request', function() {
         done()
       })
 
+    })
+
+    it('should allow for differing MIDs for non-confirmable requests', function (done) {
+      var _req = null
+        , counter = 0
+        , servers = [undefined, undefined]
+        , mids = [0, 0]
+
+      servers.forEach(function (_, i) {
+        servers[i] = coap.createServer(function (req, res) {
+          var mid = _req._packet.messageId + i + 1
+          res._packet.messageId = mid
+          mids[i] = mid
+          res.end()
+        })
+        servers[i].listen(sock)
+      })
+
+      _req = request({
+        host: MULTICAST_ADDR,
+        port: port2,
+        confirmable: false,
+        multicast: true,
+      }).on('response', function (res) {
+        if(++counter == servers.length) {
+          mids.forEach(function(mid, i) {
+            expect(mid).to.eql(_req._packet.messageId + i + 1)
+          })
+          done()
+        }
+      }).end()
     })
 
   })
