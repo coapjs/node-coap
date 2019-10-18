@@ -277,13 +277,13 @@ describe('server', function() {
   })
 
   var formatsString = {
-      'text/plain': new Buffer([0])
-    , 'application/link-format': new Buffer([40])
-    , 'application/xml': new Buffer([41])
-    , 'application/octet-stream': new Buffer([42])
-    , 'application/exi': new Buffer([47])
-    , 'application/json': new Buffer([50])
-    , 'application/cbor': new Buffer([60])
+      'text/plain': Buffer.of(0)
+    , 'application/link-format': Buffer.of(40)
+    , 'application/xml': Buffer.of(41)
+    , 'application/octet-stream': Buffer.of(42)
+    , 'application/exi': Buffer.of(47)
+    , 'application/json': Buffer.of(50)
+    , 'application/cbor': Buffer.of(60)
   }
 
   describe('with the \'Content-Format\' header in the request', function() {
@@ -328,7 +328,7 @@ describe('server', function() {
       send(generate({
         options: [{
           name: 'Content-Format'
-          , value: new Buffer([1541])
+          , value: Buffer.of(1541)
         }]
       }))
 
@@ -533,7 +533,7 @@ describe('server', function() {
 
       client.on('message', function(msg, rsinfo) {
         expect(parse(msg).options[0].name).to.eql('Content-Format')
-        expect(parse(msg).options[0].value).to.eql(new Buffer([0]))
+        expect(parse(msg).options[0].value).to.eql(Buffer.of(0))
         done()
       })
     })
@@ -808,7 +808,7 @@ describe('server', function() {
       client.once('message', function(msg) {
         expect(parse(msg).payload.toString()).to.eql('hello')
         expect(parse(msg).options[0].name).to.eql('Observe')
-        expect(parse(msg).options[0].value).to.eql(new Buffer([1]))
+        expect(parse(msg).options[0].value).to.eql(Buffer.of(1))
         expect(parse(msg).token).to.eql(token)
         expect(parse(msg).code).to.eql('2.05')
         expect(parse(msg).ack).to.be.true
@@ -816,7 +816,7 @@ describe('server', function() {
         client.once('message', function(msg) {
           expect(parse(msg).payload.toString()).to.eql('world')
           expect(parse(msg).options[0].name).to.eql('Observe')
-          expect(parse(msg).options[0].value).to.eql(new Buffer([2]))
+          expect(parse(msg).options[0].value).to.eql(Buffer.of(2))
           expect(parse(msg).token).to.eql(token)
           expect(parse(msg).code).to.eql('2.05')
           expect(parse(msg).ack).to.be.false
@@ -904,10 +904,10 @@ describe('server', function() {
 
       // the first one is an ack
       client.once('message', function(msg) {
-        expect(parse(msg).options[0].value).to.eql(Buffer.from([0x10, 0x93]))
+        expect(parse(msg).options[0].value).to.eql(Buffer.of(0x10, 0x93))
 
         client.once('message', function(msg) {
-          expect(parse(msg).options[0].value).to.eql(Buffer.from([0x10, 0x94]))
+          expect(parse(msg).options[0].value).to.eql(Buffer.of(0x10, 0x94))
           done()
         })
       })
@@ -930,10 +930,10 @@ describe('server', function() {
 
       // the first one is an ack
       client.once('message', function(msg) {
-        expect(parse(msg).options[0].value).to.eql(Buffer.from([1, 0, 0]))
+        expect(parse(msg).options[0].value).to.eql(Buffer.of(1, 0, 0))
 
         client.once('message', function(msg) {
-          expect(parse(msg).options[0].value).to.eql(Buffer.from([1, 0, 1]))
+          expect(parse(msg).options[0].value).to.eql(Buffer.of(1, 0, 1))
           done()
         })
       })

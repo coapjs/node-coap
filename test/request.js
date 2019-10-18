@@ -532,12 +532,12 @@ describe('request', function() {
       port: port
     })
 
-    req.setOption('Content-Type', new Buffer([0]))
+    req.setOption('Content-Type', Buffer.of(0))
     req.end()
 
     server.on('message', function (msg) {
       expect(parse(msg).options[0].name).to.eql('Content-Format')
-      expect(parse(msg).options[0].value).to.eql(new Buffer([0]))
+      expect(parse(msg).options[0].value).to.eql(Buffer.of(0))
       done()
     })
   })
@@ -580,13 +580,13 @@ describe('request', function() {
   })
 
   var formatsString = {
-    'text/plain': new Buffer([0])
-    , 'application/link-format': new Buffer([40])
-    , 'application/xml': new Buffer([41])
-    , 'application/octet-stream': new Buffer([42])
-    , 'application/exi': new Buffer([47])
-    , 'application/json': new Buffer([50])
-    , 'application/cbor': new Buffer([60])
+    'text/plain': Buffer.of(0)
+    , 'application/link-format': Buffer.of(40)
+    , 'application/xml': Buffer.of(41)
+    , 'application/octet-stream': Buffer.of(42)
+    , 'application/exi': Buffer.of(47)
+    , 'application/json': Buffer.of(50)
+    , 'application/cbor': Buffer.of(60)
   }
 
   describe('with the \'Content-Format\' header in the outgoing message', function () {
@@ -970,7 +970,7 @@ describe('request', function() {
           , ack: true
           , options: [{
             name: 'Observe'
-            , value: new Buffer([1])
+            , value: Buffer.of(1)
           }]
           , code: '2.05'
         })
@@ -981,7 +981,7 @@ describe('request', function() {
           , confirmable: true
           , options: [{
             name: 'Observe'
-            , value: new Buffer([2])
+            , value: Buffer.of(2)
           }]
           , code: '2.05'
         })

@@ -317,7 +317,7 @@ Also, `'Content-Type'` is aliased to `'Content-Format'` for HTTP
 compatibility.
 
 Since v0.7.0, this library supports blockwise transfers, you can trigger
-them by adding a `req.setOption('Block2', new Buffer([0x2]))` to the
+them by adding a `req.setOption('Block2', Buffer.of(0x2))` to the
 output of [request](#request).
 
 See the

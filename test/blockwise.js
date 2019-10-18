@@ -121,7 +121,7 @@ describe('blockwise2', function() {
     var req = coap.request({
         port: port
     })
-    .setOption('Block2', new Buffer([0x02]))
+    .setOption('Block2', Buffer.of(0x02))
     .on('response', function(res) {
       var block2
       for (var i in res.options) {
@@ -145,7 +145,7 @@ describe('blockwise2', function() {
     var req = coap.request({
         port: port
     })
-    .setOption('Block2', new Buffer([0x07])) // request for block 0, with overload size of 2**(7+4)
+    .setOption('Block2', Buffer.of(0x07)) // request for block 0, with overload size of 2**(7+4)
     .on('response', function(res) {
       expect(res.code).to.eql('4.02')
       //expect(cache.get(res._packet.token.toString())).to.be.undefined
@@ -161,7 +161,7 @@ describe('blockwise2', function() {
     var req = coap.request({
         port: port
     })
-    .setOption('Block2', new Buffer([0x55])) // request for block 5, size = 512 from 1300B msg (total 1300/512=3 blocks)
+    .setOption('Block2', Buffer.of(0x55)) // request for block 5, size = 512 from 1300B msg (total 1300/512=3 blocks)
     .on('response', function(res) {
       expect(res.code).to.eql('4.02')
       //expect(cache.get(res._packet.token.toString())).to.be.undefined
@@ -177,7 +177,7 @@ describe('blockwise2', function() {
     var req = coap.request({
         port: port
     })
-    .setOption('Block2', new Buffer([0x10])) // request from block 1, with size = 16
+    .setOption('Block2', Buffer.of(0x10)) // request from block 1, with size = 16
     .on('response', function(res) {
       expect(res.payload).to.eql(payload.slice(1*16, payload.length+1))
       //expect(cache.get(res._packet.token.toString())).to.not.be.undefined
@@ -194,7 +194,7 @@ describe('blockwise2', function() {
     var req = coap.request({
         port: port
     })
-    .setOption('Block2', new Buffer([0x0])) // early negotation with block size = 16, almost 10000/16 = 63 blocks
+    .setOption('Block2', Buffer.of(0x0)) // early negotation with block size = 16, almost 10000/16 = 63 blocks
     .on('response', function(res) {
       expect(res.payload).to.eql(payload)
       //expect(cache.get(res._packet.token.toString())).to.not.be.undefined
@@ -212,7 +212,7 @@ describe('blockwise2', function() {
       , token: req_token
       , options: [{
             name: 'Block2'
-          , value: new Buffer([req_block2_num << 4])
+          , value: Buffer.of(req_block2_num << 4)
         }]
     }
     send(generate(packet))
@@ -270,7 +270,7 @@ describe('blockwise2', function() {
         }
     })
 
-    req_client2.setOption('Block2', new Buffer([0x10])) // request from block 1, with size = 16
+    req_client2.setOption('Block2', Buffer.of(0x10)) // request from block 1, with size = 16
 
     // Delay second request so that first request gets first packet
     setTimeout(function() {

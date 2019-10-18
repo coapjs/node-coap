@@ -279,7 +279,7 @@ describe('Agent', function() {
             , payload: Buffer.alloc(5)
             , options: [{
                   name: 'Observe'
-                , value: new Buffer([opts.num])
+                , value: Buffer.of(opts.num)
               }]
           })
       
