@@ -106,7 +106,7 @@ describe('request', function() {
       done()
     })
 
-    req.end(new Buffer(1280))
+    req.end(Buffer.alloc(1280))
   })
 
   it('should imply a default port', function (done) {
@@ -451,7 +451,7 @@ describe('request', function() {
     var req = request({
         port: port
       })
-      , buf = new Buffer(3)
+      , buf = Buffer.alloc(3)
 
     req.setOption('ETag', buf)
     req.end()
@@ -467,7 +467,7 @@ describe('request', function() {
     var req = request({
         port: port
       })
-      , buf = new Buffer(3)
+      , buf = Buffer.alloc(3)
 
     req.setOption('content-type', buf)
     req.end()
@@ -483,9 +483,9 @@ describe('request', function() {
     var req = request({
         port: port
       })
-      , buf = new Buffer(3)
+      , buf = Buffer.alloc(3)
 
-    req.setOption('ETag', new Buffer(3))
+    req.setOption('ETag', Buffer.alloc(3))
     req.setOption('ETag', buf)
     req.end()
 
@@ -499,7 +499,7 @@ describe('request', function() {
     var req = request({
         port: port
       })
-      , buf = new Buffer(3)
+      , buf = Buffer.alloc(3)
 
     req.setHeader('ETag', buf)
     req.end()
@@ -514,8 +514,8 @@ describe('request', function() {
     var req = request({
         port: port
       })
-      , buf1 = new Buffer(3)
-      , buf2 = new Buffer(3)
+      , buf1 = Buffer.alloc(3)
+      , buf2 = Buffer.alloc(3)
 
     req.setOption('433', [buf1, buf2])
     req.end()
@@ -825,7 +825,7 @@ describe('request', function() {
             , token: packet.token
             , code: '2.00'
             , ack: true
-            , payload: new Buffer(5)
+            , payload: Buffer.alloc(5)
           })
 
         server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
@@ -1081,7 +1081,7 @@ describe('request', function() {
       server.on('message', function (msg, rsinfo) {
         var packet = parse(msg)
         expect(packet.options[0].name).to.eql('Observe')
-        expect(packet.options[0].value).to.eql(new Buffer(0))
+        expect(packet.options[0].value).to.eql(Buffer.alloc(0))
         done()
       })
     })
@@ -1251,7 +1251,7 @@ describe('request', function() {
         var packet = parse(msg)
           , toSend = generate({
             messageId: packet.messageId
-            , token: new Buffer(2)
+            , token: Buffer.alloc(2)
             , options: []
           })
         server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
@@ -1279,7 +1279,7 @@ describe('request', function() {
         var packet = parse(msg)
           , toSend = generate({
             messageId: packet.messageId
-            , token: new Buffer(4)
+            , token: Buffer.alloc(4)
             , options: []
           })
         server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)

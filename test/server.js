@@ -112,7 +112,7 @@ describe('server', function() {
   })
 
   it('should receive a request that can be piped', function(done) {
-    var buf = new Buffer(25)
+    var buf = Buffer.alloc(25)
     send(generate({ payload: buf }))
     server.on('request', function(req, res) {
       req.pipe(bl(function(err, data) {
@@ -123,7 +123,7 @@ describe('server', function() {
   })
 
   it('should expose the payload', function(done) {
-    var buf = new Buffer(25)
+    var buf = Buffer.alloc(25)
     send(generate({ payload: buf }))
     server.on('request', function(req, res) {
       expect(req.payload).to.eql(buf)
@@ -132,7 +132,7 @@ describe('server', function() {
   })
 
   it('should include an URL in the request', function(done) {
-    var buf = new Buffer(25)
+    var buf = Buffer.alloc(25)
     send(generate({ payload: buf }))
     server.on('request', function(req, res) {
       expect(req).to.have.property('url', '/')
@@ -141,7 +141,7 @@ describe('server', function() {
   })
 
   it('should include the code', function(done) {
-    var buf = new Buffer(25)
+    var buf = Buffer.alloc(25)
     send(generate({ payload: buf }))
     server.on('request', function(req, res) {
       expect(req).to.have.property('code', '0.01')
@@ -230,7 +230,7 @@ describe('server', function() {
   it('should expose the options', function(done) {
     var options = [{
         name: '555'
-      , value: new Buffer(45)
+      , value: Buffer.alloc(45)
     }]
 
     send(generate({
@@ -244,8 +244,8 @@ describe('server', function() {
   })
 
   it('should include a reset() function in the response', function(done) {
-    var buf = new Buffer(25)
-    var tok = new Buffer(4)
+    var buf = Buffer.alloc(25)
+    var tok = Buffer.alloc(4)
     send(generate({ payload: buf, token: tok }))
     client.on('message', function(msg, rinfo) {
       var result = parse(msg)
@@ -351,7 +351,7 @@ describe('server', function() {
     var packet = {
         confirmable: false
       , messageId: 4242
-      , token: new Buffer(5)
+      , token: Buffer.alloc(5)
     }
 
     function sendAndRespond(status) {
@@ -406,7 +406,7 @@ describe('server', function() {
     })
 
     it('should allow to add an option', function(done) {
-      var buf = new Buffer(3)
+      var buf = Buffer.alloc(3)
 
       send(generate(packet))
 
@@ -423,12 +423,12 @@ describe('server', function() {
     })
 
     it('should overwrite the option', function(done) {
-      var buf = new Buffer(3)
+      var buf = Buffer.alloc(3)
 
       send(generate(packet))
 
       server.on('request', function(req, res) {
-        res.setOption('ETag', new Buffer(3))
+        res.setOption('ETag', Buffer.alloc(3))
         res.setOption('ETag', buf)
         res.end('42')
       })
@@ -455,8 +455,8 @@ describe('server', function() {
     })
 
     it('should set multiple options', function(done) {
-      var buf1 = new Buffer(3)
-        , buf2 = new Buffer(3)
+      var buf1 = Buffer.alloc(3)
+        , buf2 = Buffer.alloc(3)
 
       send(generate(packet))
 
@@ -539,7 +539,7 @@ describe('server', function() {
     })
 
     it('should reply with a \'5.00\' if it cannot parse the packet', function(done) {
-      send(new Buffer(3))
+      send(Buffer.alloc(3))
       client.on('message', function(msg) {
         expect(parse(msg).code).to.eql('5.00')
         done()
@@ -571,7 +571,7 @@ describe('server', function() {
     var packet = {
         confirmable: true
       , messageId: 4242
-      , token: new Buffer(5)
+      , token: Buffer.alloc(5)
     }
 
     it('should reply in piggyback', function(done) {
@@ -597,7 +597,7 @@ describe('server', function() {
         expect(response.ack).to.be.true
         expect(response.code).to.eql('0.00')
         expect(response.messageId).to.eql(packet.messageId)
-        expect(response.payload).to.eql(new Buffer(0))
+        expect(response.payload).to.eql(Buffer.alloc(0))
         done()
       })
 
@@ -742,7 +742,7 @@ describe('server', function() {
   })
 
   describe('observe', function() {
-    var token = new Buffer(3)
+    var token = Buffer.alloc(3)
 
     function doObserve(method) {
       if (!method)
@@ -754,7 +754,7 @@ describe('server', function() {
         , token: token
         , options: [{
               name: 'Observe'
-            , value: new Buffer(0)
+            , value: Buffer.alloc(0)
           }]
       }))
     }
@@ -1001,7 +1001,7 @@ describe('validate custom server options', function() {
     client.on('message', function(msg) {
       messages++
     })
-    send(new Buffer(3))
+    send(Buffer.alloc(3))
     setTimeout(function() {
       expect(messages).to.eql(1)
       expect(server._options.piggybackReplyMs).to.eql(piggyBackTimeout)
@@ -1050,7 +1050,7 @@ describe('validate custom server options', function() {
     var packet = {
         confirmable: false
       , messageId: 4242
-      , token: new Buffer(5)
+      , token: Buffer.alloc(5)
     }
     send(generate(packet))
   }
@@ -1059,7 +1059,7 @@ describe('validate custom server options', function() {
     var packet = {
         confirmable: true
       , messageId: 4242
-      , token: new Buffer(5)
+      , token: Buffer.alloc(5)
     }
     send(generate(packet))
   }
@@ -1120,7 +1120,7 @@ describe('server LRU', function() {
   var packet = {
     confirmable: true
     , messageId: 4242
-    , token: new Buffer(5)
+    , token: Buffer.alloc(5)
   }
 
   beforeEach(function (done) {
