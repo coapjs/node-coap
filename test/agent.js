@@ -241,7 +241,7 @@ describe('Agent', function() {
           // Ensure the message sent by the server does not match any
           // current request.
           var invalidMid = packet.messageId + 1
-            , invalidTkn = new Buffer( packet.token )
+            , invalidTkn = Buffer.from(packet.token)
           ++invalidTkn[0]
 
           var toSend  = generate({

@@ -190,7 +190,7 @@ describe('blockwise2', function() {
   })
 
   it('should receive full response payload', function(done) {
-    var payload = new Buffer(16*0xff+1)
+    var payload = Buffer.alloc(16*0xff+1)
     var req = coap.request({
         port: port
     })
@@ -220,8 +220,8 @@ describe('blockwise2', function() {
 
   function parallelBlock2Test(done, checkNReq, checkBlock2Message, checkNormalReq) {
     var payload_len = 32+16+1
-    var payload_req1 = new Buffer(payload_len)
-    var payload_req2 = new Buffer(payload_len)
+    var payload_req1 = Buffer.alloc(payload_len)
+    var payload_req2 = Buffer.alloc(payload_len)
     var req1_token = Buffer.alloc(4)
     var req1_done = false
     var req2_done = false

@@ -84,7 +84,7 @@ describe('proxy', function() {
     send(generate({
       options: [{
         name: 'Proxy-Uri'
-        , value: new Buffer('coap://localhost:' + targetPort + '/the/path')
+        , value: Buffer.from('coap://localhost:' + targetPort + '/the/path')
       }]
     }))
 
@@ -142,7 +142,7 @@ describe('proxy', function() {
     send(generate({
       options: [{
         name: 'Proxy-Uri'
-        , value: new Buffer('coap://localhost:' + targetPort + '/the/path')
+        , value: Buffer.from('coap://localhost:' + targetPort + '/the/path')
       }]
     }))
   })
@@ -151,7 +151,7 @@ describe('proxy', function() {
     send(generate({
       options: [{
         name: 'Proxy-Uri'
-        , value: new Buffer('coap://localhost:' + targetPort + '/the/path')
+        , value: Buffer.from('coap://localhost:' + targetPort + '/the/path')
       }]
     }))
 
