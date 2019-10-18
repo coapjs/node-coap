@@ -174,10 +174,10 @@ describe('server', function() {
     send(generate({
         options: [{
             name: 'Uri-Path'
-          , value: new Buffer('hello')
+          , value: Buffer.from('hello')
         }, {
             name: 'Uri-Path'
-          , value: new Buffer('world')
+          , value: Buffer.from('world')
         }]
     }))
 
@@ -191,10 +191,10 @@ describe('server', function() {
     send(generate({
         options: [{
             name: 'Uri-Query'
-          , value: new Buffer('a=b')
+          , value: Buffer.from('a=b')
         }, {
             name: 'Uri-Query'
-          , value: new Buffer('b=c')
+          , value: Buffer.from('b=c')
         }]
     }))
 
@@ -208,16 +208,16 @@ describe('server', function() {
     send(generate({
         options: [{
             name: 'Uri-Query'
-          , value: new Buffer('a=b')
+          , value: Buffer.from('a=b')
         }, {
             name: 'Uri-Query'
-          , value: new Buffer('b=c')
+          , value: Buffer.from('b=c')
         }, {
             name: 'Uri-Path'
-          , value: new Buffer('hello')
+          , value: Buffer.from('hello')
         }, {
             name: 'Uri-Path'
-          , value: new Buffer('world')
+          , value: Buffer.from('world')
         }]
     }))
 
@@ -368,7 +368,7 @@ describe('server', function() {
     it('should reply with a payload to a NON message', function(done) {
       sendAndRespond()
       client.on('message', function(msg) {
-        expect(parse(msg).payload).to.eql(new Buffer('42'))
+        expect(parse(msg).payload).to.eql(Buffer.from('42'))
         done()
       })
     })
@@ -449,7 +449,7 @@ describe('server', function() {
 
       client.on('message', function(msg) {
         expect(parse(msg).options[0].name).to.eql('ETag')
-        expect(parse(msg).options[0].value).to.eql(new Buffer('hello world'))
+        expect(parse(msg).options[0].value).to.eql(Buffer.from('hello world'))
         done()
       })
     })
@@ -518,7 +518,7 @@ describe('server', function() {
 
       client.on('message', function(msg, rsinfo) {
         expect(parse(msg).options[0].name).to.eql('ETag')
-        expect(parse(msg).options[0].value).to.eql(new Buffer('abcdefgh'))
+        expect(parse(msg).options[0].value).to.eql(Buffer.from('abcdefgh'))
         done()
       })
     })
@@ -584,7 +584,7 @@ describe('server', function() {
         var response = parse(msg)
         expect(response.ack).to.be.true
         expect(response.messageId).to.eql(packet.messageId)
-        expect(response.payload).to.eql(new Buffer('42'))
+        expect(response.payload).to.eql(Buffer.from('42'))
         done()
       })
     })
