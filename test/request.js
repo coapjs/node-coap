@@ -1073,6 +1073,25 @@ describe('request', function() {
       })
     })
 
+    it('should send deregister request if close(eager=true)', function (done) {
+
+      var req = doObserve()
+
+      req.on('response', function (res) {
+        res.once('data', function (data) {
+          expect(data.toString()).to.eql('42')
+          res.close(true)
+
+          server.on('message', function (msg, rsinfo) {
+            var packet = parse(msg)
+            expect(packet.options[0].name).to.eql('Observe')
+            expect(packet.options[0].value).to.eql(Buffer.from([1]))
+            done()
+          })
+        })
+      })
+    })
+
     it('should send an empty Observe option', function (done) {
       var req = request({
         port: port
