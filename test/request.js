@@ -90,6 +90,7 @@ describe('request', function() {
   })
 
   it('should emit the errors in the req', function (done) {
+    this.timeout(20000);
     var req = request('coap://aaa.eee:' + 1234)
 
     req.once('error', function () {
