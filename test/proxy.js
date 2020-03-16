@@ -205,6 +205,7 @@ describe('proxy', function() {
 
   describe('with a proxied request with a wrong destination', function() {
     it('should return an error to the caller', function(done) {
+      this.timeout(20000);
       var request = coap.request({
         host: 'localhost',
         port: port,
@@ -221,8 +222,12 @@ describe('proxy', function() {
 
       request
           .on('response', function(res) {
-            expect(res.code).to.eql('5.00');
-            expect(res.payload.toString()).to.match(/ENOTFOUND|EAI_AGAIN/);
+            try {
+              expect(res.code).to.eql('5.00');
+              expect(res.payload.toString()).to.match(/ENOTFOUND|EAI_AGAIN/);
+            } catch (err) {
+              return done(err);
+            }
             done()
           })
           .end()
