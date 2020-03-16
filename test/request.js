@@ -1087,6 +1087,25 @@ describe('request', function() {
       })
     })
 
+    it('should allow user to send Observe=1', function (done) {
+      var req = request({
+        port: port
+        , observe: 1
+      }).end()
+
+      server.on('message', function (msg, rsinfo) {
+        var packet = parse(msg)
+        try {
+          expect(packet.options[0].name).to.eql('Observe')
+          expect(packet.options[0].value).to.eql(Buffer.from([1]))
+        } catch (err) {
+          return done(err);
+        }
+
+        done()
+      })
+    })
+
     it('should allow multiple notifications', function (done) {
       server.once('message', function(msg, rsinfo) {
         const req = parse(msg)
