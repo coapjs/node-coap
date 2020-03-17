@@ -654,8 +654,12 @@ describe('server', function() {
       })
 
       setTimeout(function() {
-        // original one plus 4 retries
-        expect(messages).to.eql(5)
+        try {
+          // original one plus 4 retries
+          expect(messages).to.eql(5)
+        } catch (err) {
+          return done(err);
+        }
         done()
       }, 45 * 1000)
 
