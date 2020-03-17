@@ -207,6 +207,45 @@ describe('request', function() {
     })
   })
 
+  it('should accept a token parameter', function (done) {
+    request({
+      port: port
+      , token: Buffer.from([1,2,3,4,5,6,7,8])
+    }).end()
+
+    server.on('message', function (msg, rsinfo) {
+      ackBack(msg, rsinfo)
+
+      var packet = parse(msg)
+      expect(packet.token).to.eql(Buffer.from([1,2,3,4,5,6,7,8]))
+      done()
+    })
+  })
+
+  it('should reject too long token', function (done) {
+    let rq = request({
+      port: port
+      , token: Buffer.from([1,2,3,4,5,6,7,8,9,10])
+    });
+
+    rq.on('error', function(err) {
+      if (err.message === 'Token may be no longer than 8 bytes.')
+        // Success, this is what we were expecting
+        done();
+      else
+        // Not our error
+        done(err);
+    });
+
+    rq.end();
+
+    server.on('message', function (msg, rsinfo) {
+      // We should not see this!
+      ackBack(msg, rsinfo)
+      done(new Error('Message should not have been sent!'))
+    })
+  })
+
   it('should emit a response with a piggyback CON message', function (done) {
     var req = request({
       port: port
