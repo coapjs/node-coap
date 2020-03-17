@@ -1124,8 +1124,16 @@ describe('request', function() {
 
           server.on('message', function (msg, rsinfo) {
             var packet = parse(msg)
-            expect(packet.options[0].name).to.eql('Observe')
-            expect(packet.options[0].value).to.eql(Buffer.from([1]))
+            if (packet.ack && (packet.code === '0.00'))
+              return;
+
+            try {
+              expect(packet.options.length).to.be.least(1);
+              expect(packet.options[0].name).to.eql('Observe')
+              expect(packet.options[0].value).to.eql(Buffer.from([1]))
+            } catch (err) {
+              return done(err);
+            }
             done()
           })
         })
