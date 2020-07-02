@@ -19,7 +19,7 @@ describe('blockwise2', function() {
     , clientPort
     , client
     , bufferVal
-    , payload   = new Buffer(1536)
+    , payload   = Buffer.alloc(1536)
 
   beforeEach(function(done) {
     bufferVal = 0
@@ -164,7 +164,7 @@ describe('blockwise2', function() {
     var req = coap.request({
         port: port
     })
-    .setOption('Block2', new Buffer([0x3D])) // request for block index 3
+    .setOption('Block2', Buffer.of(0x3D)) // request for block index 3
 
     .on('response', function(res) {
       expect(res.code).to.eql('4.02')
