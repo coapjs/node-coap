@@ -182,7 +182,7 @@ If it is an object:
 
 
 `coap.request()` returns an instance of <a
-href='#incoming'><code>OutgoingMessage</code></a>.
+href='#outgoing'><code>OutgoingMessage</code></a>.
 If you need
 to add a payload, just `pipe` into it.
 Otherwise, you __must__ call `end` to submit the request.
