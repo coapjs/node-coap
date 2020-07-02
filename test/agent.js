@@ -10,9 +10,25 @@ var coap      = require('../')
   , parse     = require('coap-packet').parse
   , generate  = require('coap-packet').generate
   , dgram     = require('dgram')
-  , bl        = require('bl')
-  , sinon     = require('sinon')
   , request   = coap.request
+
+describe('Agent config', function() {
+  it('should get agent instance through custom config', function(done) {
+    var agent = coap.Agent({ type: 'udp4', port: 62754 })
+    expect(agent._sock.type).to.eql('udp4');
+    expect(agent._sock._bindState).to.eql(1);
+    done()
+  })
+
+  it('should get agent instance through custom socket', function(done) {
+    var socket = dgram.createSocket('udp6')
+    var agent = coap.Agent({ socket, type: 'udp4', port: 62754 })
+    expect(agent._opts.type).to.eql('udp6');
+    expect(agent._sock.type).to.eql('udp6');
+    expect(agent._sock._bindState).to.eql(0);
+    done()
+  })
+})
 
 describe('Agent', function() {
   var server
