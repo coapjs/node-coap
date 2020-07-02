@@ -68,7 +68,7 @@ describe('request', function() {
 
   it('should send the data to the server', function (done) {
     var req = request('coap://localhost:' + port)
-    req.end(new Buffer('hello world'))
+    req.end(Buffer.from('hello world'))
 
     server.on('message', function (msg, rsinfo) {
       ackBack(msg, rsinfo)
@@ -79,7 +79,7 @@ describe('request', function() {
 
   it('should send a confirmable message by default', function (done) {
     var req = request('coap://localhost:' + port)
-    req.end(new Buffer('hello world'))
+    req.end(Buffer.from('hello world'))
 
     server.on('message', function (msg, rsinfo) {
       ackBack(msg, rsinfo)
@@ -96,7 +96,7 @@ describe('request', function() {
       done()
     })
 
-    req.end(new Buffer('hello world'))
+    req.end(Buffer.from('hello world'))
   })
 
   it('should error if the message is too big', function (done) {
@@ -106,7 +106,7 @@ describe('request', function() {
       done()
     })
 
-    req.end(new Buffer(1280))
+    req.end(Buffer.alloc(1280))
   })
 
   it('should imply a default port', function (done) {
@@ -124,14 +124,14 @@ describe('request', function() {
 
   it('should send the path to the server', function (done) {
     var req = request('coap://localhost:' + port + '/hello')
-    req.end(new Buffer('hello world'))
+    req.end(Buffer.from('hello world'))
 
     server.on('message', function (msg, rsinfo) {
       ackBack(msg, rsinfo)
 
       var packet = parse(msg)
       expect(packet.options[0].name).to.eql('Uri-Path')
-      expect(packet.options[0].value).to.eql(new Buffer('hello'))
+      expect(packet.options[0].value).to.eql(Buffer.from('hello'))
 
       done()
     })
@@ -139,16 +139,16 @@ describe('request', function() {
 
   it('should send a longer path to the server', function (done) {
     var req = request('coap://localhost:' + port + '/hello/world')
-    req.end(new Buffer('hello world'))
+    req.end(Buffer.from('hello world'))
 
     server.on('message', function (msg, rsinfo) {
       ackBack(msg, rsinfo)
 
       var packet = parse(msg)
       expect(packet.options[0].name).to.eql('Uri-Path')
-      expect(packet.options[0].value).to.eql(new Buffer('hello'))
+      expect(packet.options[0].value).to.eql(Buffer.from('hello'))
       expect(packet.options[1].name).to.eql('Uri-Path')
-      expect(packet.options[1].value).to.eql(new Buffer('world'))
+      expect(packet.options[1].value).to.eql(Buffer.from('world'))
       done()
     })
   })
@@ -160,32 +160,32 @@ describe('request', function() {
       , pathname: '/hello/world'
     })
 
-    req.end(new Buffer('hello world'))
+    req.end(Buffer.from('hello world'))
 
     server.on('message', function (msg, rsinfo) {
       ackBack(msg, rsinfo)
 
       var packet = parse(msg)
       expect(packet.options[0].name).to.eql('Uri-Path')
-      expect(packet.options[0].value).to.eql(new Buffer('hello'))
+      expect(packet.options[0].value).to.eql(Buffer.from('hello'))
       expect(packet.options[1].name).to.eql('Uri-Path')
-      expect(packet.options[1].value).to.eql(new Buffer('world'))
+      expect(packet.options[1].value).to.eql(Buffer.from('world'))
       done()
     })
   })
 
   it('should send a query string to the server', function (done) {
     var req = request('coap://localhost:' + port + '?a=b&c=d')
-    req.end(new Buffer('hello world'))
+    req.end(Buffer.from('hello world'))
 
     server.on('message', function (msg, rsinfo) {
       ackBack(msg, rsinfo)
 
       var packet = parse(msg)
       expect(packet.options[0].name).to.eql('Uri-Query')
-      expect(packet.options[0].value).to.eql(new Buffer('a=b'))
+      expect(packet.options[0].value).to.eql(Buffer.from('a=b'))
       expect(packet.options[1].name).to.eql('Uri-Query')
-      expect(packet.options[1].value).to.eql(new Buffer('c=d'))
+      expect(packet.options[1].value).to.eql(Buffer.from('c=d'))
       done()
     })
   })
@@ -216,7 +216,7 @@ describe('request', function() {
         , toSend = generate({
           messageId: packet.messageId
           , token: packet.token
-          , payload: new Buffer('42')
+          , payload: Buffer.from('42')
           , ack: true
           , code: '2.00'
         })
@@ -225,7 +225,7 @@ describe('request', function() {
 
     req.on('response', function (res) {
       res.pipe(bl(function (err, data) {
-        expect(data).to.eql(new Buffer('42'))
+        expect(data).to.eql(Buffer.from('42'))
         done()
       }))
     })
@@ -244,7 +244,7 @@ describe('request', function() {
         , toSend = generate({
           messageId: packet.messageId
           , token: packet.token
-          , payload: new Buffer('')
+          , payload: Buffer.alloc(0)
           , ack: true
           , code: '0.00'
         })
@@ -252,7 +252,7 @@ describe('request', function() {
 
       toSend = generate({
         token: packet.token
-        , payload: new Buffer('42')
+        , payload: Buffer.from('42')
         , confirmable: true
         , code: '2.00'
       })
@@ -261,7 +261,7 @@ describe('request', function() {
 
     req.on('response', function (res) {
       res.pipe(bl(function (err, data) {
-        expect(data).to.eql(new Buffer('42'))
+        expect(data).to.eql(Buffer.from('42'))
         done()
       }))
     })
@@ -287,7 +287,7 @@ describe('request', function() {
 
       toSend = generate({
         token: packet.token
-        , payload: new Buffer('42')
+        , payload: Buffer.from('42')
         , confirmable: true
         , code: '2.00'
       })
@@ -338,7 +338,7 @@ describe('request', function() {
         , toSend = generate({
           messageId: packet.messageId
           , token: packet.token
-          , payload: new Buffer('42')
+          , payload: Buffer.from('42')
           , code: '2.00'
         })
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
@@ -346,7 +346,7 @@ describe('request', function() {
 
     req.on('response', function (res) {
       res.pipe(bl(function (err, data) {
-        expect(data).to.eql(new Buffer('42'))
+        expect(data).to.eql(Buffer.from('42'))
         done()
       }))
     })
@@ -451,7 +451,7 @@ describe('request', function() {
     var req = request({
         port: port
       })
-      , buf = new Buffer(3)
+      , buf = Buffer.alloc(3)
 
     req.setOption('ETag', buf)
     req.end()
@@ -467,7 +467,7 @@ describe('request', function() {
     var req = request({
         port: port
       })
-      , buf = new Buffer(3)
+      , buf = Buffer.alloc(3)
 
     req.setOption('content-type', buf)
     req.end()
@@ -483,9 +483,9 @@ describe('request', function() {
     var req = request({
         port: port
       })
-      , buf = new Buffer(3)
+      , buf = Buffer.alloc(3)
 
-    req.setOption('ETag', new Buffer(3))
+    req.setOption('ETag', Buffer.alloc(3))
     req.setOption('ETag', buf)
     req.end()
 
@@ -499,7 +499,7 @@ describe('request', function() {
     var req = request({
         port: port
       })
-      , buf = new Buffer(3)
+      , buf = Buffer.alloc(3)
 
     req.setHeader('ETag', buf)
     req.end()
@@ -514,8 +514,8 @@ describe('request', function() {
     var req = request({
         port: port
       })
-      , buf1 = new Buffer(3)
-      , buf2 = new Buffer(3)
+      , buf1 = Buffer.alloc(3)
+      , buf2 = Buffer.alloc(3)
 
     req.setOption('433', [buf1, buf2])
     req.end()
@@ -532,12 +532,12 @@ describe('request', function() {
       port: port
     })
 
-    req.setOption('Content-Type', new Buffer([0]))
+    req.setOption('Content-Type', Buffer.of(0))
     req.end()
 
     server.on('message', function (msg) {
       expect(parse(msg).options[0].name).to.eql('Content-Format')
-      expect(parse(msg).options[0].value).to.eql(new Buffer([0]))
+      expect(parse(msg).options[0].value).to.eql(Buffer.of(0))
       done()
     })
   })
@@ -553,7 +553,7 @@ describe('request', function() {
         , toSend = generate({
           token: packet.token
           , messageId: packet.messageId
-          , payload: new Buffer('42')
+          , payload: Buffer.from('42')
           , confirmable: true
           , code: '2.00'
         })
@@ -562,7 +562,7 @@ describe('request', function() {
       toSend = generate({
         token: packet.token
         , messageId: packet.messageId
-        , payload: new Buffer('42')
+        , payload: Buffer.from('42')
         , confirmable: true
         , code: '2.00'
       })
@@ -571,7 +571,7 @@ describe('request', function() {
 
     req.on('response', function (res) {
       res.pipe(bl(function (err, data) {
-        expect(data).to.eql(new Buffer('42'))
+        expect(data).to.eql(Buffer.from('42'))
         done()
       }))
     })
@@ -580,13 +580,13 @@ describe('request', function() {
   })
 
   var formatsString = {
-    'text/plain': new Buffer([0])
-    , 'application/link-format': new Buffer([40])
-    , 'application/xml': new Buffer([41])
-    , 'application/octet-stream': new Buffer([42])
-    , 'application/exi': new Buffer([47])
-    , 'application/json': new Buffer([50])
-    , 'application/cbor': new Buffer([60])
+    'text/plain': Buffer.of(0)
+    , 'application/link-format': Buffer.of(40)
+    , 'application/xml': Buffer.of(41)
+    , 'application/octet-stream': Buffer.of(42)
+    , 'application/exi': Buffer.of(47)
+    , 'application/json': Buffer.of(50)
+    , 'application/cbor': Buffer.of(60)
   }
 
   describe('with the \'Content-Format\' header in the outgoing message', function () {
@@ -701,7 +701,7 @@ describe('request', function() {
           , token: packet.token
           , options: [{
             name: 'ETag'
-            , value: new Buffer('abcdefgh')
+            , value: Buffer.from('abcdefgh')
           }]
         })
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
@@ -825,7 +825,7 @@ describe('request', function() {
             , token: packet.token
             , code: '2.00'
             , ack: true
-            , payload: new Buffer(5)
+            , payload: Buffer.alloc(5)
           })
 
         server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
@@ -966,22 +966,22 @@ describe('request', function() {
         ssend(rsinfo, {
           messageId: packet.messageId
           , token: packet.token
-          , payload: new Buffer('42')
+          , payload: Buffer.from('42')
           , ack: true
           , options: [{
             name: 'Observe'
-            , value: new Buffer([1])
+            , value: Buffer.of(1)
           }]
           , code: '2.05'
         })
 
         ssend(rsinfo, {
           token: packet.token
-          , payload: new Buffer('24')
+          , payload: Buffer.from('24')
           , confirmable: true
           , options: [{
             name: 'Observe'
-            , value: new Buffer([2])
+            , value: Buffer.of(2)
           }]
           , code: '2.05'
         })
@@ -1081,7 +1081,7 @@ describe('request', function() {
       server.on('message', function (msg, rsinfo) {
         var packet = parse(msg)
         expect(packet.options[0].name).to.eql('Observe')
-        expect(packet.options[0].value).to.eql(new Buffer(0))
+        expect(packet.options[0].value).to.eql(Buffer.alloc(0))
         done()
       })
     })
@@ -1251,7 +1251,7 @@ describe('request', function() {
         var packet = parse(msg)
           , toSend = generate({
             messageId: packet.messageId
-            , token: new Buffer(2)
+            , token: Buffer.alloc(2)
             , options: []
           })
         server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
@@ -1279,7 +1279,7 @@ describe('request', function() {
         var packet = parse(msg)
           , toSend = generate({
             messageId: packet.messageId
-            , token: new Buffer(4)
+            , token: Buffer.alloc(4)
             , options: []
           })
         server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
@@ -1348,7 +1348,7 @@ describe('request', function() {
         var toSend = generate({
           messageId: packet.messageId
           , token: packet.token
-          , payload: new Buffer('42')
+          , payload: Buffer.from('42')
           , ack: true
           , code: '2.00'
         })

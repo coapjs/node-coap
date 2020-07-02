@@ -308,7 +308,7 @@ Example:
 
 or
 
-    message.setOption("555", [new Buffer('abcde'),new Buffer('ghi')]);
+    message.setOption("555", [Buffer.from('abcde'),Buffer.from('ghi')]);
 
 `setOption` is also aliased as `setHeader` for HTTP API
 compatibility.
@@ -317,7 +317,7 @@ Also, `'Content-Type'` is aliased to `'Content-Format'` for HTTP
 compatibility.
 
 Since v0.7.0, this library supports blockwise transfers, you can trigger
-them by adding a `req.setOption('Block2', new Buffer([0x2]))` to the
+them by adding a `req.setOption('Block2', Buffer.of(0x2))` to the
 output of [request](#request).
 
 See the
