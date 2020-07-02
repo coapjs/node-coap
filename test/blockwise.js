@@ -165,7 +165,6 @@ describe('blockwise2', function() {
         port: port
     })
     .setOption('Block2', Buffer.of(0x3D)) // request for block index 3
-
     .on('response', function(res) {
       expect(res.code).to.eql('4.02')
       //expect(cache.get(res._packet.token.toString())).to.be.undefined
