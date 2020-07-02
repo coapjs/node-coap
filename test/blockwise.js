@@ -57,7 +57,7 @@ describe('blockwise2', function() {
   }
 
   it('should server not use blockwise in response when payload fit in one packet', function(done) {
-    var payload   = new Buffer(100)         // default max packet is 1280
+    var payload   = Buffer.alloc(100)         // default max packet is 1280
 
     var req = coap.request({
         port: port
@@ -121,7 +121,7 @@ describe('blockwise2', function() {
     var req = coap.request({
         port: port
     })
-    .setOption('Block2', new Buffer([0x02]))
+    .setOption('Block2', Buffer.of(0x02))
     .on('response', function(res) {
       var block2
       for (var i in res.options) {
@@ -145,7 +145,7 @@ describe('blockwise2', function() {
     var req = coap.request({
         port: port
     })
-    .setOption('Block2', new Buffer([0x07])) // request for block 0, with overload size of 2**(7+4)
+    .setOption('Block2', Buffer.of(0x07)) // request for block 0, with overload size of 2**(7+4)
     .on('response', function(res) {
       expect(res.code).to.eql('4.02')
       //expect(cache.get(res._packet.token.toString())).to.be.undefined
@@ -165,6 +165,7 @@ describe('blockwise2', function() {
         port: port
     })
     .setOption('Block2', new Buffer([0x3D])) // request for block index 3
+
     .on('response', function(res) {
       expect(res.code).to.eql('4.02')
       //expect(cache.get(res._packet.token.toString())).to.be.undefined
@@ -180,7 +181,7 @@ describe('blockwise2', function() {
     var req = coap.request({
         port: port
     })
-    .setOption('Block2', new Buffer([0x10])) // request from block 1, with size = 16
+    .setOption('Block2', Buffer.of(0x10)) // request from block 1, with size = 16
     .on('response', function(res) {
       expect(res.payload).to.eql(payload.slice(1*16, payload.length+1))
       //expect(cache.get(res._packet.token.toString())).to.not.be.undefined
@@ -193,11 +194,11 @@ describe('blockwise2', function() {
   })
 
   it('should receive full response payload', function(done) {
-    var payload = new Buffer(16*0xff+1)
+    var payload = Buffer.alloc(16*0xff+1)
     var req = coap.request({
         port: port
     })
-    .setOption('Block2', new Buffer([0x0])) // early negotation with block size = 16, almost 10000/16 = 63 blocks
+    .setOption('Block2', Buffer.of(0x0)) // early negotation with block size = 16, almost 10000/16 = 63 blocks
     .on('response', function(res) {
       expect(res.payload).to.eql(payload)
       //expect(cache.get(res._packet.token.toString())).to.not.be.undefined
@@ -215,7 +216,7 @@ describe('blockwise2', function() {
       , token: req_token
       , options: [{
             name: 'Block2'
-          , value: new Buffer([req_block2_num << 4])
+          , value: Buffer.of(req_block2_num << 4)
         }]
     }
     send(generate(packet))
@@ -223,9 +224,9 @@ describe('blockwise2', function() {
 
   function parallelBlock2Test(done, checkNReq, checkBlock2Message, checkNormalReq) {
     var payload_len = 32+16+1
-    var payload_req1 = new Buffer(payload_len)
-    var payload_req2 = new Buffer(payload_len)
-    var req1_token = new Buffer(4)
+    var payload_req1 = Buffer.alloc(payload_len)
+    var payload_req2 = Buffer.alloc(payload_len)
+    var req1_token = Buffer.alloc(4)
     var req1_done = false
     var req2_done = false
     var req1_block2_num = 0
@@ -273,7 +274,7 @@ describe('blockwise2', function() {
         }
     })
 
-    req_client2.setOption('Block2', new Buffer([0x10])) // request from block 1, with size = 16
+    req_client2.setOption('Block2', Buffer.of(0x10)) // request from block 1, with size = 16
 
     // Delay second request so that first request gets first packet
     setTimeout(function() {

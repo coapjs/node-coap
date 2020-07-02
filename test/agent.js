@@ -10,9 +10,25 @@ var coap      = require('../')
   , parse     = require('coap-packet').parse
   , generate  = require('coap-packet').generate
   , dgram     = require('dgram')
-  , bl        = require('bl')
-  , sinon     = require('sinon')
   , request   = coap.request
+
+describe('Agent config', function() {
+  it('should get agent instance through custom config', function(done) {
+    var agent = coap.Agent({ type: 'udp4', port: 62754 })
+    expect(agent._sock.type).to.eql('udp4');
+    expect(agent._sock._bindState).to.eql(1);
+    done()
+  })
+
+  it('should get agent instance through custom socket', function(done) {
+    var socket = dgram.createSocket('udp6')
+    var agent = coap.Agent({ socket, type: 'udp4', port: 62754 })
+    expect(agent._opts.type).to.eql('udp6');
+    expect(agent._sock.type).to.eql('udp6');
+    expect(agent._sock._bindState).to.eql(0);
+    done()
+  })
+})
 
 describe('Agent', function() {
   var server
@@ -123,7 +139,7 @@ describe('Agent', function() {
                       , token: packet.token
                       , code: '2.00'
                       , ack: true
-                      , payload: new Buffer(5)
+                      , payload: Buffer.alloc(5)
                     })
       
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
@@ -153,7 +169,7 @@ describe('Agent', function() {
             , token: packet.token
             , code: '2.00'
             , confirmable: false
-            , payload: new Buffer(5)
+            , payload: Buffer.alloc(5)
           })
       
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
@@ -182,7 +198,7 @@ describe('Agent', function() {
             , code: '2.00'
             , confirmable: false
             , ack: true
-            , payload: new Buffer(5)
+            , payload: Buffer.alloc(5)
           })
       
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
@@ -209,7 +225,7 @@ describe('Agent', function() {
             , code: '2.00'
             , confirmable: false
             , ack: true
-            , payload: new Buffer(5)
+            , payload: Buffer.alloc(5)
           })
       
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
@@ -241,7 +257,7 @@ describe('Agent', function() {
           // Ensure the message sent by the server does not match any
           // current request.
           var invalidMid = packet.messageId + 1
-            , invalidTkn = new Buffer( packet.token )
+            , invalidTkn = Buffer.from(packet.token)
           ++invalidTkn[0]
 
           var toSend  = generate({
@@ -250,7 +266,7 @@ describe('Agent', function() {
                 , code: '2.00'
                 , confirmable: true
                 , ack: false
-                , payload: new Buffer(5)
+                , payload: Buffer.alloc(5)
               })
           server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
           break
@@ -276,10 +292,10 @@ describe('Agent', function() {
             , code: '2.05'
             , confirmable: opts.confirmable
             , ack: opts.ack
-            , payload: new Buffer(5)
+            , payload: Buffer.alloc(5)
             , options: [{
                   name: 'Observe'
-                , value: new Buffer([opts.num])
+                , value: Buffer.of(opts.num)
               }]
           })
       
