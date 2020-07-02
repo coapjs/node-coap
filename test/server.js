@@ -6,16 +6,17 @@
  * See the included LICENSE file for more details.
  */
 
-var coap      = require('../')
-  , parse     = require('coap-packet').parse
-  , generate  = require('coap-packet').generate
-  , dgram     = require('dgram')
-  , bl        = require('bl')
-  , request   = coap.request
-  , tk        = require('timekeeper')
-  , sinon     = require('sinon')
-  , params    = require('../lib/parameters')
-  , events    = require('events')
+var coap                 = require('../')
+  , parse                = require('coap-packet').parse
+  , generate             = require('coap-packet').generate
+  , dgram                = require('dgram')
+  , bl                   = require('bl')
+  , request              = coap.request
+  , tk                   = require('timekeeper')
+  , sinon                = require('sinon')
+  , params               = require('../lib/parameters')
+  , events               = require('events')
+  , originalSetImmediate = setImmediate
 
 describe('server', function() {
   var server
@@ -25,7 +26,6 @@ describe('server', function() {
     , clock
 
   beforeEach(function(done) {
-    clock = sinon.useFakeTimers()
     port = nextPort()
     server = coap.createServer()
     server.listen(port, done)
@@ -38,7 +38,8 @@ describe('server', function() {
   })
 
   afterEach(function() {
-    clock.restore()
+    if (clock)
+      clock.restore()
     client.close()
     server.close()
     tk.reset()
@@ -51,7 +52,7 @@ describe('server', function() {
   function fastForward(increase, max) {
     clock.tick(increase)
     if (increase < max)
-      setImmediate(fastForward.bind(null, increase, max - increase))
+      originalSetImmediate(fastForward.bind(null, increase, max - increase))
   }
 
   it('should receive a CoAP message', function(done) {
@@ -485,6 +486,7 @@ describe('server', function() {
     })
 
     it('should calculate the response twice after the interval', function(done) {
+      clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
       var first = true
       var delay = (params.exchangeLifetime * 1000)+1
 
@@ -547,6 +549,8 @@ describe('server', function() {
     })
 
     it('should not retry sending the response', function(done) {
+      clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
+
       var messages = 0
 
       send(generate(packet))
@@ -605,6 +609,8 @@ describe('server', function() {
     })
 
     it('should reply with a confirmable after an ack', function(done) {
+      clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
+
       send(generate(packet))
       server.on('request', function(req, res) {
         setTimeout(function() {
@@ -630,6 +636,8 @@ describe('server', function() {
     })
 
     it('should retry sending the response if it does not receive an ack four times before 45s', function(done) {
+      clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
+
       var messages = 0
 
       send(generate(packet))
@@ -655,6 +663,8 @@ describe('server', function() {
     })
 
     it('should stop resending after it receives an ack', function(done) {
+      clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
+
       var messages = 0
 
       send(generate(packet))
@@ -684,6 +694,8 @@ describe('server', function() {
     })
 
     it('should not resend with a piggyback response', function(done) {
+      clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
+
       var messages = 0
 
       send(generate(packet))
@@ -704,7 +716,7 @@ describe('server', function() {
     })
 
     it('should error if it does not receive an ack four times before ~247s', function(done) {
-      var messages = 0
+      clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
 
       send(generate(packet))
       server.on('request', function(req, res) {
@@ -799,7 +811,7 @@ describe('server', function() {
 
       server.on('request', function(req, res) {
         res.write('hello')
-        setImmediate(function() {
+        originalSetImmediate(function() {
           res.end('world')
         })
       })
@@ -828,6 +840,8 @@ describe('server', function() {
     })
 
     it('should emit a \'finish\' if the client do not ack for ~247s', function(done) {
+      clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
+
       var now = Date.now()
       doObserve()
 
@@ -897,7 +911,7 @@ describe('server', function() {
         res._counter = 4242
 
         res.write('hello')
-        setImmediate(function() {
+        originalSetImmediate(function() {
           res.end('world')
         })
       })
@@ -923,7 +937,7 @@ describe('server', function() {
         res._counter = 65535
 
         res.write('hello')
-        setImmediate(function() {
+        originalSetImmediate(function() {
           res.end('world')
         })
       })
@@ -1096,7 +1110,6 @@ describe('validate custom server options', function() {
   })
 
   it('should send ACK for confirmable message, sendAcksForNonConfirmablePackets=true', function(done) {
-    var messages = 0;
     server = coap.createServer({ sendAcksForNonConfirmablePackets: true })
     server.listen(port)
     server.on('request', function(req, res) {

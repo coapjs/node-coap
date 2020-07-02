@@ -6,14 +6,15 @@
  * See the included LICENSE file for more details.
  */
 
-var coap      = require('../')
-  , toBinary  = require('../lib/option_converter').toBinary
-  , parse     = require('coap-packet').parse
-  , generate  = require('coap-packet').generate
-  , dgram     = require('dgram')
-  , bl        = require('bl')
-  , sinon     = require('sinon')
-  , request   = coap.request
+var coap                 = require('../')
+  , toBinary             = require('../lib/option_converter').toBinary
+  , parse                = require('coap-packet').parse
+  , generate             = require('coap-packet').generate
+  , dgram                = require('dgram')
+  , bl                   = require('bl')
+  , sinon                = require('sinon')
+  , request              = coap.request
+  , originalSetImmediate = setImmediate
 
 describe('request', function() {
   var server
@@ -42,7 +43,7 @@ describe('request', function() {
   function fastForward(increase, max) {
     clock.tick(increase)
     if (increase < max)
-      setImmediate(fastForward.bind(null, increase, max - increase))
+      originalSetImmediate(fastForward.bind(null, increase, max - increase))
   }
 
   function ackBack(msg, rsinfo) {
@@ -763,7 +764,7 @@ describe('request', function() {
     function fastForward(increase, max) {
       clock.tick(increase)
       if (increase < max)
-        setImmediate(fastForward.bind(null, increase, max - increase))
+        originalSetImmediate(fastForward.bind(null, increase, max - increase))
     }
 
     it('should timeout after ~202 seconds', function (done) {
@@ -861,7 +862,7 @@ describe('request', function() {
     function fastForward(increase, max) {
       clock.tick(increase)
       if (increase < max)
-        setImmediate(fastForward.bind(null, increase, max - increase))
+        originalSetImmediate(fastForward.bind(null, increase, max - increase))
     }
 
     it('should error after ~247 seconds', function (done) {
@@ -1238,7 +1239,7 @@ describe('request', function() {
     function fastForward(increase, max) {
       clock.tick(increase)
       if (increase < max)
-        setImmediate(fastForward.bind(null, increase, max - increase))
+        originalSetImmediate(fastForward.bind(null, increase, max - increase))
     }
 
 
