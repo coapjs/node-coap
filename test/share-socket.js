@@ -6,8 +6,9 @@
  * See the included LICENSE file for more details.
  */
 
-var coap = require('../')
-  , sinon = require('sinon')
+var coap                 = require('../')
+  , sinon                = require('sinon')
+  , originalSetImmediate = setImmediate
 
 describe('share-socket', function() {
   var server
@@ -429,7 +430,7 @@ describe('share-socket', function() {
     function fastForward(increase, max) {
       clock.tick(increase)
       if (increase < max)
-        setImmediate(fastForward.bind(null, increase, max - increase))
+        originalSetImmediate(fastForward.bind(null, increase, max - increase))
     }
 
     req.on('error', function (err) {

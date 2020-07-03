@@ -6,15 +6,16 @@
  * See the included LICENSE file for more details.
  */
 
-var coap      = require('../')
-  , parse     = require('coap-packet').parse
-  , generate  = require('coap-packet').generate
-  , dgram     = require('dgram')
-  , bl        = require('bl')
-  , request   = coap.request
-  , tk        = require('timekeeper')
-  , sinon     = require('sinon')
-  , params    = require('../lib/parameters')
+var coap                 = require('../')
+  , parse                = require('coap-packet').parse
+  , generate             = require('coap-packet').generate
+  , dgram                = require('dgram')
+  , bl                   = require('bl')
+  , request              = coap.request
+  , tk                   = require('timekeeper')
+  , sinon                = require('sinon')
+  , params               = require('../lib/parameters')
+  , originalSetImmediate = setImmediate
 
 describe('proxy', function() {
   var server
@@ -77,7 +78,7 @@ describe('proxy', function() {
   function fastForward(increase, max) {
     clock.tick(increase)
     if (increase < max)
-      setImmediate(fastForward.bind(null, increase, max - increase))
+      originalSetImmediate(fastForward.bind(null, increase, max - increase))
   }
 
   it('should resend the message to its destination specified in the Proxy-Uri option', function(done) {
