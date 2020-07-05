@@ -4,8 +4,9 @@
   "description": "A CoAP library for node modelled after 'http'",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --exit --bail --reporter spec 2>&1",
-    "testnobail": "./node_modules/.bin/mocha --exit --reporter spec 2>&1"
+    "test": "./node_modules/.bin/mocha --bail",
+    "testnobail": "./node_modules/.bin/mocha",
+    "test-cov": "nyc npm run test"
   },
   "repository": {
     "type": "git",
@@ -28,11 +29,12 @@
   "author": "Matteo Collina <hello@matteocollina.com>",
   "license": "MIT",
   "devDependencies": {
-    "pre-commit": "1.2.2",
     "chai": "^4.2.0",
     "mocha": "^8.0.1",
-    "timekeeper": "^1.0.0",
-    "sinon": "^9.0.2"
+    "nyc": "^15.1.0",
+    "pre-commit": "1.2.2",
+    "sinon": "^9.0.2",
+    "timekeeper": "^1.0.0"
   },
   "dependencies": {
     "bl": "^4.0.2",
