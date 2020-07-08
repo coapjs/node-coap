@@ -19,7 +19,7 @@ describe('blockwise2', function() {
     , clientPort
     , client
     , bufferVal
-    , payload   = Buffer.alloc(1300)
+    , payload   = Buffer.alloc(1536)
 
   beforeEach(function(done) {
     bufferVal = 0
@@ -158,10 +158,13 @@ describe('blockwise2', function() {
   })
 
   it('should receive error request for out of range block number', function(done) {
+    // with a block size of 512 and a total payload of 1536 there will be 3 blocks
+    // blocks are requested with a zero based index, i.e. indices 0, 1 and 2
+    // block index 3 or higher is "out of range" and should cause an error response
     var req = coap.request({
         port: port
     })
-    .setOption('Block2', Buffer.of(0x55)) // request for block 5, size = 512 from 1300B msg (total 1300/512=3 blocks)
+    .setOption('Block2', Buffer.of(0x3D)) // request for block index 3
     .on('response', function(res) {
       expect(res.code).to.eql('4.02')
       //expect(cache.get(res._packet.token.toString())).to.be.undefined
