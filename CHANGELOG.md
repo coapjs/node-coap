@@ -10,6 +10,7 @@
 * (Apollon77) Fix: Add missing checks for Buffer length before reading from it
 * (Apollon77) Update all dependencies
 * (JsonMa) Fix: remove useless variables 
+* (JcBernack) Fix: Fix more flag during block-wise transfer
 
 ## 0.23.1 (and below)
 ... can be found in the [Releases list on GitHub](https://github.com/mcollina/node-coap/releases) 
