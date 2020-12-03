@@ -12,7 +12,7 @@ coap.createServer(function(req, res) {
   var req = coap.request('coap://localhost/repeat-me?t=400')
 
   // edit this to adjust max packet
-  req.setOption('Block2', new Buffer([0x2]))
+  req.setOption('Block2', Buffer.of(0x2))
 
   req.on('response', function(res) {
     res.pipe(process.stdout)
