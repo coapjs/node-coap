@@ -355,7 +355,7 @@ describe('blockwise2', function() {
   })
 })
 
-describe.only('blockwise1', () =>{
+describe('blockwise1', () =>{
   var server
   , port
   , clientPort
