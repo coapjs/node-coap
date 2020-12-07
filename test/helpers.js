@@ -6,10 +6,8 @@
  * See the included LICENSE file for more details.
  */
 
-const { expect } = require('chai');
-const { reporters } = require('mocha');
-const getOption = require('../lib/helpers').getOption;
-const hasOption = require('../lib/helpers').hasOption;
+const getOption              = require('../lib/helpers').getOption;
+const hasOption              = require('../lib/helpers').hasOption;
 const simplifyPacketForPrint = require('../lib/helpers').simplifyPacketForPrint;
 
 describe('Helpers', () => {

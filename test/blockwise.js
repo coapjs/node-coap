@@ -6,14 +6,12 @@
  * See the included LICENSE file for more details.
  */
 
-const { expect } = require('chai')
-
 var coap        = require('../')
   , parse       = require('coap-packet').parse
   , generate    = require('coap-packet').generate
   , getOption   = require('../lib/helpers').getOption
   , parseBlock2 = require('../lib/helpers').parseBlock2
-  , block = require('../lib/block')
+  , block       = require('../lib/block')
   , dgram       = require('dgram')
 
 describe('blockwise2', function() {
