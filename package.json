@@ -4,9 +4,8 @@
   "description": "A CoAP library for node modelled after 'http'",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --bail",
-    "testnobail": "./node_modules/.bin/mocha",
-    "test-cov": "nyc npm run test"
+    "test": "nyc mocha --exit",
+    "coverage": "nyc report --reporter=lcov --reporter=text-summary"
   },
   "repository": {
     "type": "git",
