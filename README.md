@@ -1,8 +1,8 @@
 node-coap
 =====
 
-[![Build
-Status](https://travis-ci.org/mcollina/node-coap.png)](https://travis-ci.org/mcollina/node-coap)
+![Build Status](https://github.com/mcollina/node-coap/workflows/Build%20Status/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/mcollina/node-coap/badge.svg?branch=master)](https://coveralls.io/github/mcollina/node-coap?branch=master)
 [![gitter](https://badges.gitter.im/mcollina/node-coap.png)](https://gitter.im/mcollina/node-coap)
 
 __node-coap__ is a client and server library for CoAP modeled after the `http` module.
