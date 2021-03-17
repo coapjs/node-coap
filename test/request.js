@@ -1428,6 +1428,40 @@ describe('request', function() {
         }
       }).end()
     })
+    
+    it('should preserve all listeners when using block-wise transfer and multicast', function (done) {
+      var payload = Buffer.alloc(1536)
+        , counter = 0  
+      
+      server = coap.createServer((req, res) => {
+        res.end(payload)
+      })
+      server.listen(sock)
+      
+      var server2 = coap.createServer((req, res) => {
+        res.end(payload)
+      })
+      server2.listen(sock)
+
+      var _req = request({
+        host: MULTICAST_ADDR,
+        port: port2,
+        confirmable: false,
+        multicast: true,
+      })
+
+      _req.on("bestEventEver", function () {
+        counter++
+        if (counter == 2) {
+          done()
+        }
+      })
+      
+      _req.on('response', function (res) {
+        expect(res.payload.toString()).to.eql(payload.toString())
+        _req.emit("bestEventEver")
+      }).end()
+    })
 
   })
 
