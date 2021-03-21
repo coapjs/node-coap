@@ -1400,19 +1400,12 @@ describe('request', function() {
 
     it('should allow for block-wise transfer when using multicast', function (done) {
       var payload = Buffer.alloc(1536)
-        , counter = 0  
       
       server = coap.createServer((req, res) => {
         expect(req.url).to.eql("/hello")
         res.end(payload)
       })
       server.listen(sock)
-      
-      var server2 = coap.createServer((req, res) => {
-        expect(req.url).to.eql("/hello")
-        res.end(payload)
-      })
-      server2.listen(sock)
 
       var _req = request({
         host: MULTICAST_ADDR,
@@ -1422,26 +1415,17 @@ describe('request', function() {
         multicast: true,
       }).on('response', function (res) {
         expect(res.payload.toString()).to.eql(payload.toString())
-        counter++
-        if (counter == 2) {
-          done()
-        }
+        done()
       }).end()
     })
     
     it('should preserve all listeners when using block-wise transfer and multicast', function (done) {
       var payload = Buffer.alloc(1536)
-        , counter = 0  
       
       server = coap.createServer((req, res) => {
         res.end(payload)
       })
       server.listen(sock)
-      
-      var server2 = coap.createServer((req, res) => {
-        res.end(payload)
-      })
-      server2.listen(sock)
 
       var _req = request({
         host: MULTICAST_ADDR,
@@ -1451,10 +1435,7 @@ describe('request', function() {
       })
 
       _req.on("bestEventEver", function () {
-        counter++
-        if (counter == 2) {
-          done()
-        }
+        done()
       })
       
       _req.on('response', function (res) {
