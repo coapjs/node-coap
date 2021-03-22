@@ -1444,6 +1444,38 @@ describe('request', function() {
       }).end()
     })
 
+    it('should ignore multiple responses from the same hostname when using block2 multicast', function (done) {
+      var payload = Buffer.alloc(1536)
+
+      var counter = 0
+      
+      server = coap.createServer((req, res) => {
+        res.end(payload)
+      })
+      server.listen(sock)
+
+      var server2 = coap.createServer((req, res) => {
+        res.end(payload)
+      })
+      server2.listen(sock)
+
+      var _req = request({
+        host: MULTICAST_ADDR,
+        port: port2,
+        confirmable: false,
+        multicast: true,
+      }).on('response', function (res) {
+        counter++        
+      }).end()
+      
+      setTimeout(function () {
+        expect(counter).to.eql(1)
+        done()
+      }, 45 * 1000)
+
+      fastForward(100, 45 * 1000)
+    })
+
   })
 
 })
