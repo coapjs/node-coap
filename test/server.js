@@ -1182,3 +1182,59 @@ describe('server LRU', function() {
 
 })
 
+describe('server block cache', function() {
+  var server
+      , port
+      , clientPort
+      , client
+      , clock
+
+  var packet = {
+    confirmable: true
+    , messageId: 4242
+    , token: Buffer.alloc(5)
+  }
+
+  beforeEach(function (done) {
+    clock = sinon.useFakeTimers()
+    port = nextPort()
+    server = coap.createServer()
+    server.listen(port, done)
+  })
+
+  beforeEach(function (done) {
+    clientPort = nextPort()
+    client = dgram.createSocket('udp4')
+    client.bind(clientPort, done)
+  })
+
+  afterEach(function () {
+    clock.restore()
+    client.close()
+    server.close()
+    tk.reset()
+  })
+
+  function send(message) {
+    client.send(message, 0, message.length, port, '127.0.0.1')
+  }
+
+  it('should have block1Cache return {}', function (done) {
+    send(generate(packet))
+    server.on('request', function (req, res) {
+      res.end()
+      expect(server._block1Cache._factory()).to.eql({})
+      done()
+    })
+  })
+
+  it('should have block2Cache return null', function (done) {
+    send(generate(packet))
+    server.on('request', function (req, res) {
+      res.end()
+      expect(server._block2Cache._factory()).to.eql(null)
+      done()
+    })
+  })
+
+})

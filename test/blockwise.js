@@ -365,6 +365,20 @@ describe('blockwise1', () =>{
     setImmediate(done);
    })
 
+   it('it should return buffer equal to 1,0,1', (done) => {
+    var payload  = Buffer.of(0x01, 0x00, 0x01) 
+    let value = block.generateBlockOption(4096, 0, 1);
+    expect(payload).to.eql(value)
+    setImmediate(done);
+   })
+
+   it('it should return buffer equal to 1,1', (done) => {
+    var payload  = Buffer.of(0x01, 0x01) 
+    let value = block.generateBlockOption(16, 0, 1);
+    expect(payload).to.eql(value)
+    setImmediate(done);
+   })
+
    it('it should throw Invalid Parameters error', (done) => {
     expect(() => {
       block.generateBlockOption(0, null, undefined)
@@ -387,6 +401,30 @@ describe('blockwise1', () =>{
       sequenceNumber: 0,
       moreBlocks: 0,
       blockSize: 1
+    }
+    let value = block.parseBlockOption(payload);
+    expect(value).to.eql(response)
+    setImmediate(done);
+   })
+
+   it('it should return object when length is equal to 2', (done) => {
+    var payload  = Buffer.of(0x01, 0x02) 
+    var response = {
+      sequenceNumber: 16,
+      moreBlocks: 0,
+      blockSize: 2
+    }
+    let value = block.parseBlockOption(payload);
+    expect(value).to.eql(response)
+    setImmediate(done);
+   })
+
+   it('it should return object when length is equal to 3', (done) => {
+    var payload  = Buffer.of(0x01, 0x02, 0x03) 
+    var response = {
+      sequenceNumber: 4128,
+      moreBlocks: 0,
+      blockSize: 3
     }
     let value = block.parseBlockOption(payload);
     expect(value).to.eql(response)
