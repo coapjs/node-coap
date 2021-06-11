@@ -320,6 +320,13 @@ Since v0.7.0, this library supports blockwise transfers, you can trigger
 them by adding a `req.setOption('Block2', Buffer.of(0x2))` to the
 output of [request](#request).
 
+And since v?.?.?, this library supports rudimentry type 1 blockwise transfers, you can trigger
+them by adding a `req.setOption('Block1', new Buffer([0x2]))` to the
+options of [request](#request).
+
+(The hex value 0x2 specifies the size of the blocks to transfer with.
+Use values 0 to 6 for 16 to 1024 byte block sizes respectively.)
+
 See the
 [spec](http://tools.ietf.org/html/draft-ietf-core-coap-18#section-5.4)
 for all the possible options.

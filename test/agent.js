@@ -6,11 +6,11 @@
  * See the included LICENSE file for more details.
  */
 
-var coap      = require('../')
-  , parse     = require('coap-packet').parse
-  , generate  = require('coap-packet').generate
-  , dgram     = require('dgram')
-  , request   = coap.request
+var coap     = require('../')
+  , parse    = require('coap-packet').parse
+  , generate = require('coap-packet').generate
+  , dgram    = require('dgram')
+  , request  = coap.request
 
 describe('Agent config', function() {
   it('should get agent instance through custom config', function(done) {

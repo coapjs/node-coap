@@ -41,3 +41,6 @@ lib-cov
 
 # Optional npm cache directory
 .npm
+
+#local builds
+*.tgz

@@ -11,6 +11,7 @@ var coap        = require('../')
   , generate    = require('coap-packet').generate
   , getOption   = require('../lib/helpers').getOption
   , parseBlock2 = require('../lib/helpers').parseBlock2
+  , block       = require('../lib/block')
   , dgram       = require('dgram')
 
 describe('blockwise2', function() {
@@ -352,4 +353,111 @@ describe('blockwise2', function() {
 
     parallelBlock2Test(done, checkNothing, checkBlock2Payload, checkNormalRespPayload)
   })
+})
+
+describe('blockwise1', () =>{
+
+ describe('Generate Block Options', () => {
+   it('it should return buffer', (done) => {
+    var payload  = Buffer.of(0x01) 
+    let value = block.generateBlockOption(0, 0, 1);
+    expect(payload).to.eql(value)
+    setImmediate(done);
+   })
+
+   it('it should return buffer equal to 1,0,1', (done) => {
+    var payload  = Buffer.of(0x01, 0x00, 0x01) 
+    let value = block.generateBlockOption(4096, 0, 1);
+    expect(payload).to.eql(value)
+    setImmediate(done);
+   })
+
+   it('it should return buffer equal to 1,1', (done) => {
+    var payload  = Buffer.of(0x01, 0x01) 
+    let value = block.generateBlockOption(16, 0, 1);
+    expect(payload).to.eql(value)
+    setImmediate(done);
+   })
+
+   it('it should throw Invalid Parameters error', (done) => {
+    expect(() => {
+      block.generateBlockOption(0, null, undefined)
+    }).to.throw("Invalid parameters")
+    setImmediate(done);
+   })
+
+   it('it should throw Sequence error', (done) => {
+    expect(() => {
+      block.generateBlockOption(1048576, 0, 0)
+    }).to.throw("Sequence number out of range")
+    setImmediate(done);
+   })
+ })
+
+ describe('Parse Block Options', () => {
+  it('it should return object', (done) => {
+    var payload  = Buffer.of(0x01) 
+    var response = {
+      sequenceNumber: 0,
+      moreBlocks: 0,
+      blockSize: 1
+    }
+    let value = block.parseBlockOption(payload);
+    expect(value).to.eql(response)
+    setImmediate(done);
+   })
+
+   it('it should return object when length is equal to 2', (done) => {
+    var payload  = Buffer.of(0x01, 0x02) 
+    var response = {
+      sequenceNumber: 16,
+      moreBlocks: 0,
+      blockSize: 2
+    }
+    let value = block.parseBlockOption(payload);
+    expect(value).to.eql(response)
+    setImmediate(done);
+   })
+
+   it('it should return object when length is equal to 3', (done) => {
+    var payload  = Buffer.of(0x01, 0x02, 0x03) 
+    var response = {
+      sequenceNumber: 4128,
+      moreBlocks: 0,
+      blockSize: 3
+    }
+    let value = block.parseBlockOption(payload);
+    expect(value).to.eql(response)
+    setImmediate(done);
+   })
+
+   it('it should throw Invalid Block Option error', (done) => {
+    var payload  = Buffer.from([0x04, 0x01, 0x03, 0x04])
+    expect(() => {
+      block.parseBlockOption(payload)
+    }).to.throw("Invalid block option buffer length. Must be 1, 2 or 3. It is 4")
+    setImmediate(done);
+   })
+ })
+
+ describe('Exponenent to Byte Size', () => {
+  it('it should return value', (done) => {
+    let response = 1024;
+    let payload = 6;
+    let value = block.exponentToByteSize(payload);
+    expect(value).to.eql(response)
+    setImmediate(done);
+   })
+ })
+
+ describe('Byte Size to Exponenet', () => {
+  it('it should return value', (done) => {
+    let response = 1024;
+    let payload = 6;
+    let value = block.byteSizeToExponent(response);
+    expect(value).to.eql(payload)
+    setImmediate(done);
+   })
+ })
+
 })
