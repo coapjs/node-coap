@@ -226,6 +226,25 @@ describe('request', function() {
     })
   })
 
+  it('should ignore empty token parameter', function (done) {
+    request({
+      port: port
+      , token: Buffer.from([])
+    }).end()
+
+    server.on('message', function (msg, rsinfo) {
+      try {
+        ackBack(msg, rsinfo)
+
+        var packet = parse(msg)
+        expect(packet.token.length).to.be.above(0)
+        done();
+      } catch (err) {
+        done(err);
+      }
+    })
+  })
+
   it('should reject too long token', function (done) {
     var rq = request({
       port: port
