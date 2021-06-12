@@ -214,11 +214,15 @@ describe('request', function() {
     }).end()
 
     server.on('message', function (msg, rsinfo) {
-      ackBack(msg, rsinfo)
+      try {
+        ackBack(msg, rsinfo)
 
-      var packet = parse(msg)
-      expect(packet.token).to.eql(Buffer.from([1,2,3,4,5,6,7,8]))
-      done()
+        var packet = parse(msg)
+        expect(packet.token).to.eql(Buffer.from([1,2,3,4,5,6,7,8]))
+        done();
+      } catch (err) {
+        done(err);
+      }
     })
   })
 
