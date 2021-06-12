@@ -227,7 +227,7 @@ describe('request', function() {
   })
 
   it('should reject too long token', function (done) {
-    let rq = request({
+    var rq = request({
       port: port
       , token: Buffer.from([1,2,3,4,5,6,7,8,9,10])
     });
