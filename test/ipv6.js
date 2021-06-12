@@ -68,14 +68,14 @@ describe('IPv6', function() {
     function createTest(createUrl) {
       return function (done) {
         var req = coap.request(createUrl())
-        req.end(new Buffer('hello world'))
+        req.end(Buffer.from('hello world'))
 
         server.on('message', function(msg, rsinfo) {
           var packet = parse(msg)
             , toSend = generate({
                            messageId: packet.messageId
                          , token: packet.token
-                         , payload: new Buffer('42')
+                         , payload: Buffer.from('42')
                          , ack: true
                          , code: '2.00'
                        })

@@ -1,8 +1,8 @@
 node-coap
 =====
 
-[![Build
-Status](https://travis-ci.org/mcollina/node-coap.png)](https://travis-ci.org/mcollina/node-coap)
+![Build Status](https://github.com/mcollina/node-coap/workflows/Build%20Status/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/mcollina/node-coap/badge.svg?branch=master)](https://coveralls.io/github/mcollina/node-coap?branch=master)
 [![gitter](https://badges.gitter.im/mcollina/node-coap.png)](https://gitter.im/mcollina/node-coap)
 
 __node-coap__ is a client and server library for CoAP modeled after the `http` module.
@@ -182,7 +182,7 @@ If it is an object:
 
 
 `coap.request()` returns an instance of <a
-href='#incoming'><code>OutgoingMessage</code></a>.
+href='#outgoing'><code>OutgoingMessage</code></a>.
 If you need
 to add a payload, just `pipe` into it.
 Otherwise, you __must__ call `end` to submit the request.
@@ -250,6 +250,13 @@ IPv4 or IPv6 address by passing `null` as the address to the underlining socket.
 To listen
  to a unix socket, supply a filename instead of port and hostname.
 
+A custom socket object can be passed as a `port` parameter. This custom socket
+must be an instance of `EventEmitter` which emits `message`, `error` and
+`close` events and implements `send(msg, offset, length, port, address, callback)`
+function, just like `dgram.Socket`.
+In such case, the custom socket must be pre-configured manually, i.e. CoAP server
+will not bind, add multicast groups or do any other configuration.
+
 This function is asynchronous.
 
 #### server.close([callback])
@@ -269,11 +276,11 @@ It may be used to access response status, headers and data.
 
 It implements the [Writable
 Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable) interface, as well as the
-following additional methods and properties.
+following additional properties, methods and events.
 
 #### message.code
 
-The CoAP code ot the message.
+The CoAP code of the message.
 It is HTTP-compatible, as it can be passed `404`.
 
 #### message.statusCode
@@ -301,7 +308,7 @@ Example:
 
 or
 
-    message.setOption("555", [new Buffer('abcde'),new Buffer('ghi')]);
+    message.setOption("555", [Buffer.from('abcde'),Buffer.from('ghi')]);
 
 `setOption` is also aliased as `setHeader` for HTTP API
 compatibility.
@@ -310,7 +317,7 @@ Also, `'Content-Type'` is aliased to `'Content-Format'` for HTTP
 compatibility.
 
 Since v0.7.0, this library supports blockwise transfers, you can trigger
-them by adding a `req.setOption('Block2', new Buffer([0x2]))` to the
+them by adding a `req.setOption('Block2', Buffer.of(0x2))` to the
 output of [request](#request).
 
 See the
@@ -323,6 +330,14 @@ reset flag set to `true` to the caller. This action ends the interaction with th
 
 #### message.writeHead(code, headers)
 Functions somewhat like `http`'s `writeHead()` function.  If `code` is does not match the CoAP code mask of `#.##`, it is coerced into this mask.  `headers` is an object with keys being the header names, and values being the header values.
+
+#### message.on('timeout', function(err) { })
+Emitted when the request does not receive a response or acknowledgement within a transaction lifetime.
+`Error` object with message `No reply in XXXs` and `retransmitTimeout` property is provided as a parameter.
+
+#### message.on('error', function(err) { })
+Emitted when an error occurs. This can be due to socket error, confirmable message timeout or any other generic error.
+`Error` object is provided, that describes the error.
 
 -------------------------------------------------------
 <a name="incoming"></a>

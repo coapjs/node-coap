@@ -1,9 +1,0 @@
-language: node_js
-sudo: false
-dist: trusty
-before_script: sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
-node_js:
-  - "6"
-  - "8"
-  - "9"
-  - "10"
