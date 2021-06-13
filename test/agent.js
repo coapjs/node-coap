@@ -184,6 +184,65 @@ describe('Agent', function() {
     })
   })
 
+  it('should be able to handle undefined Content-Formats', function(done) {
+    var req = doReq()
+
+    // it is needed to keep the agent open
+    doReq()
+
+    server.once('message', function(msg, rsinfo) {
+      var packet  = parse(msg)
+        , toSend  = generate({
+              messageId: packet.messageId
+            , token: packet.token
+            , code: '2.00'
+            , confirmable: false
+            , payload: Buffer.alloc(5)
+            , options: [{
+              name: 'Content-Format'
+              , value: Buffer.of(0x06, 0x06)
+            }]
+          })
+
+        server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+    })
+
+    req.on('response', function(res) {
+      expect(res.headers['Content-Format']).to.equal(1542)
+      done()
+    })
+  })
+
+  it('should be able to handle unallowed Content-Formats', function(done) {
+    var req = doReq()
+
+    // it is needed to keep the agent open
+    doReq()
+
+    server.once('message', function(msg, rsinfo) {
+      var packet  = parse(msg)
+        , toSend  = generate({
+              messageId: packet.messageId
+            , token: packet.token
+            , code: '2.00'
+            , confirmable: false
+            , payload: Buffer.alloc(5)
+            , options: [{
+              name: 'Content-Format'
+              , value: Buffer.of(0xff, 0xff, 0x1)
+            }]
+          })
+
+        server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+    })
+
+    req.on('response', function(res) {
+      console.log(res)
+      expect(res.headers['Content-Format']).to.equal(null)
+      done()
+    })
+  })
+
   it('should discard the request after receiving the payload for piggyback CON requests', function(done) {
     var req = doReq(true)
 
