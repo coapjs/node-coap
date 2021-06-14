@@ -320,7 +320,7 @@ Since v0.7.0, this library supports blockwise transfers, you can trigger
 them by adding a `req.setOption('Block2', Buffer.of(0x2))` to the
 output of [request](#request).
 
-And since v?.?.?, this library supports rudimentry type 1 blockwise transfers, you can trigger
+And since v0.25.0, this library supports rudimentry type 1 blockwise transfers, you can trigger
 them by adding a `req.setOption('Block1', new Buffer([0x2]))` to the
 options of [request](#request).
 
