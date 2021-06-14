@@ -90,6 +90,7 @@ describe('request', function() {
   })
 
   it('should emit the errors in the req', function (done) {
+    this.timeout(20000);
     var req = request('coap://aaa.eee:' + 1234)
 
     req.once('error', function () {
@@ -203,6 +204,68 @@ describe('request', function() {
       var packet = parse(msg)
       expect(packet.code).to.eql('0.02')
       done()
+    })
+  })
+
+  it('should accept a token parameter', function (done) {
+    request({
+      port: port
+      , token: Buffer.from([1,2,3,4,5,6,7,8])
+    }).end()
+
+    server.on('message', function (msg, rsinfo) {
+      try {
+        ackBack(msg, rsinfo)
+
+        var packet = parse(msg)
+        expect(packet.token).to.eql(Buffer.from([1,2,3,4,5,6,7,8]))
+        done();
+      } catch (err) {
+        done(err);
+      }
+    })
+  })
+
+  it('should ignore empty token parameter', function (done) {
+    request({
+      port: port
+      , token: Buffer.from([])
+    }).end()
+
+    server.on('message', function (msg, rsinfo) {
+      try {
+        ackBack(msg, rsinfo)
+
+        var packet = parse(msg)
+        expect(packet.token.length).to.be.above(0)
+        done();
+      } catch (err) {
+        done(err);
+      }
+    })
+  })
+
+  it('should reject too long token', function (done) {
+    var rq = request({
+      port: port
+      , token: Buffer.from([1,2,3,4,5,6,7,8,9,10])
+    });
+
+    rq.on('error', function(err) {
+      if (err.message === 'Token may be no longer than 8 bytes.')
+        // Success, this is what we were expecting
+        done();
+      else
+        // Not our error
+        done(err);
+    });
+
+    rq.end();
+
+    server.on('message', function (msg, rsinfo) {
+      // We should not see this!
+      ackBack(msg, rsinfo)
+      done(new Error('Message should not have been sent!'))
     })
   })
 
@@ -1073,6 +1136,33 @@ describe('request', function() {
       })
     })
 
+    it('should send deregister request if close(eager=true)', function (done) {
+
+      var req = doObserve()
+
+      req.on('response', function (res) {
+        res.once('data', function (data) {
+          expect(data.toString()).to.eql('42')
+          res.close(true)
+
+          server.on('message', function (msg, rsinfo) {
+            var packet = parse(msg)
+            if (packet.ack && (packet.code === '0.00'))
+              return;
+
+            try {
+              expect(packet.options.length).to.be.least(1);
+              expect(packet.options[0].name).to.eql('Observe')
+              expect(packet.options[0].value).to.eql(Buffer.from([1]))
+            } catch (err) {
+              return done(err);
+            }
+            done()
+          })
+        })
+      })
+    })
+
     it('should send an empty Observe option', function (done) {
       var req = request({
         port: port
@@ -1083,6 +1173,25 @@ describe('request', function() {
         var packet = parse(msg)
         expect(packet.options[0].name).to.eql('Observe')
         expect(packet.options[0].value).to.eql(Buffer.alloc(0))
+        done()
+      })
+    })
+
+    it('should allow user to send Observe=1', function (done) {
+      var req = request({
+        port: port
+        , observe: 1
+      }).end()
+
+      server.on('message', function (msg, rsinfo) {
+        var packet = parse(msg)
+        try {
+          expect(packet.options[0].name).to.eql('Observe')
+          expect(packet.options[0].value).to.eql(Buffer.from([1]))
+        } catch (err) {
+          return done(err);
+        }
+
         done()
       })
     })
