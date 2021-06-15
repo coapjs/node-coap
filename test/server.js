@@ -324,26 +324,48 @@ describe('server', function() {
     }
   })
 
-  describe('with the \'Content-Format\' header and a wrong value in the request', function() {
-    it('should return a 5.00 error to the cliend', function(done) {
+  describe('with the \'Content-Format\' header and an unknown value in the request', function() {
+    it('should use the numeric format if the option value is in range', function(done) {
       send(generate({
         options: [{
           name: 'Content-Format'
-          , value: Buffer.of(1541)
+          , value: Buffer.of(0x06, 0x06)
         }]
       }))
 
       client.on('message', function(msg) {
         var response = parse(msg);
 
-        expect(response.code).to.equal('5.00')
-        expect(response.payload.toString()).to.equal('No matching format found')
+        expect(response.code).to.equal('2.05')
 
         done()
       })
 
-      server.on('request', function(req) {
-        assert(false, 'This should not happen')
+      server.on('request', function(req, res) {
+        expect(req.headers['Content-Format']).to.equal(1542)
+        res.end()
+      })
+    })
+
+    it('should ignore the option if the  option value is not in range', function(done) {
+      send(generate({
+        options: [{
+          name: 'Content-Format'
+          , value: Buffer.of(0xff, 0xff, 0x01)
+        }]
+      }))
+
+      client.on('message', function(msg) {
+        var response = parse(msg);
+
+        expect(response.code).to.equal('2.05')
+
+        done()
+      })
+
+      server.on('request', function(req, res) {
+        expect(req.headers['Content-Format']).to.equal(undefined)
+        res.end()
       })
     })
   })
