@@ -325,7 +325,7 @@ describe('server', function() {
   })
 
   describe('with the \'Content-Format\' header and an unknown value in the request', function() {
-    it('should include the content-format as a numeric value', function(done) {
+    it('should use the numeric format if the option value is in range', function(done) {
       send(generate({
         options: [{
           name: 'Content-Format'
@@ -343,6 +343,28 @@ describe('server', function() {
 
       server.on('request', function(req, res) {
         expect(req.headers['Content-Format']).to.equal(1542)
+        res.end()
+      })
+    })
+
+    it('should ignore the option if the  option value is not in range', function(done) {
+      send(generate({
+        options: [{
+          name: 'Content-Format'
+          , value: Buffer.of(0xff, 0xff, 0x01)
+        }]
+      }))
+
+      client.on('message', function(msg) {
+        var response = parse(msg);
+
+        expect(response.code).to.equal('2.05')
+
+        done()
+      })
+
+      server.on('request', function(req, res) {
+        expect(req.headers['Content-Format']).to.equal(undefined)
         res.end()
       })
     })
