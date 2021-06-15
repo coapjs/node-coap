@@ -237,7 +237,6 @@ describe('Agent', function() {
     })
 
     req.on('response', function(res) {
-      console.log(res)
       expect(res.headers['Content-Format']).to.equal(undefined)
       done()
     })
