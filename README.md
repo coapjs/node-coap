@@ -455,7 +455,7 @@ Each new `write()` call is a __new message__ being sent to the client.
 
 It implements the [Writable
 Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable)
-and [OutgoingMessage](#outgoing) interfaces, as well as the
+interface, as well as the
 following additional methods and properties.
 
 #### Event: 'finish'
