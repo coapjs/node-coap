@@ -6,21 +6,21 @@
  * See the included LICENSE file for more details.
  */
 
-var coap                 = require('../')
-  , toBinary             = require('../lib/option_converter').toBinary
-  , parse                = require('coap-packet').parse
-  , generate             = require('coap-packet').generate
-  , dgram                = require('dgram')
-  , bl                   = require('bl')
-  , sinon                = require('sinon')
-  , request              = coap.request
-  , originalSetImmediate = setImmediate
+const coap = require('../')
+const toBinary = require('../lib/option_converter').toBinary
+const parse = require('coap-packet').parse
+const generate = require('coap-packet').generate
+const dgram = require('dgram')
+const bl = require('bl')
+const sinon = require('sinon')
+const request = coap.request
+const originalSetImmediate = setImmediate
 
-describe('request', function() {
-  var server
-    , server2
-    , port
-    , clock
+describe('request', function () {
+  let server,
+    server2,
+    port,
+    clock
 
   beforeEach(function (done) {
     port = nextPort()
@@ -32,33 +32,31 @@ describe('request', function() {
   afterEach(function () {
     server.close()
 
-    if (server2)
-      server2.close()
+    if (server2) { server2.close() }
 
     server = server2 = null
 
     clock.restore()
   })
 
-  function fastForward(increase, max) {
+  function fastForward (increase, max) {
     clock.tick(increase)
-    if (increase < max)
-      originalSetImmediate(fastForward.bind(null, increase, max - increase))
+    if (increase < max) { originalSetImmediate(fastForward.bind(null, increase, max - increase)) }
   }
 
-  function ackBack(msg, rsinfo) {
-    var packet = parse(msg)
-      , toSend = generate({
-        messageId: packet.messageId
-        , ack: true
-        , code: '0.00'
-      })
+  function ackBack (msg, rsinfo) {
+    const packet = parse(msg)
+    const toSend = generate({
+      messageId: packet.messageId,
+      ack: true,
+      code: '0.00'
+    })
     server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
   }
 
   it('should return a pipeable stream', function (done) {
-    var req = request('coap://localhost:' + port)
-      , stream = bl()
+    const req = request('coap://localhost:' + port)
+    const stream = bl()
 
     stream.append('hello world')
 
@@ -68,7 +66,7 @@ describe('request', function() {
   })
 
   it('should send the data to the server', function (done) {
-    var req = request('coap://localhost:' + port)
+    const req = request('coap://localhost:' + port)
     req.end(Buffer.from('hello world'))
 
     server.on('message', function (msg, rsinfo) {
@@ -79,7 +77,7 @@ describe('request', function() {
   })
 
   it('should send a confirmable message by default', function (done) {
-    var req = request('coap://localhost:' + port)
+    const req = request('coap://localhost:' + port)
     req.end(Buffer.from('hello world'))
 
     server.on('message', function (msg, rsinfo) {
@@ -91,7 +89,7 @@ describe('request', function() {
 
   it('should emit the errors in the req', function (done) {
     this.timeout(20000)
-    var req = request('coap://aaa.eee:' + 1234)
+    const req = request('coap://aaa.eee:' + 1234)
 
     req.once('error', function () {
       coap.globalAgent.abort(req)
@@ -102,7 +100,7 @@ describe('request', function() {
   })
 
   it('should error if the message is too big', function (done) {
-    var req = request('coap://localhost:' + port)
+    const req = request('coap://localhost:' + port)
 
     req.on('error', function () {
       done()
@@ -125,13 +123,13 @@ describe('request', function() {
   })
 
   it('should send the path to the server', function (done) {
-    var req = request('coap://localhost:' + port + '/hello')
+    const req = request('coap://localhost:' + port + '/hello')
     req.end(Buffer.from('hello world'))
 
     server.on('message', function (msg, rsinfo) {
       ackBack(msg, rsinfo)
 
-      var packet = parse(msg)
+      const packet = parse(msg)
       expect(packet.options[0].name).to.eql('Uri-Path')
       expect(packet.options[0].value).to.eql(Buffer.from('hello'))
 
@@ -140,13 +138,13 @@ describe('request', function() {
   })
 
   it('should send a longer path to the server', function (done) {
-    var req = request('coap://localhost:' + port + '/hello/world')
+    const req = request('coap://localhost:' + port + '/hello/world')
     req.end(Buffer.from('hello world'))
 
     server.on('message', function (msg, rsinfo) {
       ackBack(msg, rsinfo)
 
-      var packet = parse(msg)
+      const packet = parse(msg)
       expect(packet.options[0].name).to.eql('Uri-Path')
       expect(packet.options[0].value).to.eql(Buffer.from('hello'))
       expect(packet.options[1].name).to.eql('Uri-Path')
@@ -156,10 +154,10 @@ describe('request', function() {
   })
 
   it('should accept an object instead of a string', function (done) {
-    var req = request({
-      hostname: 'localhost'
-      , port: port
-      , pathname: '/hello/world'
+    const req = request({
+      hostname: 'localhost',
+      port: port,
+      pathname: '/hello/world'
     })
 
     req.end(Buffer.from('hello world'))
@@ -167,7 +165,7 @@ describe('request', function() {
     server.on('message', function (msg, rsinfo) {
       ackBack(msg, rsinfo)
 
-      var packet = parse(msg)
+      const packet = parse(msg)
       expect(packet.options[0].name).to.eql('Uri-Path')
       expect(packet.options[0].value).to.eql(Buffer.from('hello'))
       expect(packet.options[1].name).to.eql('Uri-Path')
@@ -177,13 +175,13 @@ describe('request', function() {
   })
 
   it('should send a query string to the server', function (done) {
-    var req = request('coap://localhost:' + port + '?a=b&c=d')
+    const req = request('coap://localhost:' + port + '?a=b&c=d')
     req.end(Buffer.from('hello world'))
 
     server.on('message', function (msg, rsinfo) {
       ackBack(msg, rsinfo)
 
-      var packet = parse(msg)
+      const packet = parse(msg)
       expect(packet.options[0].name).to.eql('Uri-Query')
       expect(packet.options[0].value).to.eql(Buffer.from('a=b'))
       expect(packet.options[1].name).to.eql('Uri-Query')
@@ -194,14 +192,14 @@ describe('request', function() {
 
   it('should accept a method parameter', function (done) {
     request({
-      port: port
-      , method: 'POST'
+      port: port,
+      method: 'POST'
     }).end()
 
     server.on('message', function (msg, rsinfo) {
       ackBack(msg, rsinfo)
 
-      var packet = parse(msg)
+      const packet = parse(msg)
       expect(packet.code).to.eql('0.02')
       done()
     })
@@ -209,16 +207,16 @@ describe('request', function() {
 
   it('should accept a token parameter', function (done) {
     request({
-      port: port
-      , token: Buffer.from([1,2,3,4,5,6,7,8])
+      port: port,
+      token: Buffer.from([1, 2, 3, 4, 5, 6, 7, 8])
     }).end()
 
     server.on('message', function (msg, rsinfo) {
       try {
         ackBack(msg, rsinfo)
 
-        var packet = parse(msg)
-        expect(packet.token).to.eql(Buffer.from([1,2,3,4,5,6,7,8]))
+        const packet = parse(msg)
+        expect(packet.token).to.eql(Buffer.from([1, 2, 3, 4, 5, 6, 7, 8]))
         done()
       } catch (err) {
         done(err)
@@ -228,15 +226,15 @@ describe('request', function() {
 
   it('should ignore empty token parameter', function (done) {
     request({
-      port: port
-      , token: Buffer.from([])
+      port: port,
+      token: Buffer.from([])
     }).end()
 
     server.on('message', function (msg, rsinfo) {
       try {
         ackBack(msg, rsinfo)
 
-        var packet = parse(msg)
+        const packet = parse(msg)
         expect(packet.token.length).to.be.above(0)
         done()
       } catch (err) {
@@ -246,18 +244,19 @@ describe('request', function() {
   })
 
   it('should reject too long token', function (done) {
-    var rq = request({
-      port: port
-      , token: Buffer.from([1,2,3,4,5,6,7,8,9,10])
+    const rq = request({
+      port: port,
+      token: Buffer.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     })
 
-    rq.on('error', function(err) {
-      if (err.message === 'Token may be no longer than 8 bytes.')
+    rq.on('error', function (err) {
+      if (err.message === 'Token may be no longer than 8 bytes.') {
         // Success, this is what we were expecting
         done()
-      else
+      } else {
         // Not our error
         done(err)
+      }
     })
 
     rq.end()
@@ -270,55 +269,19 @@ describe('request', function() {
   })
 
   it('should emit a response with a piggyback CON message', function (done) {
-    var req = request({
-      port: port
-      , confirmable: true
+    const req = request({
+      port: port,
+      confirmable: true
     })
 
     server.on('message', function (msg, rsinfo) {
-      var packet = parse(msg)
-        , toSend = generate({
-          messageId: packet.messageId
-          , token: packet.token
-          , payload: Buffer.from('42')
-          , ack: true
-          , code: '2.00'
-        })
-      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
-    })
-
-    req.on('response', function (res) {
-      res.pipe(bl(function (err, data) {
-        expect(data).to.eql(Buffer.from('42'))
-        done()
-      }))
-    })
-
-    req.end()
-  })
-
-  it('should emit a response with a delayed CON message', function (done) {
-    var req = request({
-      port: port
-      , confirmable: true
-    })
-
-    server.once('message', function (msg, rsinfo) {
-      var packet = parse(msg)
-        , toSend = generate({
-          messageId: packet.messageId
-          , token: packet.token
-          , payload: Buffer.alloc(0)
-          , ack: true
-          , code: '0.00'
-        })
-      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
-
-      toSend = generate({
-        token: packet.token
-        , payload: Buffer.from('42')
-        , confirmable: true
-        , code: '2.00'
+      const packet = parse(msg)
+      const toSend = generate({
+        messageId: packet.messageId,
+        token: packet.token,
+        payload: Buffer.from('42'),
+        ack: true,
+        code: '2.00'
       })
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
     })
@@ -333,27 +296,62 @@ describe('request', function() {
     req.end()
   })
 
-
-  it('should send an ACK back after receiving a CON response', function (done) {
-    var req = request({
-      port: port
-      , confirmable: true
+  it('should emit a response with a delayed CON message', function (done) {
+    const req = request({
+      port: port,
+      confirmable: true
     })
 
     server.once('message', function (msg, rsinfo) {
-      var packet = parse(msg)
-        , toSend = generate({
-          messageId: packet.messageId
-          , ack: true
-          , code: '0.00'
-        })
+      const packet = parse(msg)
+      let toSend = generate({
+        messageId: packet.messageId,
+        token: packet.token,
+        payload: Buffer.alloc(0),
+        ack: true,
+        code: '0.00'
+      })
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
 
       toSend = generate({
-        token: packet.token
-        , payload: Buffer.from('42')
-        , confirmable: true
-        , code: '2.00'
+        token: packet.token,
+        payload: Buffer.from('42'),
+        confirmable: true,
+        code: '2.00'
+      })
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+    })
+
+    req.on('response', function (res) {
+      res.pipe(bl(function (err, data) {
+        expect(data).to.eql(Buffer.from('42'))
+        done()
+      }))
+    })
+
+    req.end()
+  })
+
+  it('should send an ACK back after receiving a CON response', function (done) {
+    const req = request({
+      port: port,
+      confirmable: true
+    })
+
+    server.once('message', function (msg, rsinfo) {
+      let packet = parse(msg)
+      let toSend = generate({
+        messageId: packet.messageId,
+        ack: true,
+        code: '0.00'
+      })
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+
+      toSend = generate({
+        token: packet.token,
+        payload: Buffer.from('42'),
+        confirmable: true,
+        code: '2.00'
       })
 
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
@@ -371,9 +369,9 @@ describe('request', function() {
   })
 
   it('should not emit a response with an ack', function (done) {
-    var req = request({
-      port: port
-      , confirmable: true
+    const req = request({
+      port: port,
+      confirmable: true
     })
 
     server.on('message', function (msg, rsinfo) {
@@ -392,19 +390,19 @@ describe('request', function() {
   })
 
   it('should emit a response with a NON message', function (done) {
-    var req = request({
-      port: port
-      , confirmable: false
+    const req = request({
+      port: port,
+      confirmable: false
     })
 
     server.on('message', function (msg, rsinfo) {
-      var packet = parse(msg)
-        , toSend = generate({
-          messageId: packet.messageId
-          , token: packet.token
-          , payload: Buffer.from('42')
-          , code: '2.00'
-        })
+      const packet = parse(msg)
+      const toSend = generate({
+        messageId: packet.messageId,
+        token: packet.token,
+        payload: Buffer.from('42'),
+        code: '2.00'
+      })
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
     })
 
@@ -419,18 +417,18 @@ describe('request', function() {
   })
 
   it('should emit a response on reset', function (done) {
-    var req = request({
+    const req = request({
       port: port
     })
 
     server.on('message', function (msg, rsinfo) {
-      var packet = parse(msg)
-        , toSend = generate({
-          messageId: packet.messageId
-          , code: '0.00'
-          , ack: false
-          , reset: true
-        })
+      const packet = parse(msg)
+      const toSend = generate({
+        messageId: packet.messageId,
+        code: '0.00',
+        ack: false,
+        reset: true
+      })
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
     })
 
@@ -446,19 +444,19 @@ describe('request', function() {
   })
 
   it('should stop retrying on reset', function (done) {
-    var req = request({
+    const req = request({
       port: port
     })
-    var messages = 0
+    let messages = 0
 
     server.on('message', function (msg, rsinfo) {
-      var packet = parse(msg)
-        , toSend = generate({
-          messageId: packet.messageId
-          , code: '0.00'
-          , ack: false
-          , reset: true
-        })
+      const packet = parse(msg)
+      const toSend = generate({
+        messageId: packet.messageId,
+        code: '0.00',
+        ack: false,
+        reset: true
+      })
       messages++
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
     })
@@ -479,19 +477,19 @@ describe('request', function() {
   })
 
   it('should not send response to invalid packets', function (done) {
-    var req = request({
+    const req = request({
       port: port
     })
-    var messages = 0
+    let messages = 0
 
     server.on('message', function (msg, rsinfo) {
-      var packet = parse(msg)
-        , toSend = generate({
-          messageId: packet.messageId
-          , code: '0.00'
-          , ack: true
-          , payload: 'this payload invalidates empty message'
-        })
+      const packet = parse(msg)
+      const toSend = generate({
+        messageId: packet.messageId,
+        code: '0.00',
+        ack: true,
+        payload: 'this payload invalidates empty message'
+      })
       expect(packet.code).to.be.eq('0.01')
       messages++
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
@@ -512,10 +510,10 @@ describe('request', function() {
   })
 
   it('should allow to add an option', function (done) {
-    var req = request({
-        port: port
-      })
-      , buf = Buffer.alloc(3)
+    const req = request({
+      port: port
+    })
+    const buf = Buffer.alloc(3)
 
     req.setOption('ETag', buf)
     req.end()
@@ -528,10 +526,10 @@ describe('request', function() {
   })
 
   it('should attempt to normalize option case', function (done) {
-    var req = request({
-        port: port
-      })
-      , buf = Buffer.alloc(3)
+    const req = request({
+      port: port
+    })
+    const buf = Buffer.alloc(3)
 
     req.setOption('content-type', buf)
     req.end()
@@ -544,10 +542,10 @@ describe('request', function() {
   })
 
   it('should overwrite the option', function (done) {
-    var req = request({
-        port: port
-      })
-      , buf = Buffer.alloc(3)
+    const req = request({
+      port: port
+    })
+    const buf = Buffer.alloc(3)
 
     req.setOption('ETag', Buffer.alloc(3))
     req.setOption('ETag', buf)
@@ -560,10 +558,10 @@ describe('request', function() {
   })
 
   it('should alias setOption to setHeader', function (done) {
-    var req = request({
-        port: port
-      })
-      , buf = Buffer.alloc(3)
+    const req = request({
+      port: port
+    })
+    const buf = Buffer.alloc(3)
 
     req.setHeader('ETag', buf)
     req.end()
@@ -575,11 +573,11 @@ describe('request', function() {
   })
 
   it('should set multiple options', function (done) {
-    var req = request({
-        port: port
-      })
-      , buf1 = Buffer.alloc(3)
-      , buf2 = Buffer.alloc(3)
+    const req = request({
+      port: port
+    })
+    const buf1 = Buffer.alloc(3)
+    const buf2 = Buffer.alloc(3)
 
     req.setOption('433', [buf1, buf2])
     req.end()
@@ -592,7 +590,7 @@ describe('request', function() {
   })
 
   it('should alias the \'Content-Format\' option to \'Content-Type\'', function (done) {
-    var req = request({
+    const req = request({
       port: port
     })
 
@@ -607,28 +605,28 @@ describe('request', function() {
   })
 
   it('should not crash with two CON responses with the same messageId & token', function (done) {
-    var req = request({
-      port: port
-      , confirmable: true
+    const req = request({
+      port: port,
+      confirmable: true
     })
 
     server.once('message', function (msg, rsinfo) {
-      var packet = parse(msg)
-        , toSend = generate({
-          token: packet.token
-          , messageId: packet.messageId
-          , payload: Buffer.from('42')
-          , confirmable: true
-          , code: '2.00'
-        })
+      const packet = parse(msg)
+      let toSend = generate({
+        token: packet.token,
+        messageId: packet.messageId,
+        payload: Buffer.from('42'),
+        confirmable: true,
+        code: '2.00'
+      })
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
 
       toSend = generate({
-        token: packet.token
-        , messageId: packet.messageId
-        , payload: Buffer.from('42')
-        , confirmable: true
-        , code: '2.00'
+        token: packet.token,
+        messageId: packet.messageId,
+        payload: Buffer.from('42'),
+        confirmable: true,
+        code: '2.00'
       })
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
     })
@@ -643,20 +641,20 @@ describe('request', function() {
     req.end()
   })
 
-  var formatsString = {
-    'text/plain': Buffer.of(0)
-    , 'application/link-format': Buffer.of(40)
-    , 'application/xml': Buffer.of(41)
-    , 'application/octet-stream': Buffer.of(42)
-    , 'application/exi': Buffer.of(47)
-    , 'application/json': Buffer.of(50)
-    , 'application/cbor': Buffer.of(60)
+  const formatsString = {
+    'text/plain': Buffer.of(0),
+    'application/link-format': Buffer.of(40),
+    'application/xml': Buffer.of(41),
+    'application/octet-stream': Buffer.of(42),
+    'application/exi': Buffer.of(47),
+    'application/json': Buffer.of(50),
+    'application/cbor': Buffer.of(60)
   }
 
   describe('with the \'Content-Format\' header in the outgoing message', function () {
-    function buildTest(format, value) {
+    function buildTest (format, value) {
       it('should parse ' + format, function (done) {
-        var req = request({
+        const req = request({
           port: port
         })
 
@@ -670,15 +668,15 @@ describe('request', function() {
       })
     }
 
-    for (var format in formatsString) {
+    for (const format in formatsString) {
       buildTest(format, formatsString[format])
     }
   })
 
   describe('with the \'Accept\' header in the outgoing message', function () {
-    function buildTest(format, value) {
+    function buildTest (format, value) {
       it('should parse ' + format, function (done) {
-        var req = request({
+        const req = request({
           port: port
         })
 
@@ -692,31 +690,31 @@ describe('request', function() {
       })
     }
 
-    for (var format in formatsString) {
+    for (const format in formatsString) {
       buildTest(format, formatsString[format])
     }
   })
 
   describe('with the \'Content-Format\' in the response', function () {
-    function buildResponse(value) {
+    function buildResponse (value) {
       return function (msg, rsinfo) {
-        var packet = parse(msg)
-          , toSend = generate({
-            messageId: packet.messageId
-            , code: '2.05'
-            , token: packet.token
-            , options: [{
-              name: 'Content-Format'
-              , value: value
-            }]
-          })
+        const packet = parse(msg)
+        const toSend = generate({
+          messageId: packet.messageId,
+          code: '2.05',
+          token: packet.token,
+          options: [{
+            name: 'Content-Format',
+            value: value
+          }]
+        })
         server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
       }
     }
 
-    function buildTest(format, value) {
+    function buildTest (format, value) {
       it('should parse ' + format, function (done) {
-        var req = request({
+        const req = request({
           port: port
         })
 
@@ -731,7 +729,7 @@ describe('request', function() {
       })
 
       it('should include ' + format + ' in the headers', function (done) {
-        var req = request({
+        const req = request({
           port: port
         })
 
@@ -747,27 +745,27 @@ describe('request', function() {
       })
     }
 
-    for (var format in formatsString) {
+    for (const format in formatsString) {
       buildTest(format, formatsString[format])
     }
   })
 
   it('should include \'ETag\' in the response headers', function (done) {
-    var req = request({
+    const req = request({
       port: port
     })
 
     server.on('message', function (msg, rsinfo) {
-      var packet = parse(msg)
-        , toSend = generate({
-          messageId: packet.messageId
-          , code: '2.05'
-          , token: packet.token
-          , options: [{
-            name: 'ETag'
-            , value: Buffer.from('abcdefgh')
-          }]
-        })
+      const packet = parse(msg)
+      const toSend = generate({
+        messageId: packet.messageId,
+        code: '2.05',
+        token: packet.token,
+        options: [{
+          name: 'ETag',
+          value: Buffer.from('abcdefgh')
+        }]
+      })
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
     })
 
@@ -780,18 +778,18 @@ describe('request', function() {
   })
 
   it('should include original and destination socket information in the response', function (done) {
-    var req = request({
+    const req = request({
       port: port
     })
 
     server.on('message', function (msg, rsinfo) {
-      var packet = parse(msg)
-        , toSend = generate({
-          messageId: packet.messageId
-          , code: '2.05'
-          , token: packet.token
-          , options: []
-        })
+      const packet = parse(msg)
+      const toSend = generate({
+        messageId: packet.messageId,
+        code: '2.05',
+        token: packet.token,
+        options: []
+      })
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
     })
 
@@ -807,7 +805,7 @@ describe('request', function() {
   })
 
   describe('non-confirmable retries', function () {
-    var clock
+    let clock
 
     beforeEach(function () {
       clock = sinon.useFakeTimers()
@@ -817,21 +815,20 @@ describe('request', function() {
       clock.restore()
     })
 
-    function doReq() {
+    function doReq () {
       return request({
-        port: port
-        , confirmable: false
+        port: port,
+        confirmable: false
       }).end()
     }
 
-    function fastForward(increase, max) {
+    function fastForward (increase, max) {
       clock.tick(increase)
-      if (increase < max)
-        originalSetImmediate(fastForward.bind(null, increase, max - increase))
+      if (increase < max) { originalSetImmediate(fastForward.bind(null, increase, max - increase)) }
     }
 
     it('should timeout after ~202 seconds', function (done) {
-      var req = doReq()
+      const req = doReq()
 
       req.on('error', function () {
       })
@@ -846,8 +843,8 @@ describe('request', function() {
     })
 
     it('should not retry before timeout', function (done) {
-      var req = doReq()
-        , messages = 0
+      const req = doReq()
+      let messages = 0
 
       server.on('message', function (msg) {
         messages++
@@ -862,8 +859,8 @@ describe('request', function() {
     })
 
     it('should not retry before 45s', function (done) {
-      var req = doReq()
-        , messages = 0
+      doReq()
+      let messages = 0
 
       server.on('message', function (msg) {
         messages++
@@ -878,19 +875,19 @@ describe('request', function() {
     })
 
     it('should stop retrying if it receives a message', function (done) {
-      var req = doReq()
-        , messages = 0
+      doReq()
+      let messages = 0
 
       server.on('message', function (msg, rsinfo) {
         messages++
-        var packet = parse(msg)
-          , toSend = generate({
-            messageId: packet.messageId
-            , token: packet.token
-            , code: '2.00'
-            , ack: true
-            , payload: Buffer.alloc(5)
-          })
+        const packet = parse(msg)
+        const toSend = generate({
+          messageId: packet.messageId,
+          token: packet.token,
+          code: '2.00',
+          ack: true,
+          payload: Buffer.alloc(5)
+        })
 
         server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
       })
@@ -905,7 +902,7 @@ describe('request', function() {
   })
 
   describe('confirmable retries', function () {
-    var clock
+    let clock
 
     beforeEach(function () {
       clock = sinon.useFakeTimers()
@@ -915,21 +912,20 @@ describe('request', function() {
       clock.restore()
     })
 
-    function doReq() {
+    function doReq () {
       return request({
-        port: port
-        , confirmable: true
+        port: port,
+        confirmable: true
       }).end()
     }
 
-    function fastForward(increase, max) {
+    function fastForward (increase, max) {
       clock.tick(increase)
-      if (increase < max)
-        originalSetImmediate(fastForward.bind(null, increase, max - increase))
+      if (increase < max) { originalSetImmediate(fastForward.bind(null, increase, max - increase)) }
     }
 
     it('should error after ~247 seconds', function (done) {
-      var req = doReq()
+      const req = doReq()
 
       req.on('error', function (err) {
         expect(err).to.have.property('message', 'No reply in 247s')
@@ -940,8 +936,8 @@ describe('request', function() {
     })
 
     it('should retry four times before erroring', function (done) {
-      var req = doReq()
-        , messages = 0
+      const req = doReq()
+      let messages = 0
 
       server.on('message', function (msg) {
         messages++
@@ -957,19 +953,18 @@ describe('request', function() {
     })
 
     it('should retry with the same message id', function (done) {
-      var req = doReq()
-        , messageId
+      const req = doReq()
+      let messageId
 
       server.on('message', function (msg) {
-        var packet = parse(msg)
+        const packet = parse(msg)
 
-        if (!messageId)
-          messageId = packet.messageId
+        if (!messageId) { messageId = packet.messageId }
 
         expect(packet.messageId).to.eql(messageId)
       })
 
-      req.on('error', function (err) {
+      req.on('error', function () {
         done()
       })
 
@@ -977,8 +972,8 @@ describe('request', function() {
     })
 
     it('should retry four times before 45s', function (done) {
-      var req = doReq()
-        , messages = 0
+      doReq()
+      let messages = 0
 
       server.on('message', function (msg) {
         messages++
@@ -994,17 +989,17 @@ describe('request', function() {
     })
 
     it('should stop retrying if it receives an ack', function (done) {
-      var req = doReq()
-        , messages = 0
+      doReq()
+      let messages = 0
 
       server.on('message', function (msg, rsinfo) {
         messages++
-        var packet = parse(msg)
-          , toSend = generate({
-            messageId: packet.messageId
-            , code: '0.00'
-            , ack: true
-          })
+        const packet = parse(msg)
+        const toSend = generate({
+          messageId: packet.messageId,
+          code: '0.00',
+          ack: true
+        })
 
         server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
       })
@@ -1019,76 +1014,71 @@ describe('request', function() {
   })
 
   describe('observe', function () {
-
-    function doObserve() {
+    function doObserve () {
       server.on('message', function (msg, rsinfo) {
-        var packet = parse(msg)
+        const packet = parse(msg)
 
-        if (packet.ack)
-          return
+        if (packet.ack) { return }
 
         ssend(rsinfo, {
-          messageId: packet.messageId
-          , token: packet.token
-          , payload: Buffer.from('42')
-          , ack: true
-          , options: [{
-            name: 'Observe'
-            , value: Buffer.of(1)
-          }]
-          , code: '2.05'
+          messageId: packet.messageId,
+          token: packet.token,
+          payload: Buffer.from('42'),
+          ack: true,
+          options: [{
+            name: 'Observe',
+            value: Buffer.of(1)
+          }],
+          code: '2.05'
         })
 
         ssend(rsinfo, {
-          token: packet.token
-          , payload: Buffer.from('24')
-          , confirmable: true
-          , options: [{
-            name: 'Observe'
-            , value: Buffer.of(2)
-          }]
-          , code: '2.05'
+          token: packet.token,
+          payload: Buffer.from('24'),
+          confirmable: true,
+          options: [{
+            name: 'Observe',
+            value: Buffer.of(2)
+          }],
+          code: '2.05'
         })
       })
 
       return request({
-        port: port
-        , observe: true
+        port: port,
+        observe: true
       }).end()
     }
 
-    function ssend(rsinfo, packet) {
-      var toSend = generate(packet)
+    function ssend (rsinfo, packet) {
+      const toSend = generate(packet)
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
     }
 
-    function sendNotification(rsinfo, req, opts) {
+    function sendNotification (rsinfo, req, opts) {
       ssend(rsinfo, {
-        messageId: req.messageId
-        , token: req.token
-        , payload: Buffer.from(opts.payload)
-        , ack: false
-        , options: [{
-          name: 'Observe'
-          , value: toBinary('Observe', opts.num)
-        }]
-        , code: '2.05'
+        messageId: req.messageId,
+        token: req.token,
+        payload: Buffer.from(opts.payload),
+        ack: false,
+        options: [{
+          name: 'Observe',
+          value: toBinary('Observe', opts.num)
+        }],
+        code: '2.05'
       })
     }
 
     it('should ack the update', function (done) {
-
-      var req = doObserve()
+      doObserve()
 
       server.on('message', function (msg) {
-        if (parse(msg).ack)
-          done()
+        if (parse(msg).ack) { done() }
       })
     })
 
     it('should emit any more data after close', function (done) {
-
-      var req = doObserve()
+      const req = doObserve()
 
       req.on('response', function (res) {
         res.once('data', function (data) {
@@ -1104,8 +1094,7 @@ describe('request', function() {
     })
 
     it('should send origin and destination socket data along with the response', function (done) {
-
-      var req = doObserve()
+      const req = doObserve()
 
       req.on('response', function (res) {
         res.once('data', function (data) {
@@ -1120,8 +1109,7 @@ describe('request', function() {
     })
 
     it('should emit any more data after close', function (done) {
-
-      var req = doObserve()
+      const req = doObserve()
 
       req.on('response', function (res) {
         res.once('data', function (data) {
@@ -1137,8 +1125,7 @@ describe('request', function() {
     })
 
     it('should send deregister request if close(eager=true)', function (done) {
-
-      var req = doObserve()
+      const req = doObserve()
 
       req.on('response', function (res) {
         res.once('data', function (data) {
@@ -1146,9 +1133,8 @@ describe('request', function() {
           res.close(true)
 
           server.on('message', function (msg, rsinfo) {
-            var packet = parse(msg)
-            if (packet.ack && (packet.code === '0.00'))
-              return
+            const packet = parse(msg)
+            if (packet.ack && (packet.code === '0.00')) { return }
 
             try {
               expect(packet.options.length).to.be.least(1)
@@ -1164,13 +1150,13 @@ describe('request', function() {
     })
 
     it('should send an empty Observe option', function (done) {
-      var req = request({
-        port: port
-        , observe: true
+      request({
+        port: port,
+        observe: true
       }).end()
 
       server.on('message', function (msg, rsinfo) {
-        var packet = parse(msg)
+        const packet = parse(msg)
         expect(packet.options[0].name).to.eql('Observe')
         expect(packet.options[0].value).to.eql(Buffer.alloc(0))
         done()
@@ -1178,13 +1164,13 @@ describe('request', function() {
     })
 
     it('should allow user to send Observe=1', function (done) {
-      var req = request({
-        port: port
-        , observe: 1
+      request({
+        port: port,
+        observe: 1
       }).end()
 
       server.on('message', function (msg, rsinfo) {
-        var packet = parse(msg)
+        const packet = parse(msg)
         try {
           expect(packet.options[0].name).to.eql('Observe')
           expect(packet.options[0].value).to.eql(Buffer.from([1]))
@@ -1197,7 +1183,7 @@ describe('request', function() {
     })
 
     it('should allow multiple notifications', function (done) {
-      server.once('message', function(msg, rsinfo) {
+      server.once('message', function (msg, rsinfo) {
         const req = parse(msg)
 
         sendNotification(rsinfo, req, { num: 0, payload: 'zero' })
@@ -1205,9 +1191,9 @@ describe('request', function() {
       })
 
       const req = request({
-        port: port
-        , observe: true
-        , confirmable: false
+        port: port,
+        observe: true,
+        confirmable: false
       }).end()
 
       req.on('response', function (res) {
@@ -1216,10 +1202,10 @@ describe('request', function() {
         res.on('data', function (data) {
           ndata++
           if (ndata === 1) {
-            expect(res.headers['Observe']).to.equal(0)
+            expect(res.headers.Observe).to.equal(0)
             expect(data.toString()).to.equal('zero')
           } else if (ndata === 2) {
-            expect(res.headers['Observe']).to.equal(1)
+            expect(res.headers.Observe).to.equal(1)
             expect(data.toString()).to.equal('one')
             done()
           } else {
@@ -1230,7 +1216,7 @@ describe('request', function() {
     })
 
     it('should drop out of order notifications', function (done) {
-      server.once('message', function(msg, rsinfo) {
+      server.once('message', function (msg, rsinfo) {
         const req = parse(msg)
 
         sendNotification(rsinfo, req, { num: 1, payload: 'one' })
@@ -1239,9 +1225,9 @@ describe('request', function() {
       })
 
       const req = request({
-        port: port
-        , observe: true
-        , confirmable: false
+        port: port,
+        observe: true,
+        confirmable: false
       }).end()
 
       req.on('response', function (res) {
@@ -1250,10 +1236,10 @@ describe('request', function() {
         res.on('data', function (data) {
           ndata++
           if (ndata === 1) {
-            expect(res.headers['Observe']).to.equal(1)
+            expect(res.headers.Observe).to.equal(1)
             expect(data.toString()).to.equal('one')
           } else if (ndata === 2) {
-            expect(res.headers['Observe']).to.equal(2)
+            expect(res.headers.Observe).to.equal(2)
             expect(data.toString()).to.equal('two')
             done()
           } else {
@@ -1264,7 +1250,7 @@ describe('request', function() {
     })
 
     it('should allow repeating order after 128 seconds', function (done) {
-      server.once('message', function(msg, rsinfo) {
+      server.once('message', function (msg, rsinfo) {
         const req = parse(msg)
 
         sendNotification(rsinfo, req, { num: 1, payload: 'one' })
@@ -1274,9 +1260,9 @@ describe('request', function() {
       })
 
       const req = request({
-        port: port
-        , observe: true
-        , confirmable: false
+        port: port,
+        observe: true,
+        confirmable: false
       }).end()
 
       req.on('response', function (res) {
@@ -1285,10 +1271,10 @@ describe('request', function() {
         res.on('data', function (data) {
           ndata++
           if (ndata === 1) {
-            expect(res.headers['Observe']).to.equal(1)
+            expect(res.headers.Observe).to.equal(1)
             expect(data.toString()).to.equal('one')
           } else if (ndata === 2) {
-            expect(res.headers['Observe']).to.equal(1)
+            expect(res.headers.Observe).to.equal(1)
             expect(data.toString()).to.equal('two')
             done()
           } else {
@@ -1297,11 +1283,11 @@ describe('request', function() {
         })
       })
 
-      fastForward(100, 129*1000)
+      fastForward(100, 129 * 1000)
     })
 
     it('should allow Observe option 24bit overflow', function (done) {
-      server.once('message', function(msg, rsinfo) {
+      server.once('message', function (msg, rsinfo) {
         const req = parse(msg)
 
         sendNotification(rsinfo, req, { num: 0xffffff, payload: 'max' })
@@ -1309,9 +1295,9 @@ describe('request', function() {
       })
 
       const req = request({
-        port: port
-        , observe: true
-        , confirmable: false
+        port: port,
+        observe: true,
+        confirmable: false
       }).end()
 
       req.on('response', function (res) {
@@ -1320,10 +1306,10 @@ describe('request', function() {
         res.on('data', function (data) {
           ndata++
           if (ndata === 1) {
-            expect(res.headers['Observe']).to.equal(0xffffff)
+            expect(res.headers.Observe).to.equal(0xffffff)
             expect(data.toString()).to.equal('max')
           } else if (ndata === 2) {
-            expect(res.headers['Observe']).to.equal(0)
+            expect(res.headers.Observe).to.equal(0)
             expect(data.toString()).to.equal('zero')
             done()
           } else {
@@ -1335,7 +1321,7 @@ describe('request', function() {
   })
 
   describe('token', function () {
-    var clock
+    let clock
 
     beforeEach(function () {
       clock = sinon.useFakeTimers()
@@ -1345,25 +1331,23 @@ describe('request', function() {
       clock.restore()
     })
 
-    function fastForward(increase, max) {
+    function fastForward (increase, max) {
       clock.tick(increase)
-      if (increase < max)
-        originalSetImmediate(fastForward.bind(null, increase, max - increase))
+      if (increase < max) { originalSetImmediate(fastForward.bind(null, increase, max - increase)) }
     }
 
-
     it('should timeout if the response token size doesn\'t match the request\'s', function (done) {
-      var req = request({
+      const req = request({
         port: port
       })
 
       server.on('message', function (msg, rsinfo) {
-        var packet = parse(msg)
-          , toSend = generate({
-            messageId: packet.messageId
-            , token: Buffer.alloc(2)
-            , options: []
-          })
+        const packet = parse(msg)
+        const toSend = generate({
+          messageId: packet.messageId,
+          token: Buffer.alloc(2),
+          options: []
+        })
         server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
       })
 
@@ -1375,23 +1359,21 @@ describe('request', function() {
 
       req.end()
 
-
       fastForward(1000, 247 * 1000)
-
     })
 
     it('should timeout if the response token content doesn\'t match the request\'s', function (done) {
-      var req = request({
+      const req = request({
         port: port
       })
 
       server.on('message', function (msg, rsinfo) {
-        var packet = parse(msg)
-          , toSend = generate({
-            messageId: packet.messageId
-            , token: Buffer.alloc(4)
-            , options: []
-          })
+        const packet = parse(msg)
+        const toSend = generate({
+          messageId: packet.messageId,
+          token: Buffer.alloc(4),
+          options: []
+        })
         server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
       })
 
@@ -1403,88 +1385,83 @@ describe('request', function() {
 
       req.end()
 
-
       fastForward(1000, 247 * 1000)
     })
-
-
   })
 
-
   describe('multicast', function () {
-    var MULTICAST_ADDR = '224.0.0.1'
-      , port2 = nextPort()
-      , sock = null
+    const MULTICAST_ADDR = '224.0.0.1'
+    const port2 = nextPort()
+    let sock = null
 
-    function doReq() {
+    function doReq () {
       return request({
-        host: MULTICAST_ADDR
-        , port: port
-        , multicast: true
+        host: MULTICAST_ADDR,
+        port: port,
+        multicast: true
       }).end()
     }
 
-    beforeEach(function(done) {
+    beforeEach(function (done) {
       sock = dgram.createSocket('udp4')
-      sock.bind(port2, function() {
+      sock.bind(port2, function () {
         server.addMembership(MULTICAST_ADDR)
         sock.addMembership(MULTICAST_ADDR)
         done()
       })
     })
 
-    afterEach(function() {
+    afterEach(function () {
       sock.close()
     })
 
     it('should be non-confirmable', function (done) {
-      var req = doReq()
+      doReq()
 
-      server.on('message', function(msg, rsinfo) {
-        var packet = parse(msg)
+      server.on('message', function (msg, rsinfo) {
+        const packet = parse(msg)
         expect(packet).to.have.property('confirmable', false)
         done()
       })
     })
 
     it('should be responsed with the same token', function (done) {
-      var req = doReq()
-      , token
+      const req = doReq()
+      let token
 
-      server.on('message', function(msg, rsinfo) {
-        var packet = parse(msg)
+      server.on('message', function (msg, rsinfo) {
+        const packet = parse(msg)
         token = packet.token
 
-        var toSend = generate({
-          messageId: packet.messageId
-          , token: packet.token
-          , payload: Buffer.from('42')
-          , ack: true
-          , code: '2.00'
+        const toSend = generate({
+          messageId: packet.messageId,
+          token: packet.token,
+          payload: Buffer.from('42'),
+          ack: true,
+          code: '2.00'
         })
 
         server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
       })
 
       req.on('response', function (res) {
-        var packet = res._packet
+        const packet = res._packet
         expect(packet).to.have.property('confirmable', false)
         expect(packet).to.have.property('reset', false)
         expect(packet.token).to.eql(token)
         done()
       })
-
     })
 
     it('should allow for differing MIDs for non-confirmable requests', function (done) {
-      var _req = null
-        , counter = 0
-        , servers = [undefined, undefined]
-        , mids = [0, 0]
+      let _req = null
+      let counter = 0
+      const servers = [undefined, undefined]
+      const mids = [0, 0]
 
       servers.forEach(function (_, i) {
         servers[i] = coap.createServer(function (req, res) {
-          var mid = _req._packet.messageId + i + 1
+          const mid = _req._packet.messageId + i + 1
           res._packet.messageId = mid
           mids[i] = mid
           res.end()
@@ -1496,10 +1473,10 @@ describe('request', function() {
         host: MULTICAST_ADDR,
         port: port2,
         confirmable: false,
-        multicast: true,
+        multicast: true
       }).on('response', function (res) {
-        if(++counter == servers.length) {
-          mids.forEach(function(mid, i) {
+        if (++counter === servers.length) {
+          mids.forEach(function (mid, i) {
             expect(mid).to.eql(_req._packet.messageId + i + 1)
           })
           done()
@@ -1508,75 +1485,75 @@ describe('request', function() {
     })
 
     it('should allow for block-wise transfer when using multicast', function (done) {
-      var payload = Buffer.alloc(1536)
-      
+      const payload = Buffer.alloc(1536)
+
       server = coap.createServer((req, res) => {
-        expect(req.url).to.eql("/hello")
+        expect(req.url).to.eql('/hello')
         res.end(payload)
       })
       server.listen(sock)
 
-      var _req = request({
+      request({
         host: MULTICAST_ADDR,
         port: port2,
-        pathname: "/hello",
+        pathname: '/hello',
         confirmable: false,
-        multicast: true,
+        multicast: true
       }).on('response', function (res) {
         expect(res.payload.toString()).to.eql(payload.toString())
         done()
       }).end()
     })
-    
+
     it('should preserve all listeners when using block-wise transfer and multicast', function (done) {
-      var payload = Buffer.alloc(1536)
-      
+      const payload = Buffer.alloc(1536)
+
       server = coap.createServer((req, res) => {
         res.end(payload)
       })
       server.listen(sock)
 
-      var _req = request({
+      const _req = request({
         host: MULTICAST_ADDR,
         port: port2,
         confirmable: false,
-        multicast: true,
+        multicast: true
       })
 
-      _req.on("bestEventEver", function () {
+      _req.on('bestEventEver', function () {
         done()
       })
-      
+
       _req.on('response', function (res) {
         expect(res.payload.toString()).to.eql(payload.toString())
-        _req.emit("bestEventEver")
+        _req.emit('bestEventEver')
       }).end()
     })
 
     it('should ignore multiple responses from the same hostname when using block2 multicast', function (done) {
-      var payload = Buffer.alloc(1536)
+      const payload = Buffer.alloc(1536)
 
-      var counter = 0
-      
+      let counter = 0
+
       server = coap.createServer((req, res) => {
         res.end(payload)
       })
       server.listen(sock)
 
-      var server2 = coap.createServer((req, res) => {
+      const server2 = coap.createServer((req, res) => {
         res.end(payload)
       })
       server2.listen(sock)
 
-      var _req = request({
+      request({
         host: MULTICAST_ADDR,
         port: port2,
         confirmable: false,
-        multicast: true,
+        multicast: true
       }).on('response', function (res) {
-        counter++        
+        counter++
       }).end()
-      
+
       setTimeout(function () {
         expect(counter).to.eql(1)
         done()
@@ -1584,7 +1561,5 @@ describe('request', function() {
 
       fastForward(100, 45 * 1000)
     })
-
   })
-
 })

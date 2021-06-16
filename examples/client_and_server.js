@@ -1,14 +1,13 @@
-const coap        = require('../') // or coap
+const coap = require('../') // or coap
 
-coap.createServer(function(req, res) {
+coap.createServer(function (req, res) {
   res.end('Hello ' + req.url.split('/')[1] + '\n')
-}).listen(function() {
+}).listen(function () {
+  const req = coap.request('coap://localhost/Matteo')
 
-  var req = coap.request('coap://localhost/Matteo')
-
-  req.on('response', function(res) {
+  req.on('response', function (res) {
     res.pipe(process.stdout)
-    res.on('end', function() {
+    res.on('end', function () {
       process.exit(0)
     })
   })

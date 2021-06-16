@@ -1,19 +1,18 @@
-const coap    = require('../') // or coap
-    , server  = coap.createServer()
+const coap = require('../') // or coap
+const server = coap.createServer()
 
-server.on('request', function(req, res) {
-  if (req.headers['Observe'] !== 0)
-    return res.end(new Date().toISOString() + '\n')
+server.on('request', function (req, res) {
+  if (req.headers.Observe !== 0) { return res.end(new Date().toISOString() + '\n') }
 
-  var interval = setInterval(function() {
+  const interval = setInterval(function () {
     res.write(new Date().toISOString() + '\n')
   }, 1000)
 
-  res.on('finish', function(err) {
+  res.on('finish', function (err) {
     clearInterval(interval)
   })
 })
 
-server.listen(function() {
+server.listen(function () {
   console.log('server started')
 })

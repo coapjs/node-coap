@@ -1,21 +1,20 @@
-const coap        = require('../') // or coap
+const coap = require('../') // or coap
 
-coap.createServer(function(req, res) {
-  res.end('Hello ' + req.url.split('/')[1] + '\nMessage payload:\n'+req.payload+'\n')
-}).listen(function() {
+coap.createServer(function (req, res) {
+  res.end('Hello ' + req.url.split('/')[1] + '\nMessage payload:\n' + req.payload + '\n')
+}).listen(function () {
+  const req = coap.request('coap://localhost/Matteo')
 
-  var req = coap.request('coap://localhost/Matteo')
-  
-  var payload = {
+  const payload = {
     title: 'this is a test payload',
     body: 'containing nothing useful'
   }
-  
+
   req.write(JSON.stringify(payload))
-  
-  req.on('response', function(res) {
+
+  req.on('response', function (res) {
     res.pipe(process.stdout)
-    res.on('end', function() {
+    res.on('end', function () {
       process.exit(0)
     })
   })
