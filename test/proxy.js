@@ -70,16 +70,6 @@ describe('proxy', function () {
     client.send(message, 0, message.length, port, '127.0.0.1')
   }
 
-  function ssend (rsinfo, packet) {
-    const toSend = generate(packet)
-    target.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
-  }
-
-  function fastForward (increase, max) {
-    clock.tick(increase)
-    if (increase < max) { originalSetImmediate(fastForward.bind(null, increase, max - increase)) }
-  }
-
   it('should resend the message to its destination specified in the Proxy-Uri option', function (done) {
     send(generate({
       options: [{
