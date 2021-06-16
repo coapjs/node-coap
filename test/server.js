@@ -1127,60 +1127,63 @@ describe('validate custom server options', function () {
   })
 })
 
-describe('server LRU', function () {
-  let server,
-    port,
-    clientPort,
-    client,
-    clock
+describe('server LRU', function() {
+    var server
+        , port
+        , clientPort
+        , client
+        , clock
 
-  const packet = {
-    confirmable: true,
-    messageId: 4242,
-    token: Buffer.alloc(5)
-  }
+    var packet = {
+      confirmable: true
+      , messageId: 4242
+      , token: Buffer.alloc(5)
+    }
 
-  beforeEach(function (done) {
-    clock = sinon.useFakeTimers()
-    port = nextPort()
-    server = coap.createServer()
-    server.listen(port, done)
-  })
+    beforeEach(function (done) {
+      clock = sinon.useFakeTimers()
+      port = nextPort()
+      server = coap.createServer()
+      server.listen(port, done)
+    })
 
-  beforeEach(function (done) {
-    clientPort = nextPort()
-    client = dgram.createSocket('udp4')
-    client.bind(clientPort, done)
-  })
+    beforeEach(function (done) {
+      clientPort = nextPort()
+      client = dgram.createSocket('udp4')
+      client.bind(clientPort, done)
+    })
 
-  afterEach(function () {
-    clock.restore()
-    client.close()
-    server.close()
-    tk.reset()
-  })
+    afterEach(function () {
+      clock.restore()
+      client.close()
+      server.close()
+      tk.reset()
+    })
 
-  function send (message) {
-    client.send(message, 0, message.length, port, '127.0.0.1')
-  }
+    function send(message) {
+      client.send(message, 0, message.length, port, '127.0.0.1')
+    }
 
-  it('should remove old packets after < exchangeLifetime x 1.5', function (done) {
-    send(generate(packet))
-    server.on('request', function (req, res) {
-      res.end()
+    it('should remove old packets after < exchangeLifetime x 1.5', function (done) {
+      var messages = 0
 
-      expect(server._lru.itemCount, 1)
+      send(generate(packet))
+      server.on('request', function (req, res) {
+        var now = Date.now()
+        res.end()
 
-      clock.tick(params.exchangeLifetime * 500)
+        expect(server._lru.itemCount, 1)
 
-      expect(server._lru.itemCount, 1)
+        clock.tick(params.exchangeLifetime * 500)
 
-      clock.tick(params.exchangeLifetime * 1000)
-      expect(server._lru.itemCount, 0)
-      done()
+        expect(server._lru.itemCount, 1)
+
+        clock.tick(params.exchangeLifetime * 1000)
+        expect(server._lru.itemCount, 0)
+        done()
+      })
     })
   })
-})
 
 describe('server block cache', function () {
   let server,
@@ -1238,101 +1241,101 @@ describe('server block cache', function () {
   })
 })
 
-describe('Client Identifier', function () {
-  let server,
-    port,
-    clientPort,
-    client,
-    clock
+describe("Client Identifier", function () {
+    let server,
+      port,
+      clientPort,
+      client,
+      clock
 
-  const packet = function (key) {
-    return {
-      confirmable: true,
-      messageId: 4242,
-      token: new Buffer(5),
-      options: [
-        { name: 2109, value: Buffer.from(key) }
-      ]
+    const packet = function (key) {
+        return {
+            confirmable: true,
+            messageId: 4242,
+            token: Buffer.of(0x5),
+            options: [{ name: 2109, value: Buffer.from(key) }],
+        };
+    };
+
+    beforeEach(function (done) {
+        clock = sinon.useFakeTimers();
+        port = nextPort();
+
+        server = coap.createServer({
+            clientIdentifier: (request) => {
+                const authenticationHeader = request.options.find(
+                    (o) => o.name === "2109"
+                );
+
+                if (typeof authenticationHeader !== "undefined") {
+                    return `auth:${authenticationHeader.value.toString()}`;
+                }
+                return `unauth:${request.rsinfo.address}:${request.rsinfo.port}`;
+            },
+        });
+        server.listen(port, done);
+    });
+
+    beforeEach(function (done) {
+        clientPort = nextPort();
+        client = dgram.createSocket("udp4");
+        client.bind(clientPort, done);
+    });
+
+    afterEach(function () {
+        clock.restore();
+        client.close();
+        server.close();
+        tk.reset();
+    });
+
+    function send(message) {
+        client.send(message, 0, message.length, port, "127.0.0.1");
     }
-  }
 
-  beforeEach(function (done) {
-    clock = sinon.useFakeTimers()
-    port = nextPort()
+    it("should share the cache between two requests of the same client", function (done) {
+        let messagesSent = 0;
+        let messagesReceived = 0;
 
-    server = coap.createServer({
-      clientIdentifier: (request) => {
-        const authenticationHeader = request.options.find(o => o.name === '2109')
+        server.on("request", function (req, res) {
+            res.end(`${messagesSent}`);
+            messagesSent += 1;
+        });
 
-        if (typeof authenticationHeader !== 'undefined') {
-          return `auth:${authenticationHeader.value.toString()}`
-        }
-        return `unauth:${request.rsinfo.address}:${request.rsinfo.port}`
-      }
-    })
-    server.listen(port, done)
-  })
+        client.on("message", function (msg) {
+            const result = parse(msg);
+            expect(result.payload.toString(), "0");
+            messagesReceived += 1;
 
-  beforeEach(function (done) {
-    clientPort = nextPort()
-    client = dgram.createSocket('udp4')
-    client.bind(clientPort, done)
-  })
+            if (messagesReceived === 2) {
+                done();
+            }
+        });
 
-  afterEach(function () {
-    clock.restore()
-    client.close()
-    server.close()
-    tk.reset()
-  })
+        send(generate(packet("key1")));
+        send(generate(packet("key1")));
+    });
 
-  function send (message) {
-    client.send(message, 0, message.length, port, '127.0.0.1')
-  }
+    it("should not share the cache between requests of different clients", function (done) {
+        let messagesSent = 0;
+        let messagesReceived = 0;
 
-  it('should share the cache between two requests of the same client', function (done) {
-    let messagesSent = 0
-    let messagesReceived = 0
+        server.on("request", function (req, res) {
+            res.end(`${messagesSent}`);
+            messagesSent += 1;
+        });
 
-    server.on('request', function (req, res) {
-      res.end(`${messagesSent}`)
-      messagesSent += 1
-    })
+        client.on("message", function (msg) {
+            const result = parse(msg);
+            expect(result.payload.toString(), `${messagesReceived}`);
+            messagesReceived += 1;
 
-    client.on('message', function (msg) {
-      const result = parse(msg)
-      expect(result.payload.toString(), '0')
-      messagesReceived += 1
+            if (messagesReceived === 2) {
+                done();
+            }
+        });
 
-      if (messagesReceived === 2) {
-        done()
-      }
-    })
-
-    send(generate(packet('key1')))
-    send(generate(packet('key1')))
-  })
-
-  it('should not share the cache between requests of different clients', function (done) {
-    let messagesSent = 0
-    let messagesReceived = 0
-
-    server.on('request', function (req, res) {
-      res.end(`${messagesSent}`)
-      messagesSent += 1
-    })
-
-    client.on('message', function (msg) {
-      const result = parse(msg)
-      expect(result.payload.toString(), `${messagesReceived}`)
-      messagesReceived += 1
-
-      if (messagesReceived === 2) {
-        done()
-      }
-    })
-
-    send(generate(packet('key1')))
-    send(generate(packet('key2')))
-  })
-})
+        send(generate(packet("key1")));
+        send(generate(packet("key2")));
+    });
+});

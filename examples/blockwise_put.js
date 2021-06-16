@@ -27,7 +27,7 @@ function TestGet () {
     // GET Request resources /test with block transfer with 1024 byte size
     const req = coap.request('/test')
 
-    req.setOption('Block2', new Buffer([0x6]))
+    req.setOption('Block2', Buffer.from(0x6))
 
     req.on('response', function (res) {
       console.log('Client Received ' + res.payload.length + ' bytes')
@@ -58,7 +58,7 @@ function TestPut () {
       pathname: '/test',
       method: 'PUT'
     })
-    request.setOption('Block1', new Buffer([0x6]))
+    request.setOption('Block1', Buffer.from(0x6))
 
     request.on('response', function (res) {
       console.log('Client Received Response: ' + res.payload.toString('utf-8'))
@@ -78,7 +78,7 @@ function TestServer () {
   coap.createServer(function (req, res) {
     console.log('Got request. Waiting 500ms')
     setTimeout(() => {
-      res.setOption('Block2', new Buffer([0x6]))
+      res.setOption('Block2', Buffer.from(0x6))
       console.log('Sending Back Test Buffer')
       res.end(testBuffer)
       console.log('Sent Back')
@@ -96,7 +96,7 @@ function TestClient () {
     pathname: '/test',
     method: 'PUT'
   })
-  request.setOption('Block1', new Buffer([0]))
+  request.setOption('Block1', Buffer.from(0))
 
   request.on('response', function (res) {
     console.log('Client Received ' + res.payload.length + ' bytes in response')
