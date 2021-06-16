@@ -408,7 +408,7 @@ describe('end-to-end', function () {
     })
   })
 
-  it('should ignore ignored options', function () {
+  it('should ignore ignored options', function (done) {
     const req = coap.request('coap://localhost:' + port)
     req.setOption('Cache-Control', 'private')
     req.end()
