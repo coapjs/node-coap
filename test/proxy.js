@@ -10,12 +10,9 @@ const coap = require('../')
 const parse = require('coap-packet').parse
 const generate = require('coap-packet').generate
 const dgram = require('dgram')
-const bl = require('bl')
 const request = coap.request
 const tk = require('timekeeper')
 const sinon = require('sinon')
-const params = require('../lib/parameters')
-const originalSetImmediate = setImmediate
 
 describe('proxy', function () {
   let server,
