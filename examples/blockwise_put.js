@@ -1,6 +1,4 @@
 const coap = require('../')
-const url = require('url')
-const fs = require('fs')
 
 const bufferSize = 25000
 const testBuffer = Buffer.alloc(bufferSize)
