@@ -6,6 +6,8 @@
  * See the included LICENSE file for more details.
  */
 
+/* global nextPort */
+
 const coap = require('../')
 const sinon = require('sinon')
 const originalSetImmediate = setImmediate

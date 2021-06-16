@@ -6,6 +6,8 @@
  * See the included LICENSE file for more details.
  */
 
+/* global nextPort */
+
 const coap = require('../')
 const toBinary = require('../lib/option_converter').toBinary
 const parse = require('coap-packet').parse

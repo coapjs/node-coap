@@ -6,6 +6,8 @@
  * See the included LICENSE file for more details.
  */
 
+/* global nextPort */
+
 const coap = require('../')
 
 describe('end-to-end', function () {
