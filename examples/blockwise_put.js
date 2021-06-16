@@ -19,7 +19,7 @@ testBuffer.write(containedData, testBuffer.length - containedData.length, contai
 /**
  * Tests the GET Block2 method transfer. Sends data in 1024 byte chunks
 */
-function TestGet () {
+function TestGet () { // eslint-disable-line no-unused-vars
   coap.createServer(function (req, res) {
     // Respond with the test buffer.
     res.end(testBuffer)
@@ -74,7 +74,7 @@ function TestPut () {
  * Creates a CoAP server which listens for connections from outside.
  * Start up an external CoAP client and try it out.
 */
-function TestServer () {
+function TestServer () { // eslint-disable-line no-unused-vars
   coap.createServer(function (req, res) {
     console.log('Got request. Waiting 500ms')
     setTimeout(() => {
@@ -89,7 +89,7 @@ function TestServer () {
 /**
  * Connects to another end point located on this machine. Setup a coap server somewhere else and try it out.
 */
-function TestClient () {
+function TestClient () { // eslint-disable-line no-unused-vars
   const request = coap.request({
     hostname: 'localhost',
     port: 5683,
