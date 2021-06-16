@@ -22,9 +22,13 @@ coap.createServer(function (req, res) {
       if (res.code !== '2.05') { return process.exit(1) }
 
       res.pipe(bl(function (err, data) {
-        const json = JSON.parse(data)
-        console.log(json)
-        process.exit(0)
+        if (err) {
+          process.exit(1)
+        } else {
+          const json = JSON.parse(data)
+          console.log(json)
+          process.exit(0)
+        }
       }))
     })
     .end()

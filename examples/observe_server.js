@@ -8,7 +8,7 @@ server.on('request', function (req, res) {
     res.write(new Date().toISOString() + '\n')
   }, 1000)
 
-  res.on('finish', function (err) {
+  res.on('finish', function () {
     clearInterval(interval)
   })
 })

@@ -115,8 +115,12 @@ describe('server', function () {
     send(generate({ payload: buf }))
     server.on('request', function (req, res) {
       req.pipe(bl(function (err, data) {
-        expect(data).to.eql(buf)
-        done()
+        if (err) {
+          done(err)
+        } else {
+          expect(data).to.eql(buf)
+          done()
+        }
       }))
     })
   })

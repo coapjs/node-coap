@@ -288,8 +288,12 @@ describe('request', function () {
 
     req.on('response', function (res) {
       res.pipe(bl(function (err, data) {
-        expect(data).to.eql(Buffer.from('42'))
-        done()
+        if (err) {
+          done(err)
+        } else {
+          expect(data).to.eql(Buffer.from('42'))
+          done()
+        }
       }))
     })
 
@@ -324,8 +328,12 @@ describe('request', function () {
 
     req.on('response', function (res) {
       res.pipe(bl(function (err, data) {
-        expect(data).to.eql(Buffer.from('42'))
-        done()
+        if (err) {
+          done(err)
+        } else {
+          expect(data).to.eql(Buffer.from('42'))
+          done()
+        }
       }))
     })
 
@@ -408,6 +416,9 @@ describe('request', function () {
 
     req.on('response', function (res) {
       res.pipe(bl(function (err, data) {
+        if (err) {
+          done(err)
+        }
         expect(data).to.eql(Buffer.from('42'))
         done()
       }))
@@ -633,8 +644,12 @@ describe('request', function () {
 
     req.on('response', function (res) {
       res.pipe(bl(function (err, data) {
-        expect(data).to.eql(Buffer.from('42'))
-        done()
+        if (err) {
+          done(err)
+        } else {
+          expect(data).to.eql(Buffer.from('42'))
+          done()
+        }
       }))
     })
 
@@ -850,7 +865,7 @@ describe('request', function () {
         messages++
       })
 
-      req.on('timeout', function (err) {
+      req.on('timeout', function () {
         expect(messages).to.eql(1)
         done()
       })
@@ -943,7 +958,7 @@ describe('request', function () {
         messages++
       })
 
-      req.on('error', function (err) {
+      req.on('error', function () {
         // original one plus 4 retries
         expect(messages).to.eql(5)
         done()
