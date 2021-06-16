@@ -608,7 +608,7 @@ describe('server', function () {
 
       client.on('message', function (msg) {
         const response = parse(msg)
-        expect(response.ack).to.be.true
+        expect(response.ack).to.be.true // eslint-disable-line no-unused-expressions
         expect(response.messageId).to.eql(packet.messageId)
         expect(response.payload).to.eql(Buffer.from('42'))
         done()
@@ -620,7 +620,7 @@ describe('server', function () {
 
       client.once('message', function (msg) {
         const response = parse(msg)
-        expect(response.ack).to.be.true
+        expect(response.ack).to.be.true // eslint-disable-line no-unused-expressions
         expect(response.code).to.eql('0.00')
         expect(response.messageId).to.eql(packet.messageId)
         expect(response.payload).to.eql(Buffer.alloc(0))
@@ -642,12 +642,12 @@ describe('server', function () {
 
       client.once('message', function (msg) {
         const response = parse(msg)
-        expect(response.ack).to.be.true
+        expect(response.ack).to.be.true // eslint-disable-line no-unused-expressions
 
         client.once('message', function (msg) {
           const response = parse(msg)
 
-          expect(response.confirmable).to.be.true
+          expect(response.confirmable).to.be.true // eslint-disable-line no-unused-expressions
           expect(response.messageId).not.to.eql(packet.messageId)
           done()
         })
@@ -846,7 +846,7 @@ describe('server', function () {
         expect(parse(msg).options[0].value).to.eql(Buffer.of(1))
         expect(parse(msg).token).to.eql(token)
         expect(parse(msg).code).to.eql('2.05')
-        expect(parse(msg).ack).to.be.true
+        expect(parse(msg).ack).to.be.true // eslint-disable-line no-unused-expressions
 
         client.once('message', function (msg) {
           expect(parse(msg).payload.toString()).to.eql('world')
@@ -854,8 +854,8 @@ describe('server', function () {
           expect(parse(msg).options[0].value).to.eql(Buffer.of(2))
           expect(parse(msg).token).to.eql(token)
           expect(parse(msg).code).to.eql('2.05')
-          expect(parse(msg).ack).to.be.false
-          expect(parse(msg).confirmable).to.be.true
+          expect(parse(msg).ack).to.be.false // eslint-disable-line no-unused-expressions
+          expect(parse(msg).confirmable).to.be.true // eslint-disable-line no-unused-expressions
 
           done()
         })

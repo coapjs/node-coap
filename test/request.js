@@ -82,7 +82,7 @@ describe('request', function () {
 
     server.on('message', function (msg, rsinfo) {
       ackBack(msg, rsinfo)
-      expect(parse(msg).confirmable).to.be.true
+      expect(parse(msg).confirmable).to.be.true // eslint-disable-line no-unused-expressions
       done()
     })
   })
@@ -367,7 +367,7 @@ describe('request', function () {
       server.once('message', function (msg, rsinfo) {
         packet = parse(msg)
         expect(packet.code).to.eql('0.00')
-        expect(packet.ack).to.be.true
+        expect(packet.ack).to.be.true // eslint-disable-line no-unused-expressions
         expect(packet.messageId).to.eql(parse(toSend).messageId)
         done()
       })
