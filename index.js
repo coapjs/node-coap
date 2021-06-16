@@ -20,7 +20,7 @@ module.exports.request = function (url) {
   let agent
 
   if (typeof url === 'string') {
-    url = URL.parse(url)
+    url = URL.parse(url) // eslint-disable-line node/no-deprecated-api
   }
 
   const ipv6 = net.isIPv6(url.hostname || url.host)
