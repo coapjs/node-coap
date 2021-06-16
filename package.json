@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "nyc mocha --exit",
-    "coverage": "nyc report --reporter=lcov --reporter=text-summary"
+    "coverage": "nyc report --reporter=lcov --reporter=text-summary",
+    "lint": "standard --verbose | snazzy",
+    "lint:fix": "standard --fix"
   },
   "repository": {
     "type": "git",
@@ -33,6 +35,8 @@
     "nyc": "^15.1.0",
     "pre-commit": "1.2.2",
     "sinon": "^9.0.2",
+    "snazzy": "^9.0.0",
+    "standard": "^16.0.1",
     "timekeeper": "^1.0.0"
   },
   "dependencies": {
@@ -43,5 +47,8 @@
     "fastseries": "^2.0.0",
     "lru-cache": "^5.1.1",
     "readable-stream": "^3.6.0"
+  },
+  "standard": {
+    "env": ["jest"]
   }
 }
