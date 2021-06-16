@@ -45,10 +45,10 @@ describe('proxy', function () {
   })
 
   afterEach(function (done) {
-    function closeSocket (socketcToClose, callback) {
+    function closeSocket (socketToClose, callback) {
       try {
         socketToClose.on('close', callback)
-        socketcToClose.close()
+        socketToClose.close()
       } catch (ignored) {
         callback()
       }
