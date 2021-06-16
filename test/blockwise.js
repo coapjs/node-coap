@@ -209,38 +209,38 @@ describe('blockwise2', function () {
     })
   })
 
-  function sendNextBlock2 (req_token, req_block2_num) {
+  function sendNextBlock2 (reqToken, reqBlock2Num) {
     const packet = {
-      messageId: 1100 + req_block2_num,
-      token: req_token,
+      messageId: 1100 + reqBlock2Num,
+      token: reqToken,
       options: [{
         name: 'Block2',
-        value: Buffer.of(req_block2_num << 4)
+        value: Buffer.of(reqBlock2Num << 4)
       }]
     }
     send(generate(packet))
   }
 
   function parallelBlock2Test (done, checkNReq, checkBlock2Message, checkNormalReq) {
-    const payload_len = 32 + 16 + 1
-    const payload_req1 = Buffer.alloc(payload_len)
-    const payload_req2 = Buffer.alloc(payload_len)
-    const req1_token = Buffer.alloc(4)
-    let req1_done = false
-    let req2_done = false
-    let req1_block2_num = 0
-    const req_client2 = coap.request({
+    const payloadLength = 32 + 16 + 1
+    const payloadReq1 = Buffer.alloc(payloadLength)
+    const payloadReq2 = Buffer.alloc(payloadLength)
+    const req1Token = Buffer.alloc(4)
+    let req1Done = false
+    let req2Done = false
+    let req1Block2Num = 0
+    const reqClient2 = coap.request({
       port: port
     })
 
-    fillPayloadBuffer(payload_req1)
-    fillPayloadBuffer(payload_req2)
-    fillPayloadBuffer(req1_token)
+    fillPayloadBuffer(payloadReq1)
+    fillPayloadBuffer(payloadReq2)
+    fillPayloadBuffer(req1Token)
 
     let nreq = 1
     server.on('request', function (req, res) {
       // only two request to upper level, blockwise transfer completed from cache
-      if (nreq === 1) { res.end(payload_req1) } else if (nreq === 2) { res.end(payload_req2) }
+      if (nreq === 1) { res.end(payloadReq1) } else if (nreq === 2) { res.end(payloadReq2) }
 
       checkNReq(nreq)
 
@@ -248,39 +248,39 @@ describe('blockwise2', function () {
     })
 
     // Send first request, initiate blockwise transfer from server
-    sendNextBlock2(req1_token, req1_block2_num)
+    sendNextBlock2(req1Token, req1Block2Num)
 
     client.on('message', function (msg, rinfo) {
-      checkBlock2Message(msg, payload_req1, req1_block2_num, payload_len)
+      checkBlock2Message(msg, payloadReq1, req1Block2Num, payloadLength)
 
-      const expectMore = (req1_block2_num + 1) * 16 <= payload_len
+      const expectMore = (req1Block2Num + 1) * 16 <= payloadLength
       if (expectMore) {
         // Request next block after 50 msec delay
-        req1_block2_num++
+        req1Block2Num++
 
         setTimeout(function () {
           // Send next request, fetch next block of blockwise transfer from server
-          sendNextBlock2(req1_token, req1_block2_num)
+          sendNextBlock2(req1Token, req1Block2Num)
         }, 50)
       } else {
         // No more blocks, transfer completed.
-        req1_done = true
-        if (req1_done && req2_done) { setImmediate(done) }
+        req1Done = true
+        if (req1Done && req2Done) { setImmediate(done) }
       }
     })
 
-    req_client2.setOption('Block2', Buffer.of(0x10)) // request from block 1, with size = 16
+    reqClient2.setOption('Block2', Buffer.of(0x10)) // request from block 1, with size = 16
 
     // Delay second request so that first request gets first packet
     setTimeout(function () {
-      req_client2.end()
+      reqClient2.end()
     }, 1)
 
-    req_client2.on('response', function (res) {
-      checkNormalReq(res, payload_req2)
+    reqClient2.on('response', function (res) {
+      checkNormalReq(res, payloadReq2)
 
-      req2_done = true
-      if (req1_done && req2_done) { setImmediate(done) }
+      req2Done = true
+      if (req1Done && req2Done) { setImmediate(done) }
     })
   }
 
@@ -312,7 +312,7 @@ describe('blockwise2', function () {
   })
 
   it('should have correct block2 option for parallel requests', function (done) {
-    const checkBlock2Option = function (msg, payload_req1, req1_block2_num, payload_len) {
+    const checkBlock2Option = function (msg, payloadReq1, req1Block2Num, payloadLength) {
       const res = parse(msg)
 
       // Have block2 option?
@@ -322,10 +322,10 @@ describe('blockwise2', function () {
       const block2 = parseBlock2(block2Buff)
       expect(block2).to.not.eql(null)
 
-      const expectMore = (req1_block2_num + 1) * 16 <= payload_len
+      const expectMore = (req1Block2Num + 1) * 16 <= payloadLength
 
       // Have correct num / moreBlock2 fields?
-      expect(block2.num).to.eql(req1_block2_num)
+      expect(block2.num).to.eql(req1Block2Num)
       expect(block2.moreBlock2).to.eql(expectMore)
     }
 
@@ -333,16 +333,16 @@ describe('blockwise2', function () {
   })
 
   it('should have correct payload in block2 messages for parallel requests', function (done) {
-    const checkBlock2Payload = function (msg, payload_req1, req1_block2_num) {
+    const checkBlock2Payload = function (msg, payloadReq1, req1Block2Num) {
       const res = parse(msg)
 
       // Have correct payload?
-      expect(res.payload).to.eql(payload_req1.slice(req1_block2_num * 16, req1_block2_num * 16 + 16))
+      expect(res.payload).to.eql(payloadReq1.slice(req1Block2Num * 16, req1Block2Num * 16 + 16))
     }
 
-    const checkNormalRespPayload = function (res, payload_req2) {
+    const checkNormalRespPayload = function (res, payloadReq2) {
       // Have correct payload?
-      expect(res.payload).to.eql(payload_req2.slice(1 * 16, payload.length + 1))
+      expect(res.payload).to.eql(payloadReq2.slice(1 * 16, payload.length + 1))
     }
 
     parallelBlock2Test(done, checkNothing, checkBlock2Payload, checkNormalRespPayload)
