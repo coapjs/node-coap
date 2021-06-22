@@ -89,7 +89,7 @@ describe('share-socket', function() {
 
   it('should support observing', function(done) {
     var req = coap.request({
-        port: port
+      port: port
       , observe: true
     }).end()
 
@@ -111,7 +111,7 @@ describe('share-socket', function() {
 
   it('should support a 4.04 observe request', function(done) {
     var req = coap.request({
-        port: port
+      port: port
       , observe: true
     }).end()
 
@@ -128,7 +128,7 @@ describe('share-socket', function() {
 
   it('should support a 4.04 observe request and emit an end event in the response', function(done) {
     var req = coap.request({
-        port: port
+      port: port
       , observe: true
     }).end()
 
@@ -270,7 +270,7 @@ describe('share-socket', function() {
 
   it('should set and parse \'Location-Path\'', function(done) {
     var req = coap.request({
-        port: port
+      port: port
       , method: 'PUT'
     }).end()
 
@@ -287,7 +287,7 @@ describe('share-socket', function() {
 
   it('should set and parse \'Location-Query\'', function(done) {
     var req = coap.request({
-        port: port
+      port: port
       , method: 'PUT'
     }).end()
 
@@ -304,17 +304,17 @@ describe('share-socket', function() {
 
   it('should support multiple observe to the same destination', function(done) {
     var req1  = coap.request({
-                    port: port
-                  , method: 'GET'
-                  , observe: true
-                  , pathname: '/a'
-                }).end()
+        port: port
+        , method: 'GET'
+        , observe: true
+        , pathname: '/a'
+      }).end()
       , req2  = coap.request({
-                    port: port
-                  , method: 'GET'
-                  , observe: true
-                  , pathname: '/b'
-                }).end()
+        port: port
+        , method: 'GET'
+        , observe: true
+        , pathname: '/b'
+      }).end()
       , completed = 2
 
     server.on('request', function(req, res) {
@@ -340,15 +340,15 @@ describe('share-socket', function() {
 
   it('should reuse the same socket for two concurrent requests', function(done) {
     var req1  = coap.request({
-                    port: port
-                  , method: 'GET'
-                  , pathname: '/a'
-                }).end()
+        port: port
+        , method: 'GET'
+        , pathname: '/a'
+      }).end()
       , req2  = coap.request({
-                    port: port
-                  , method: 'GET'
-                  , pathname: '/b'
-                }).end()
+        port: port
+        , method: 'GET'
+        , pathname: '/b'
+      }).end()
       , first
 
     server.on('request', function(req, res) {
@@ -366,11 +366,11 @@ describe('share-socket', function() {
 
     var agent = new coap.Agent()
       , req1  = coap.request({
-                    port: port
-                  , method: 'GET'
-                  , pathname: '/a'
-                  , agent: agent
-                }).end()
+        port: port
+        , method: 'GET'
+        , pathname: '/a'
+        , agent: agent
+      }).end()
       , req2
       , first
 
@@ -388,7 +388,7 @@ describe('share-socket', function() {
     req1.on('response', function() {
       setImmediate(function() {
         req2 = coap.request({
-            port: port
+          port: port
           , method: 'GET'
           , pathname: '/b'
         }).end()
@@ -398,11 +398,11 @@ describe('share-socket', function() {
 
   it("should use the port binded in the agent", function(done) {
     var agent = new coap.Agent({ port: 3636 })
-        , req = coap.request({port: port
-          , method: 'GET'
-          , pathname: 'a'
-          , agent: agent
-        }).end()
+      , req = coap.request({port: port
+        , method: 'GET'
+        , pathname: 'a'
+        , agent: agent
+      }).end()
 
     server.on('request', function(req, res) {
       res.end('hello')

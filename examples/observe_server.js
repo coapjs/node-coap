@@ -1,5 +1,5 @@
 const coap    = require('../') // or coap
-    , server  = coap.createServer()
+  , server  = coap.createServer()
 
 server.on('request', function(req, res) {
   if (req.headers['Observe'] !== 0)

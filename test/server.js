@@ -173,13 +173,13 @@ describe('server', function() {
 
   it('should include the path in the URL', function(done) {
     send(generate({
-        options: [{
-            name: 'Uri-Path'
-          , value: Buffer.from('hello')
-        }, {
-            name: 'Uri-Path'
-          , value: Buffer.from('world')
-        }]
+      options: [{
+        name: 'Uri-Path'
+        , value: Buffer.from('hello')
+      }, {
+        name: 'Uri-Path'
+        , value: Buffer.from('world')
+      }]
     }))
 
     server.on('request', function(req, res) {
@@ -190,13 +190,13 @@ describe('server', function() {
 
   it('should include the query in the URL', function(done) {
     send(generate({
-        options: [{
-            name: 'Uri-Query'
-          , value: Buffer.from('a=b')
-        }, {
-            name: 'Uri-Query'
-          , value: Buffer.from('b=c')
-        }]
+      options: [{
+        name: 'Uri-Query'
+        , value: Buffer.from('a=b')
+      }, {
+        name: 'Uri-Query'
+        , value: Buffer.from('b=c')
+      }]
     }))
 
     server.on('request', function(req, res) {
@@ -207,19 +207,19 @@ describe('server', function() {
 
   it('should include the path and the query in the URL', function(done) {
     send(generate({
-        options: [{
-            name: 'Uri-Query'
-          , value: Buffer.from('a=b')
-        }, {
-            name: 'Uri-Query'
-          , value: Buffer.from('b=c')
-        }, {
-            name: 'Uri-Path'
-          , value: Buffer.from('hello')
-        }, {
-            name: 'Uri-Path'
-          , value: Buffer.from('world')
-        }]
+      options: [{
+        name: 'Uri-Query'
+        , value: Buffer.from('a=b')
+      }, {
+        name: 'Uri-Query'
+        , value: Buffer.from('b=c')
+      }, {
+        name: 'Uri-Path'
+        , value: Buffer.from('hello')
+      }, {
+        name: 'Uri-Path'
+        , value: Buffer.from('world')
+      }]
     }))
 
     server.on('request', function(req, res) {
@@ -230,7 +230,7 @@ describe('server', function() {
 
   it('should expose the options', function(done) {
     var options = [{
-        name: '555'
+      name: '555'
       , value: Buffer.alloc(45)
     }]
 
@@ -278,7 +278,7 @@ describe('server', function() {
   })
 
   var formatsString = {
-      'text/plain': Buffer.of(0)
+    'text/plain': Buffer.of(0)
     , 'application/link-format': Buffer.of(40)
     , 'application/xml': Buffer.of(41)
     , 'application/octet-stream': Buffer.of(42)
@@ -292,7 +292,7 @@ describe('server', function() {
       it('should parse \'' + option + ': ' + format + '\'', function(done) {
         send(generate({
           options: [{
-              name: option
+            name: option
             , value: value
           }]
         }))
@@ -306,7 +306,7 @@ describe('server', function() {
       it('should include \'' + option + ': ' + format + '\' in the headers', function(done) {
         send(generate({
           options: [{
-              name: option
+            name: option
             , value: value
           }]
         }))
@@ -372,7 +372,7 @@ describe('server', function() {
 
   describe('with a non-confirmable message', function() {
     var packet = {
-        confirmable: false
+      confirmable: false
       , messageId: 4242
       , token: Buffer.alloc(5)
     }
@@ -523,7 +523,7 @@ describe('server', function() {
           }, delay)
 
           fastForward(100, delay)
-         } else {
+        } else {
           res.end('24')
           done()
         }
@@ -595,7 +595,7 @@ describe('server', function() {
 
   describe('with a confirmable message', function() {
     var packet = {
-        confirmable: true
+      confirmable: true
       , messageId: 4242
       , token: Buffer.alloc(5)
     }
@@ -704,7 +704,7 @@ describe('server', function() {
         client.on('message', function(msg) {
           var res = parse(msg)
           send(generate({
-              code: '0.00'
+            code: '0.00'
             , messageId: res.messageId
             , ack: true }))
           messages++
@@ -787,13 +787,13 @@ describe('server', function() {
         method = 'GET'
 
       send(generate({
-          code: method
+        code: method
         , confirmable: true
         , token: token
         , options: [{
-              name: 'Observe'
-            , value: Buffer.alloc(0)
-          }]
+          name: 'Observe'
+          , value: Buffer.alloc(0)
+        }]
       }))
     }
 
@@ -902,7 +902,7 @@ describe('server', function() {
       client.on('message', function(msg) {
         var packet = parse(msg)
         send(generate({
-            reset: true
+          reset: true
           , messageId: packet.messageId
           , code: '0.00'
         }))
@@ -982,7 +982,7 @@ describe('server', function() {
 
   describe('multicast', function() {
     var port = nextPort()
-    , reqCount = 0
+      , reqCount = 0
 
     it('receive CoAp message', function(done) {
 
@@ -1088,7 +1088,7 @@ describe('validate custom server options', function() {
 
   function sendNonConfirmableMessage() {
     var packet = {
-        confirmable: false
+      confirmable: false
       , messageId: 4242
       , token: Buffer.alloc(5)
     }
@@ -1097,7 +1097,7 @@ describe('validate custom server options', function() {
 
   function sendConfirmableMessage() {
     var packet = {
-        confirmable: true
+      confirmable: true
       , messageId: 4242
       , token: Buffer.alloc(5)
     }
@@ -1151,10 +1151,10 @@ describe('validate custom server options', function() {
 
 describe('server LRU', function() {
   var server
-      , port
-      , clientPort
-      , client
-      , clock
+    , port
+    , clientPort
+    , client
+    , clock
 
   var packet = {
     confirmable: true
@@ -1210,10 +1210,10 @@ describe('server LRU', function() {
 
 describe('server block cache', function() {
   var server
-      , port
-      , clientPort
-      , client
-      , clock
+    , port
+    , clientPort
+    , client
+    , clock
 
   var packet = {
     confirmable: true

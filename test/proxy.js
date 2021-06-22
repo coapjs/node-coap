@@ -96,7 +96,7 @@ describe('proxy', function() {
 
   it('should resend notifications in an observe connection', function(done) {
     var counter = 0,
-        req
+      req
 
     clock.restore()
 
@@ -221,16 +221,16 @@ describe('proxy', function() {
       })
 
       request
-          .on('response', function(res) {
-            try {
-              expect(res.code).to.eql('5.00')
-              expect(res.payload.toString()).to.match(/ENOTFOUND|EAI_AGAIN/)
-            } catch (err) {
-              return done(err)
-            }
-            done()
-          })
-          .end()
+        .on('response', function(res) {
+          try {
+            expect(res.code).to.eql('5.00')
+            expect(res.payload.toString()).to.match(/ENOTFOUND|EAI_AGAIN/)
+          } catch (err) {
+            return done(err)
+          }
+          done()
+        })
+        .end()
     })
   })
 
@@ -251,11 +251,11 @@ describe('proxy', function() {
       })
 
       request
-          .on('response', function(res) {
-            expect(res.payload.toString()).to.contain('Standard response')
-            done()
-          })
-          .end()
+        .on('response', function(res) {
+          expect(res.payload.toString()).to.contain('Standard response')
+          done()
+        })
+        .end()
     })
   })
 

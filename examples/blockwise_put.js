@@ -80,10 +80,10 @@ function TestServer () {
   coap.createServer(function (req, res) {
     console.log("Got request. Waiting 500ms")
     setTimeout(() => {
-        res.setOption('Block2', new Buffer([0x6]))
-        console.log("Sending Back Test Buffer")
-        res.end(testBuffer)
-        console.log("Sent Back")
+      res.setOption('Block2', new Buffer([0x6]))
+      console.log("Sending Back Test Buffer")
+      res.end(testBuffer)
+      console.log("Sent Back")
     }, 500)
   }).listen()
 }

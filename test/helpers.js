@@ -15,143 +15,143 @@ const createBlock2           = require('../lib/helpers').createBlock2
 
 describe('Helpers', () => {
 
-    describe('Has Options', () => {
-        it('Should return true', (done) => {
-            let options = [
-                {name: 'test'},
-                {name: 'test2'}
-            ]
-            expect(hasOption(options, 'test')).to.eql(true)
-            setImmediate(done)
-        })
-
-        it('Should return null', (done) => {
-            let options = [
-                {name: 'test2'}
-            ]
-            expect(hasOption(options, 'test')).to.eql(null)
-            setImmediate(done)
-        })
+  describe('Has Options', () => {
+    it('Should return true', (done) => {
+      let options = [
+        {name: 'test'},
+        {name: 'test2'}
+      ]
+      expect(hasOption(options, 'test')).to.eql(true)
+      setImmediate(done)
     })
 
-    describe('Get Options', () => {
-        it('Should return option value', (done) => {
-            let options = [
-                {name: 'test', value: 'hello'},
-                {name: 'test2', value: 'world'}
-            ]
-            expect(getOption(options, 'test')).to.eql('hello')
-            setImmediate(done)
-        })
+    it('Should return null', (done) => {
+      let options = [
+        {name: 'test2'}
+      ]
+      expect(hasOption(options, 'test')).to.eql(null)
+      setImmediate(done)
+    })
+  })
 
-        it('Should return null', (done) => {
-            let options = [
-                {name: 'test2', value: 'world'}
-            ]
-            expect(getOption(options, 'test')).to.eql(null)
-            setImmediate(done)
-        })
+  describe('Get Options', () => {
+    it('Should return option value', (done) => {
+      let options = [
+        {name: 'test', value: 'hello'},
+        {name: 'test2', value: 'world'}
+      ]
+      expect(getOption(options, 'test')).to.eql('hello')
+      setImmediate(done)
     })
 
-    describe('Remove Options', () => {
-        it('Should return true', (done) => {
-            let options = [
-                {name: 'test', value: 'hello'},
-                {name: 'test2', value: 'world'}
-            ]
-            expect(removeOption(options, 'test')).to.eql(true)
-            setImmediate(done)
-        })
-
-        it('Should return false', (done) => {
-            let options = [
-                {name: 'test2', value: 'world'}
-            ]
-            expect(removeOption(options, 'test')).to.eql(false)
-            setImmediate(done)
-        })
+    it('Should return null', (done) => {
+      let options = [
+        {name: 'test2', value: 'world'}
+      ]
+      expect(getOption(options, 'test')).to.eql(null)
+      setImmediate(done)
     })
+  })
+
+  describe('Remove Options', () => {
+    it('Should return true', (done) => {
+      let options = [
+        {name: 'test', value: 'hello'},
+        {name: 'test2', value: 'world'}
+      ]
+      expect(removeOption(options, 'test')).to.eql(true)
+      setImmediate(done)
+    })
+
+    it('Should return false', (done) => {
+      let options = [
+        {name: 'test2', value: 'world'}
+      ]
+      expect(removeOption(options, 'test')).to.eql(false)
+      setImmediate(done)
+    })
+  })
     
-    describe('Simplify Packet for Print', () => {
-        it('Should return pretty packet', (done) => {
-            let packet = {
-                token: '0x01',
-                options: [],
-                payload: '01 02 03'
-            }
-            let response = {
-                options: {},
-                payload: "Buff: 8",
-                token: "0x01"
-            }
-            expect(simplifyPacketForPrint(packet)).to.eql(response)
-            setImmediate(done)
-        })
-
-        it('Should return packet with options as parsed hex values', (done) => {
-            let packet = {
-                token: '0x01',
-                options: [{name: "test", value: [0x01, 0x02]}],
-                payload: '01 02 03'
-            }
-            let response = {
-                options: {"test": "1,2"},
-                payload: "Buff: 8",
-                token: "0x01"
-            }
-            expect(simplifyPacketForPrint(packet)).to.eql(response)
-            setImmediate(done)
-        })
+  describe('Simplify Packet for Print', () => {
+    it('Should return pretty packet', (done) => {
+      let packet = {
+        token: '0x01',
+        options: [],
+        payload: '01 02 03'
+      }
+      let response = {
+        options: {},
+        payload: "Buff: 8",
+        token: "0x01"
+      }
+      expect(simplifyPacketForPrint(packet)).to.eql(response)
+      setImmediate(done)
     })
 
-    describe('Parse Block2', () => {
-        it('Should have case 3 equal 4128', (done) => {
-            let buff = Buffer.from([0x01, 0x02, 0x03])
-            let res = parseBlock2(buff)
-            expect(res.num).to.eql(4128)
-            setImmediate(done)
-        })
+    it('Should return packet with options as parsed hex values', (done) => {
+      let packet = {
+        token: '0x01',
+        options: [{name: "test", value: [0x01, 0x02]}],
+        payload: '01 02 03'
+      }
+      let response = {
+        options: {"test": "1,2"},
+        payload: "Buff: 8",
+        token: "0x01"
+      }
+      expect(simplifyPacketForPrint(packet)).to.eql(response)
+      setImmediate(done)
+    })
+  })
 
-        it('Should return null', (done) => {
-            let buff = Buffer.from([0x01, 0x02, 0x03, 0x04])
-            let res = parseBlock2(buff)
-            expect(res).to.eql(null)
-            setImmediate(done)
-        })
+  describe('Parse Block2', () => {
+    it('Should have case 3 equal 4128', (done) => {
+      let buff = Buffer.from([0x01, 0x02, 0x03])
+      let res = parseBlock2(buff)
+      expect(res.num).to.eql(4128)
+      setImmediate(done)
     })
 
-    describe('Create Block2', () => {
-        it('Should return a buffer carrying a block 2 value', (done) => {
-            let buff = Buffer.from([0xff, 0xff, 0xe9])
-            let block = { moreBlock2: true, num: 1048574, size: 32}
-            let res = createBlock2(block)
-            expect(res).to.eql(buff)
-            setImmediate(done)
-        })
+    it('Should return null', (done) => {
+      let buff = Buffer.from([0x01, 0x02, 0x03, 0x04])
+      let res = parseBlock2(buff)
+      expect(res).to.eql(null)
+      setImmediate(done)
+    })
+  })
 
-        it('Should return null', (done) => {
-            let block = { moreBlock2: true, num: 1048576, size: 32}
-            let res = createBlock2(block)
-            expect(res).to.eql(null)
-            setImmediate(done)
-        })
+  describe('Create Block2', () => {
+    it('Should return a buffer carrying a block 2 value', (done) => {
+      let buff = Buffer.from([0xff, 0xff, 0xe9])
+      let block = { moreBlock2: true, num: 1048574, size: 32}
+      let res = createBlock2(block)
+      expect(res).to.eql(buff)
+      setImmediate(done)
     })
 
-    // genAck
+    it('Should return null', (done) => {
+      let block = { moreBlock2: true, num: 1048576, size: 32}
+      let res = createBlock2(block)
+      expect(res).to.eql(null)
+      setImmediate(done)
+    })
+  })
 
-    // addSetOptions
+  // genAck
 
-    // toCode
+  // addSetOptions
 
-    // packetToMessage
+  // toCode
 
-    // removeOption
+  // packetToMessage
 
-    // or
+  // removeOption
 
-    // isOptions
+  // or
 
-    // isNumeric
+  // isOptions
 
-    // isBoolean
+  // isNumeric
+
+  // isBoolean
 })

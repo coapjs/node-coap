@@ -51,7 +51,7 @@ describe('Agent', function() {
       confirmable = false
 
     return request({
-        port: port
+      port: port
       , agent: agent
       , confirmable: confirmable
     }).end()
@@ -135,12 +135,12 @@ describe('Agent', function() {
     server.on('message', function(msg, rsinfo) {
       var packet  = parse(msg)
         , toSend  = generate({
-                        messageId: packet.messageId
-                      , token: packet.token
-                      , code: '2.00'
-                      , ack: true
-                      , payload: Buffer.alloc(5)
-                    })
+          messageId: packet.messageId
+          , token: packet.token
+          , code: '2.00'
+          , ack: true
+          , payload: Buffer.alloc(5)
+        })
       
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
     })
@@ -165,12 +165,12 @@ describe('Agent', function() {
     server.once('message', function(msg, rsinfo) {
       var packet  = parse(msg)
         , toSend  = generate({
-              messageId: packet.messageId
-            , token: packet.token
-            , code: '2.00'
-            , confirmable: false
-            , payload: Buffer.alloc(5)
-          })
+          messageId: packet.messageId
+          , token: packet.token
+          , code: '2.00'
+          , confirmable: false
+          , payload: Buffer.alloc(5)
+        })
       
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
 
@@ -193,18 +193,18 @@ describe('Agent', function() {
     server.once('message', function(msg, rsinfo) {
       var packet  = parse(msg)
         , toSend  = generate({
-              messageId: packet.messageId
-            , token: packet.token
-            , code: '2.00'
-            , confirmable: false
-            , payload: Buffer.alloc(5)
-            , options: [{
-              name: 'Content-Format'
-              , value: Buffer.of(0x06, 0x06)
-            }]
-          })
+          messageId: packet.messageId
+          , token: packet.token
+          , code: '2.00'
+          , confirmable: false
+          , payload: Buffer.alloc(5)
+          , options: [{
+            name: 'Content-Format'
+            , value: Buffer.of(0x06, 0x06)
+          }]
+        })
 
-        server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
     })
 
     req.on('response', function(res) {
@@ -222,18 +222,18 @@ describe('Agent', function() {
     server.once('message', function(msg, rsinfo) {
       var packet  = parse(msg)
         , toSend  = generate({
-              messageId: packet.messageId
-            , token: packet.token
-            , code: '2.00'
-            , confirmable: false
-            , payload: Buffer.alloc(5)
-            , options: [{
-              name: 'Content-Format'
-              , value: Buffer.of(0xff, 0xff, 0x1)
-            }]
-          })
+          messageId: packet.messageId
+          , token: packet.token
+          , code: '2.00'
+          , confirmable: false
+          , payload: Buffer.alloc(5)
+          , options: [{
+            name: 'Content-Format'
+            , value: Buffer.of(0xff, 0xff, 0x1)
+          }]
+        })
 
-        server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+      server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
     })
 
     req.on('response', function(res) {
@@ -251,13 +251,13 @@ describe('Agent', function() {
     server.once('message', function(msg, rsinfo) {
       var packet  = parse(msg)
         , toSend  = generate({
-              messageId: packet.messageId
-            , token: packet.token
-            , code: '2.00'
-            , confirmable: false
-            , ack: true
-            , payload: Buffer.alloc(5)
-          })
+          messageId: packet.messageId
+          , token: packet.token
+          , code: '2.00'
+          , confirmable: false
+          , ack: true
+          , payload: Buffer.alloc(5)
+        })
       
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
 
@@ -278,13 +278,13 @@ describe('Agent', function() {
     server.on('message', function(msg, rsinfo) {
       var packet  = parse(msg)
         , toSend  = generate({
-              messageId: packet.messageId
-            , token: packet.token
-            , code: '2.00'
-            , confirmable: false
-            , ack: true
-            , payload: Buffer.alloc(5)
-          })
+          messageId: packet.messageId
+          , token: packet.token
+          , code: '2.00'
+          , confirmable: false
+          , ack: true
+          , payload: Buffer.alloc(5)
+        })
       
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
 
@@ -310,33 +310,33 @@ describe('Agent', function() {
       var packet  = parse(msg)
 
       switch (++step) {
-        case 1:
-          // Request message from the client
-          // Ensure the message sent by the server does not match any
-          // current request.
-          var invalidMid = packet.messageId + 1
-            , invalidTkn = Buffer.from(packet.token)
-          ++invalidTkn[0]
+      case 1:
+        // Request message from the client
+        // Ensure the message sent by the server does not match any
+        // current request.
+        var invalidMid = packet.messageId + 1
+          , invalidTkn = Buffer.from(packet.token)
+        ++invalidTkn[0]
 
-          var toSend  = generate({
-                  messageId: invalidMid
-                , token: invalidTkn
-                , code: '2.00'
-                , confirmable: true
-                , ack: false
-                , payload: Buffer.alloc(5)
-              })
-          server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
-          break
+        var toSend  = generate({
+          messageId: invalidMid
+          , token: invalidTkn
+          , code: '2.00'
+          , confirmable: true
+          , ack: false
+          , payload: Buffer.alloc(5)
+        })
+        server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+        break
 
-        case 2:
-          expect(packet.reset).to.be.true
-          done()
-          break
+      case 2:
+        expect(packet.reset).to.be.true
+        done()
+        break
 
-        case 3:
-          done(Error('Got two answers'))
-          break
+      case 3:
+        done(Error('Got two answers'))
+        break
       }
     })
   })
@@ -345,24 +345,24 @@ describe('Agent', function() {
 
     function sendObserve(opts) {
       var toSend  = generate({
-              messageId: opts.messageId
-            , token: opts.token
-            , code: '2.05'
-            , confirmable: opts.confirmable
-            , ack: opts.ack
-            , payload: Buffer.alloc(5)
-            , options: [{
-                  name: 'Observe'
-                , value: Buffer.of(opts.num)
-              }]
-          })
+        messageId: opts.messageId
+        , token: opts.token
+        , code: '2.05'
+        , confirmable: opts.confirmable
+        , ack: opts.ack
+        , payload: Buffer.alloc(5)
+        , options: [{
+          name: 'Observe'
+          , value: Buffer.of(opts.num)
+        }]
+      })
       
       server.send(toSend, 0, toSend.length, opts.rsinfo.port, opts.rsinfo.address)
     }
 
     it('should discard the request after receiving the payload for piggyback CON requests with observe request', function(done) {
       var req = request({
-          port: port
+        port: port
         , agent: agent
         , observe: true
         , confirmable: true
@@ -372,7 +372,7 @@ describe('Agent', function() {
         var packet  = parse(msg)
 
         sendObserve({
-            num: 1
+          num: 1
           , messageId: packet.messageId
           , token: packet.token
           , confirmable: false
@@ -382,7 +382,7 @@ describe('Agent', function() {
 
         // duplicate, as there was some retransmission
         sendObserve({
-            num: 1
+          num: 1
           , messageId: packet.messageId
           , token: packet.token
           , confirmable: false
@@ -392,7 +392,7 @@ describe('Agent', function() {
 
         // some more data
         sendObserve({
-            num: 2
+          num: 2
           , token: packet.token
           , confirmable: true
           , ack: false
@@ -410,17 +410,17 @@ describe('Agent', function() {
       var firstRsinfo
 
         , req = request({
-              port: port
-            , agent: agent
-            , observe: true
-            , confirmable: true
-          }).end()
+          port: port
+          , agent: agent
+          , observe: true
+          , confirmable: true
+        }).end()
 
       server.once('message', function(msg, rsinfo) {
         var packet  = parse(msg)
 
         sendObserve({
-            num: 1
+          num: 1
           , messageId: packet.messageId
           , token: packet.token
           , confirmable: false

@@ -1449,7 +1449,7 @@ describe('request', function() {
 
     it('should be responsed with the same token', function (done) {
       var req = doReq()
-      , token
+        , token
 
       server.on('message', function(msg, rsinfo) {
         var packet = parse(msg)

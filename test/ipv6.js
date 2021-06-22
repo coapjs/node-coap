@@ -81,12 +81,12 @@ describe('IPv6', function() {
         server.on('message', function(msg, rsinfo) {
           var packet = parse(msg)
             , toSend = generate({
-                           messageId: packet.messageId
-                         , token: packet.token
-                         , payload: Buffer.from('42')
-                         , ack: true
-                         , code: '2.00'
-                       })
+              messageId: packet.messageId
+              , token: packet.token
+              , payload: Buffer.from('42')
+              , ack: true
+              , code: '2.00'
+            })
           server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
 
           expect(parse(msg).payload.toString()).to.eql('hello world')

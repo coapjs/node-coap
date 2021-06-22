@@ -61,21 +61,21 @@ describe('blockwise2', function() {
     var payload   = Buffer.alloc(100)         // default max packet is 1280
 
     var req = coap.request({
-        port: port
+      port: port
     })
-    .on('response', function(res) {
-      var blockwiseResponse = false
-      for (var i in res.options) {
-        if (res.options[i].name == 'Block2') {
-          blockwiseResponse = true
-          break
+      .on('response', function(res) {
+        var blockwiseResponse = false
+        for (var i in res.options) {
+          if (res.options[i].name == 'Block2') {
+            blockwiseResponse = true
+            break
+          }
         }
-      }
-      expect(blockwiseResponse).to.eql(false)
-      //expect(cache.get(res._packet.token.toString())).to.be.undefined
-      setImmediate(done)
-    })
-    .end()
+        expect(blockwiseResponse).to.eql(false)
+        //expect(cache.get(res._packet.token.toString())).to.be.undefined
+        setImmediate(done)
+      })
+      .end()
     server.on('request', function(req, res) {
       res.end(payload)
     })
@@ -83,21 +83,21 @@ describe('blockwise2', function() {
 
   it('should use blockwise in response when payload bigger than max packet', function(done) {
     var req = coap.request({
-        port: port
+      port: port
     })
-    .on('response', function(res) {
-      var blockwiseResponse = false
-      for (var i in res.options) {
-        if (res.options[i].name == 'Block2') {
-          blockwiseResponse = true
-          break
+      .on('response', function(res) {
+        var blockwiseResponse = false
+        for (var i in res.options) {
+          if (res.options[i].name == 'Block2') {
+            blockwiseResponse = true
+            break
+          }
         }
-      }
-      expect(blockwiseResponse).to.eql(true)
-      //expect(cache.get(res._packet.token.toString())).to.not.be.undefined
-      setImmediate(done)
-    })
-    .end()
+        expect(blockwiseResponse).to.eql(true)
+        //expect(cache.get(res._packet.token.toString())).to.not.be.undefined
+        setImmediate(done)
+      })
+      .end()
     server.on('request', function(req, res) {
       res.end(payload)
     })
@@ -105,14 +105,14 @@ describe('blockwise2', function() {
 
   it('should blockwise response have etag', function(done) {
     var req = coap.request({
-        port: port
+      port: port
     })
-    .on('response', function(res) {
-      expect(typeof res.headers.ETag).to.eql('string')
-      //expect(cache.get(res._packet.token.toString())).to.not.be.undefined
-      setImmediate(done)
-    })
-    .end()
+      .on('response', function(res) {
+        expect(typeof res.headers.ETag).to.eql('string')
+        //expect(cache.get(res._packet.token.toString())).to.not.be.undefined
+        setImmediate(done)
+      })
+      .end()
     server.on('request', function(req, res) {
       res.end(payload)
     })
@@ -120,23 +120,23 @@ describe('blockwise2', function() {
 
   it('should accept early negotation', function(done) {
     var req = coap.request({
-        port: port
+      port: port
     })
-    .setOption('Block2', Buffer.of(0x02))
-    .on('response', function(res) {
-      var block2
-      for (var i in res.options) {
-        if (res.options[i].name == 'Block2') {
-          block2 = res.options[i].value
-          break
+      .setOption('Block2', Buffer.of(0x02))
+      .on('response', function(res) {
+        var block2
+        for (var i in res.options) {
+          if (res.options[i].name == 'Block2') {
+            block2 = res.options[i].value
+            break
+          }
         }
-      }
-      expect(block2 instanceof Buffer).to.eql(true)
-      expect(block2[block2.length-1] & 0x07).to.eql(2)
-      //expect(cache.get(res._packet.token.toString())).to.not.be.undefined
-      setImmediate(done)
-    })
-    .end()
+        expect(block2 instanceof Buffer).to.eql(true)
+        expect(block2[block2.length-1] & 0x07).to.eql(2)
+        //expect(cache.get(res._packet.token.toString())).to.not.be.undefined
+        setImmediate(done)
+      })
+      .end()
     server.on('request', function(req, res) {
       res.end(payload)
     })
@@ -144,15 +144,15 @@ describe('blockwise2', function() {
 
   it('should receive error when early negotation request block size higher than 1024', function(done) {
     var req = coap.request({
-        port: port
+      port: port
     })
-    .setOption('Block2', Buffer.of(0x07)) // request for block 0, with overload size of 2**(7+4)
-    .on('response', function(res) {
-      expect(res.code).to.eql('4.02')
-      //expect(cache.get(res._packet.token.toString())).to.be.undefined
-      setImmediate(done)
-    })
-    .end()
+      .setOption('Block2', Buffer.of(0x07)) // request for block 0, with overload size of 2**(7+4)
+      .on('response', function(res) {
+        expect(res.code).to.eql('4.02')
+        //expect(cache.get(res._packet.token.toString())).to.be.undefined
+        setImmediate(done)
+      })
+      .end()
     server.on('request', function(req, res) {
       res.end(payload)
     })
@@ -163,15 +163,15 @@ describe('blockwise2', function() {
     // blocks are requested with a zero based index, i.e. indices 0, 1 and 2
     // block index 3 or higher is "out of range" and should cause an error response
     var req = coap.request({
-        port: port
+      port: port
     })
-    .setOption('Block2', Buffer.of(0x3D)) // request for block index 3
-    .on('response', function(res) {
-      expect(res.code).to.eql('4.02')
-      //expect(cache.get(res._packet.token.toString())).to.be.undefined
-      setImmediate(done)
-    })
-    .end()
+      .setOption('Block2', Buffer.of(0x3D)) // request for block index 3
+      .on('response', function(res) {
+        expect(res.code).to.eql('4.02')
+        //expect(cache.get(res._packet.token.toString())).to.be.undefined
+        setImmediate(done)
+      })
+      .end()
     server.on('request', function(req, res) {
       res.end(payload)
     })
@@ -179,15 +179,15 @@ describe('blockwise2', function() {
 
   it('should be able to receive part of message', function(done) {
     var req = coap.request({
-        port: port
+      port: port
     })
-    .setOption('Block2', Buffer.of(0x10)) // request from block 1, with size = 16
-    .on('response', function(res) {
-      expect(res.payload).to.eql(payload.slice(1*16, payload.length+1))
-      //expect(cache.get(res._packet.token.toString())).to.not.be.undefined
-      setImmediate(done)
-    })
-    .end()
+      .setOption('Block2', Buffer.of(0x10)) // request from block 1, with size = 16
+      .on('response', function(res) {
+        expect(res.payload).to.eql(payload.slice(1*16, payload.length+1))
+        //expect(cache.get(res._packet.token.toString())).to.not.be.undefined
+        setImmediate(done)
+      })
+      .end()
     server.on('request', function(req, res) {
       res.end(payload)
     })
@@ -196,15 +196,15 @@ describe('blockwise2', function() {
   it('should receive full response payload', function(done) {
     var payload = Buffer.alloc(16*0xff+1)
     var req = coap.request({
-        port: port
+      port: port
     })
-    .setOption('Block2', Buffer.of(0x0)) // early negotation with block size = 16, almost 10000/16 = 63 blocks
-    .on('response', function(res) {
-      expect(res.payload).to.eql(payload)
-      //expect(cache.get(res._packet.token.toString())).to.not.be.undefined
-      setImmediate(done)
-    })
-    .end()
+      .setOption('Block2', Buffer.of(0x0)) // early negotation with block size = 16, almost 10000/16 = 63 blocks
+      .on('response', function(res) {
+        expect(res.payload).to.eql(payload)
+        //expect(cache.get(res._packet.token.toString())).to.not.be.undefined
+        setImmediate(done)
+      })
+      .end()
     server.on('request', function(req, res) {
       res.end(payload)
     })
@@ -212,12 +212,12 @@ describe('blockwise2', function() {
 
   function sendNextBlock2(req_token, req_block2_num) {
     var packet = {
-        messageId: 1100 + req_block2_num
+      messageId: 1100 + req_block2_num
       , token: req_token
       , options: [{
-            name: 'Block2'
-          , value: Buffer.of(req_block2_num << 4)
-        }]
+        name: 'Block2'
+        , value: Buffer.of(req_block2_num << 4)
+      }]
     }
     send(generate(packet))
   }
@@ -231,7 +231,7 @@ describe('blockwise2', function() {
     var req2_done = false
     var req1_block2_num = 0
     var req_client2 = coap.request({
-        port: port
+      port: port
     })
 
     fillPayloadBuffer(payload_req1)
@@ -271,7 +271,7 @@ describe('blockwise2', function() {
         req1_done = true
         if (req1_done && req2_done)
           setImmediate(done)
-        }
+      }
     })
 
     req_client2.setOption('Block2', Buffer.of(0x10)) // request from block 1, with size = 16
@@ -357,107 +357,107 @@ describe('blockwise2', function() {
 
 describe('blockwise1', () =>{
 
- describe('Generate Block Options', () => {
-   it('it should return buffer', (done) => {
-    var payload  = Buffer.of(0x01) 
-    let value = block.generateBlockOption(0, 0, 1)
-    expect(payload).to.eql(value)
-    setImmediate(done)
-   })
+  describe('Generate Block Options', () => {
+    it('it should return buffer', (done) => {
+      var payload  = Buffer.of(0x01) 
+      let value = block.generateBlockOption(0, 0, 1)
+      expect(payload).to.eql(value)
+      setImmediate(done)
+    })
 
-   it('it should return buffer equal to 1,0,1', (done) => {
-    var payload  = Buffer.of(0x01, 0x00, 0x01) 
-    let value = block.generateBlockOption(4096, 0, 1)
-    expect(payload).to.eql(value)
-    setImmediate(done)
-   })
+    it('it should return buffer equal to 1,0,1', (done) => {
+      var payload  = Buffer.of(0x01, 0x00, 0x01) 
+      let value = block.generateBlockOption(4096, 0, 1)
+      expect(payload).to.eql(value)
+      setImmediate(done)
+    })
 
-   it('it should return buffer equal to 1,1', (done) => {
-    var payload  = Buffer.of(0x01, 0x01) 
-    let value = block.generateBlockOption(16, 0, 1)
-    expect(payload).to.eql(value)
-    setImmediate(done)
-   })
+    it('it should return buffer equal to 1,1', (done) => {
+      var payload  = Buffer.of(0x01, 0x01) 
+      let value = block.generateBlockOption(16, 0, 1)
+      expect(payload).to.eql(value)
+      setImmediate(done)
+    })
 
-   it('it should throw Invalid Parameters error', (done) => {
-    expect(() => {
-      block.generateBlockOption(0, null, undefined)
-    }).to.throw("Invalid parameters")
-    setImmediate(done)
-   })
+    it('it should throw Invalid Parameters error', (done) => {
+      expect(() => {
+        block.generateBlockOption(0, null, undefined)
+      }).to.throw("Invalid parameters")
+      setImmediate(done)
+    })
 
-   it('it should throw Sequence error', (done) => {
-    expect(() => {
-      block.generateBlockOption(1048576, 0, 0)
-    }).to.throw("Sequence number out of range")
-    setImmediate(done)
-   })
- })
+    it('it should throw Sequence error', (done) => {
+      expect(() => {
+        block.generateBlockOption(1048576, 0, 0)
+      }).to.throw("Sequence number out of range")
+      setImmediate(done)
+    })
+  })
 
- describe('Parse Block Options', () => {
-  it('it should return object', (done) => {
-    var payload  = Buffer.of(0x01) 
-    var response = {
-      sequenceNumber: 0,
-      moreBlocks: 0,
-      blockSize: 1
-    }
-    let value = block.parseBlockOption(payload)
-    expect(value).to.eql(response)
-    setImmediate(done)
-   })
+  describe('Parse Block Options', () => {
+    it('it should return object', (done) => {
+      var payload  = Buffer.of(0x01) 
+      var response = {
+        sequenceNumber: 0,
+        moreBlocks: 0,
+        blockSize: 1
+      }
+      let value = block.parseBlockOption(payload)
+      expect(value).to.eql(response)
+      setImmediate(done)
+    })
 
-   it('it should return object when length is equal to 2', (done) => {
-    var payload  = Buffer.of(0x01, 0x02) 
-    var response = {
-      sequenceNumber: 16,
-      moreBlocks: 0,
-      blockSize: 2
-    }
-    let value = block.parseBlockOption(payload)
-    expect(value).to.eql(response)
-    setImmediate(done)
-   })
+    it('it should return object when length is equal to 2', (done) => {
+      var payload  = Buffer.of(0x01, 0x02) 
+      var response = {
+        sequenceNumber: 16,
+        moreBlocks: 0,
+        blockSize: 2
+      }
+      let value = block.parseBlockOption(payload)
+      expect(value).to.eql(response)
+      setImmediate(done)
+    })
 
-   it('it should return object when length is equal to 3', (done) => {
-    var payload  = Buffer.of(0x01, 0x02, 0x03) 
-    var response = {
-      sequenceNumber: 4128,
-      moreBlocks: 0,
-      blockSize: 3
-    }
-    let value = block.parseBlockOption(payload)
-    expect(value).to.eql(response)
-    setImmediate(done)
-   })
+    it('it should return object when length is equal to 3', (done) => {
+      var payload  = Buffer.of(0x01, 0x02, 0x03) 
+      var response = {
+        sequenceNumber: 4128,
+        moreBlocks: 0,
+        blockSize: 3
+      }
+      let value = block.parseBlockOption(payload)
+      expect(value).to.eql(response)
+      setImmediate(done)
+    })
 
-   it('it should throw Invalid Block Option error', (done) => {
-    var payload  = Buffer.from([0x04, 0x01, 0x03, 0x04])
-    expect(() => {
-      block.parseBlockOption(payload)
-    }).to.throw("Invalid block option buffer length. Must be 1, 2 or 3. It is 4")
-    setImmediate(done)
-   })
- })
+    it('it should throw Invalid Block Option error', (done) => {
+      var payload  = Buffer.from([0x04, 0x01, 0x03, 0x04])
+      expect(() => {
+        block.parseBlockOption(payload)
+      }).to.throw("Invalid block option buffer length. Must be 1, 2 or 3. It is 4")
+      setImmediate(done)
+    })
+  })
 
- describe('Exponenent to Byte Size', () => {
-  it('it should return value', (done) => {
-    let response = 1024
-    let payload = 6
-    let value = block.exponentToByteSize(payload)
-    expect(value).to.eql(response)
-    setImmediate(done)
-   })
- })
+  describe('Exponenent to Byte Size', () => {
+    it('it should return value', (done) => {
+      let response = 1024
+      let payload = 6
+      let value = block.exponentToByteSize(payload)
+      expect(value).to.eql(response)
+      setImmediate(done)
+    })
+  })
 
- describe('Byte Size to Exponenet', () => {
-  it('it should return value', (done) => {
-    let response = 1024
-    let payload = 6
-    let value = block.byteSizeToExponent(response)
-    expect(value).to.eql(payload)
-    setImmediate(done)
-   })
- })
+  describe('Byte Size to Exponenet', () => {
+    it('it should return value', (done) => {
+      let response = 1024
+      let payload = 6
+      let value = block.byteSizeToExponent(response)
+      expect(value).to.eql(payload)
+      setImmediate(done)
+    })
+  })
 
 })

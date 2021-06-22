@@ -1,5 +1,5 @@
 const coap = require('../') // or coap
-    , bl   = require('bl')
+  , bl   = require('bl')
 
 coap.createServer(function(req, res) {
   if (req.headers['Accept'] != 'application/json') {

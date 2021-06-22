@@ -1,10 +1,10 @@
 const coap        = require('../') // or coap
-		, url 				= require('url')
+  , url 				= require('url')
 
 coap.createServer(function(req, res) {
-	var path = url.parse(req.url)
-	var time = parseInt(path.search.split('=')[1])
-	var pathname = path.pathname.split('/')[1]
+  var path = url.parse(req.url)
+  var time = parseInt(path.search.split('=')[1])
+  var pathname = path.pathname.split('/')[1]
 
   res.end(new Array(time+1).join(pathname+' '))
 
