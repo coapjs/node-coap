@@ -49,10 +49,10 @@ function TestPut () {
       console.log(req.payload.slice(0, containedData.length*2).toString('utf-8'))
       console.log(req.payload.slice(-containedData.length).toString('utf-8'))
       console.log("Sending back pleasantries")
-      res.statusCode = "2.04";
+      res.statusCode = "2.04"
       res.end("Congratulations!")
       console.log("Sent back")
-    }, 500);
+    }, 500)
   }).listen(function () {
     var request = coap.request({
       hostname: this.hostname,
@@ -78,13 +78,13 @@ function TestPut () {
 */
 function TestServer () {
   coap.createServer(function (req, res) {
-    console.log("Got request. Waiting 500ms");
+    console.log("Got request. Waiting 500ms")
     setTimeout(() => {
         res.setOption('Block2', new Buffer([0x6]))
         console.log("Sending Back Test Buffer")
         res.end(testBuffer)
         console.log("Sent Back")
-    }, 500);
+    }, 500)
   }).listen()
 }
 

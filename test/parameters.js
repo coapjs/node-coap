@@ -17,7 +17,7 @@ describe('Parameters', function() {
 
   it('should ignore empty parameter', function() {
     //WHEN
-    coap.updateTiming();
+    coap.updateTiming()
 
     // THEN
     expect(parameters.maxRTT).to.eql(202)
@@ -34,10 +34,10 @@ describe('Parameters', function() {
       maxRetransmit: 3,
       maxLatency: 5,
       piggybackReplyMs: 6
-    };
+    }
 
     //WHEN
-    coap.updateTiming(coapTiming);
+    coap.updateTiming(coapTiming)
 
     // THEN
     expect(parameters.maxRTT).to.eql(11)

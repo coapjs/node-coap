@@ -20,14 +20,14 @@ server.on('request', function(msg, res) {
 	console.log('Server 1 has received message')
 	res.end('Ok')
 
-	server.close();
+	server.close()
 })
 
 server2.on('request', function(msg, res) {
 	console.log('Server 2 has received message')
 	res.end('Ok')
 
-	server2.close();
+	server2.close()
 })
 
 // Send multicast message

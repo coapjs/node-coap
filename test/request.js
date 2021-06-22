@@ -90,7 +90,7 @@ describe('request', function() {
   })
 
   it('should emit the errors in the req', function (done) {
-    this.timeout(20000);
+    this.timeout(20000)
     var req = request('coap://aaa.eee:' + 1234)
 
     req.once('error', function () {
@@ -219,9 +219,9 @@ describe('request', function() {
 
         var packet = parse(msg)
         expect(packet.token).to.eql(Buffer.from([1,2,3,4,5,6,7,8]))
-        done();
+        done()
       } catch (err) {
-        done(err);
+        done(err)
       }
     })
   })
@@ -238,9 +238,9 @@ describe('request', function() {
 
         var packet = parse(msg)
         expect(packet.token.length).to.be.above(0)
-        done();
+        done()
       } catch (err) {
-        done(err);
+        done(err)
       }
     })
   })
@@ -249,18 +249,18 @@ describe('request', function() {
     var rq = request({
       port: port
       , token: Buffer.from([1,2,3,4,5,6,7,8,9,10])
-    });
+    })
 
     rq.on('error', function(err) {
       if (err.message === 'Token may be no longer than 8 bytes.')
         // Success, this is what we were expecting
-        done();
+        done()
       else
         // Not our error
-        done(err);
-    });
+        done(err)
+    })
 
-    rq.end();
+    rq.end()
 
     server.on('message', function (msg, rsinfo) {
       // We should not see this!
@@ -492,7 +492,7 @@ describe('request', function() {
           , ack: true
           , payload: 'this payload invalidates empty message'
         })
-      expect(packet.code).to.be.eq('0.01');
+      expect(packet.code).to.be.eq('0.01')
       messages++
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
     })
@@ -1148,14 +1148,14 @@ describe('request', function() {
           server.on('message', function (msg, rsinfo) {
             var packet = parse(msg)
             if (packet.ack && (packet.code === '0.00'))
-              return;
+              return
 
             try {
-              expect(packet.options.length).to.be.least(1);
+              expect(packet.options.length).to.be.least(1)
               expect(packet.options[0].name).to.eql('Observe')
               expect(packet.options[0].value).to.eql(Buffer.from([1]))
             } catch (err) {
-              return done(err);
+              return done(err)
             }
             done()
           })
@@ -1189,7 +1189,7 @@ describe('request', function() {
           expect(packet.options[0].name).to.eql('Observe')
           expect(packet.options[0].value).to.eql(Buffer.from([1]))
         } catch (err) {
-          return done(err);
+          return done(err)
         }
 
         done()
@@ -1431,11 +1431,11 @@ describe('request', function() {
         sock.addMembership(MULTICAST_ADDR)
         done()
       })
-    });
+    })
 
     afterEach(function() {
       sock.close()
-    });
+    })
 
     it('should be non-confirmable', function (done) {
       var req = doReq()
@@ -1444,7 +1444,7 @@ describe('request', function() {
         var packet = parse(msg)
         expect(packet).to.have.property('confirmable', false)
         done()
-      });
+      })
     })
 
     it('should be responsed with the same token', function (done) {
@@ -1464,7 +1464,7 @@ describe('request', function() {
         })
 
         server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
-      });
+      })
 
       req.on('response', function (res) {
         var packet = res._packet

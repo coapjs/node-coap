@@ -24,8 +24,8 @@ describe('end-to-end', function() {
   })*/
 
   process.on('uncaughtException', function (err) {
-    console.log('Caught exception: ' + err);
-  });
+    console.log('Caught exception: ' + err)
+  })
 
   it('should receive a request at a path with some query', function(done) {
     coap.request('coap://localhost:'+port + '/abcd/ef/gh/?foo=bar&beep=bop').end()
@@ -172,7 +172,7 @@ describe('end-to-end', function() {
           var req = {
             port: port,
             options: {}
-          };
+          }
 
           req.options[option] = format
 
@@ -189,7 +189,7 @@ describe('end-to-end', function() {
           var req = {
             port: port,
             headers: {}
-          };
+          }
 
           req.headers[option] = format
 
@@ -260,7 +260,7 @@ describe('end-to-end', function() {
 
   it('should provide a writeHead() method', function(done) {
     var req = coap.request('coap://localhost:' + port)
-    req.end();
+    req.end()
     req.on('response', function(res) {
       expect(res.headers['Content-Format']).to.equal('application/json')
       done()
@@ -410,10 +410,10 @@ describe('end-to-end', function() {
         }).end()
 
     server.on('request', function(req, res) {
-      res.end('hello');
-      expect(req.rsinfo.port).eql(3636);
-      done();
-    });
+      res.end('hello')
+      expect(req.rsinfo.port).eql(3636)
+      done()
+    })
   })
 
   it('should ignore ignored options', function() {

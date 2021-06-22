@@ -3,7 +3,7 @@ const coap = require('../') // or coap
 coap.createServer(function(req, res) {
   //simulate delayed response
   setTimeout(function(){
-    res.setOption('Block2', Buffer.of(2));
+    res.setOption('Block2', Buffer.of(2))
     res.end('Hello ' + req.url.split('/')[1] + '\nMessage payload:\n'+req.payload+'\n')
   }, 1500)
 }).listen(function() {

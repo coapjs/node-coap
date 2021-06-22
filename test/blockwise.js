@@ -238,7 +238,7 @@ describe('blockwise2', function() {
     fillPayloadBuffer(payload_req2)
     fillPayloadBuffer(req1_token)
 
-    var nreq = 1;
+    var nreq = 1
     server.on('request', function(req, res) {
       // only two request to upper level, blockwise transfer completed from cache
       if (nreq == 1)
@@ -360,37 +360,37 @@ describe('blockwise1', () =>{
  describe('Generate Block Options', () => {
    it('it should return buffer', (done) => {
     var payload  = Buffer.of(0x01) 
-    let value = block.generateBlockOption(0, 0, 1);
+    let value = block.generateBlockOption(0, 0, 1)
     expect(payload).to.eql(value)
-    setImmediate(done);
+    setImmediate(done)
    })
 
    it('it should return buffer equal to 1,0,1', (done) => {
     var payload  = Buffer.of(0x01, 0x00, 0x01) 
-    let value = block.generateBlockOption(4096, 0, 1);
+    let value = block.generateBlockOption(4096, 0, 1)
     expect(payload).to.eql(value)
-    setImmediate(done);
+    setImmediate(done)
    })
 
    it('it should return buffer equal to 1,1', (done) => {
     var payload  = Buffer.of(0x01, 0x01) 
-    let value = block.generateBlockOption(16, 0, 1);
+    let value = block.generateBlockOption(16, 0, 1)
     expect(payload).to.eql(value)
-    setImmediate(done);
+    setImmediate(done)
    })
 
    it('it should throw Invalid Parameters error', (done) => {
     expect(() => {
       block.generateBlockOption(0, null, undefined)
     }).to.throw("Invalid parameters")
-    setImmediate(done);
+    setImmediate(done)
    })
 
    it('it should throw Sequence error', (done) => {
     expect(() => {
       block.generateBlockOption(1048576, 0, 0)
     }).to.throw("Sequence number out of range")
-    setImmediate(done);
+    setImmediate(done)
    })
  })
 
@@ -402,9 +402,9 @@ describe('blockwise1', () =>{
       moreBlocks: 0,
       blockSize: 1
     }
-    let value = block.parseBlockOption(payload);
+    let value = block.parseBlockOption(payload)
     expect(value).to.eql(response)
-    setImmediate(done);
+    setImmediate(done)
    })
 
    it('it should return object when length is equal to 2', (done) => {
@@ -414,9 +414,9 @@ describe('blockwise1', () =>{
       moreBlocks: 0,
       blockSize: 2
     }
-    let value = block.parseBlockOption(payload);
+    let value = block.parseBlockOption(payload)
     expect(value).to.eql(response)
-    setImmediate(done);
+    setImmediate(done)
    })
 
    it('it should return object when length is equal to 3', (done) => {
@@ -426,9 +426,9 @@ describe('blockwise1', () =>{
       moreBlocks: 0,
       blockSize: 3
     }
-    let value = block.parseBlockOption(payload);
+    let value = block.parseBlockOption(payload)
     expect(value).to.eql(response)
-    setImmediate(done);
+    setImmediate(done)
    })
 
    it('it should throw Invalid Block Option error', (done) => {
@@ -436,27 +436,27 @@ describe('blockwise1', () =>{
     expect(() => {
       block.parseBlockOption(payload)
     }).to.throw("Invalid block option buffer length. Must be 1, 2 or 3. It is 4")
-    setImmediate(done);
+    setImmediate(done)
    })
  })
 
  describe('Exponenent to Byte Size', () => {
   it('it should return value', (done) => {
-    let response = 1024;
-    let payload = 6;
-    let value = block.exponentToByteSize(payload);
+    let response = 1024
+    let payload = 6
+    let value = block.exponentToByteSize(payload)
     expect(value).to.eql(response)
-    setImmediate(done);
+    setImmediate(done)
    })
  })
 
  describe('Byte Size to Exponenet', () => {
   it('it should return value', (done) => {
-    let response = 1024;
-    let payload = 6;
-    let value = block.byteSizeToExponent(response);
+    let response = 1024
+    let payload = 6
+    let value = block.byteSizeToExponent(response)
     expect(value).to.eql(payload)
-    setImmediate(done);
+    setImmediate(done)
    })
  })
 

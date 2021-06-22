@@ -256,7 +256,7 @@ describe('server', function() {
       expect(result.token.length).to.eql(0)
       expect(result.payload.length).to.eql(0)
       done()
-    });
+    })
     server.on('request', function(req, res) {
       res.reset()
     })
@@ -334,7 +334,7 @@ describe('server', function() {
       }))
 
       client.on('message', function(msg) {
-        var response = parse(msg);
+        var response = parse(msg)
 
         expect(response.code).to.equal('2.05')
 
@@ -356,7 +356,7 @@ describe('server', function() {
       }))
 
       client.on('message', function(msg) {
-        var response = parse(msg);
+        var response = parse(msg)
 
         expect(response.code).to.equal('2.05')
 
@@ -680,7 +680,7 @@ describe('server', function() {
           // original one plus 4 retries
           expect(messages).to.eql(5)
         } catch (err) {
-          return done(err);
+          return done(err)
         }
         done()
       }, 45 * 1000)
@@ -924,7 +924,7 @@ describe('server', function() {
         expect(result.ack).to.eql(false)
         expect(result.payload.length).to.eql(0)
 
-        done();
+        done()
       })
     })
 
@@ -1032,7 +1032,7 @@ describe('validate custom server options', function() {
 
   it('use custom piggyBackTimeout time', function(done) {
     var piggyBackTimeout = 10
-    var messages = 0;
+    var messages = 0
     server = coap.createServer({ piggybackReplyMs: piggyBackTimeout })
     server.listen(port)
     server.on('request', function(req, res) {
@@ -1105,7 +1105,7 @@ describe('validate custom server options', function() {
   }
 
   it('should send ACK for non-confirmable message, sendAcksForNonConfirmablePackets=true', function(done) {
-    var messages = 0;
+    var messages = 0
     server = coap.createServer({ sendAcksForNonConfirmablePackets: true })
     server.listen(port)
     server.on('request', function(req, res) {
@@ -1119,7 +1119,7 @@ describe('validate custom server options', function() {
   })
 
   it('should not send ACK for non-confirmable message, sendAcksForNonConfirmablePackets=false', function(done) {
-    var messages = 0;
+    var messages = 0
     server = coap.createServer({ sendAcksForNonConfirmablePackets: false })
     server.listen(port)
     server.on('request', function(req, res) {
@@ -1142,7 +1142,7 @@ describe('validate custom server options', function() {
       res.end('42')
     })
     client.on('message', function(msg) {
-      done();
+      done()
     })
     sendConfirmableMessage()
   })
