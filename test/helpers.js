@@ -6,12 +6,12 @@
  * See the included LICENSE file for more details.
  */
 
-const getOption              = require('../lib/helpers').getOption;
-const hasOption              = require('../lib/helpers').hasOption;
-const removeOption           = require('../lib/helpers').removeOption; 
-const simplifyPacketForPrint = require('../lib/helpers').simplifyPacketForPrint;
-const parseBlock2            = require('../lib/helpers').parseBlock2;
-const createBlock2           = require('../lib/helpers').createBlock2;
+const getOption              = require('../lib/helpers').getOption
+const hasOption              = require('../lib/helpers').hasOption
+const removeOption           = require('../lib/helpers').removeOption 
+const simplifyPacketForPrint = require('../lib/helpers').simplifyPacketForPrint
+const parseBlock2            = require('../lib/helpers').parseBlock2
+const createBlock2           = require('../lib/helpers').createBlock2
 
 describe('Helpers', () => {
 
@@ -84,7 +84,7 @@ describe('Helpers', () => {
                 payload: "Buff: 8",
                 token: "0x01"
             }
-            expect(simplifyPacketForPrint(packet)).to.eql(response);
+            expect(simplifyPacketForPrint(packet)).to.eql(response)
             setImmediate(done)
         })
 
@@ -99,41 +99,41 @@ describe('Helpers', () => {
                 payload: "Buff: 8",
                 token: "0x01"
             }
-            expect(simplifyPacketForPrint(packet)).to.eql(response);
+            expect(simplifyPacketForPrint(packet)).to.eql(response)
             setImmediate(done)
         })
     })
 
     describe('Parse Block2', () => {
         it('Should have case 3 equal 4128', (done) => {
-            let buff = Buffer.from([0x01, 0x02, 0x03]);
+            let buff = Buffer.from([0x01, 0x02, 0x03])
             let res = parseBlock2(buff)
-            expect(res.num).to.eql(4128);
-            setImmediate(done);
+            expect(res.num).to.eql(4128)
+            setImmediate(done)
         })
 
         it('Should return null', (done) => {
-            let buff = Buffer.from([0x01, 0x02, 0x03, 0x04]);
+            let buff = Buffer.from([0x01, 0x02, 0x03, 0x04])
             let res = parseBlock2(buff)
-            expect(res).to.eql(null);
-            setImmediate(done);
+            expect(res).to.eql(null)
+            setImmediate(done)
         })
     })
 
     describe('Create Block2', () => {
         it('Should return a buffer carrying a block 2 value', (done) => {
             let buff = Buffer.from([0xff, 0xff, 0xe9])
-            let block = { moreBlock2: true, num: 1048574, size: 32};
+            let block = { moreBlock2: true, num: 1048574, size: 32}
             let res = createBlock2(block)
-            expect(res).to.eql(buff);
-            setImmediate(done);
+            expect(res).to.eql(buff)
+            setImmediate(done)
         })
 
         it('Should return null', (done) => {
-            let block = { moreBlock2: true, num: 1048576, size: 32};
+            let block = { moreBlock2: true, num: 1048576, size: 32}
             let res = createBlock2(block)
-            expect(res).to.eql(null);
-            setImmediate(done);
+            expect(res).to.eql(null)
+            setImmediate(done)
         })
     })
 

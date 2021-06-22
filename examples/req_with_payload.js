@@ -11,7 +11,7 @@ coap.createServer(function(req, res) {
     body: 'containing nothing useful'
   }
   
-  req.write(JSON.stringify(payload));
+  req.write(JSON.stringify(payload))
   
   req.on('response', function(res) {
     res.pipe(process.stdout)

@@ -63,7 +63,7 @@ describe('proxy', function() {
           done()
         })
       })
-    });
+    })
   })
 
   function send(message) {
@@ -96,18 +96,18 @@ describe('proxy', function() {
 
   it('should resend notifications in an observe connection', function(done) {
     var counter = 0,
-        req;
+        req
 
     clock.restore()
 
     function sendObservation(message) {
       target.on('request', function(req, res) {
-        res.setOption('Observe', 1);
-        res.write('Pruebas');
+        res.setOption('Observe', 1)
+        res.write('Pruebas')
 
         setTimeout(function() {
-          res.write('Pruebas2');
-          res.end('Last msg');
+          res.write('Pruebas2')
+          res.end('Last msg')
         }, 500)
       })
 
@@ -125,9 +125,9 @@ describe('proxy', function() {
         if (counter === 2)
           done()
         else
-          counter++;
+          counter++
 
-        clock.tick(600);
+        clock.tick(600)
       })
     })
   })
@@ -195,7 +195,7 @@ describe('proxy', function() {
       })
 
       request.on('response', function(res) {
-        expect(res.payload.toString()).to.eql('This is the response');
+        expect(res.payload.toString()).to.eql('This is the response')
         done()
       })
 
@@ -205,7 +205,7 @@ describe('proxy', function() {
 
   describe('with a proxied request with a wrong destination', function() {
     it('should return an error to the caller', function(done) {
-      this.timeout(20000);
+      this.timeout(20000)
       var request = coap.request({
         host: 'localhost',
         port: port,
@@ -223,10 +223,10 @@ describe('proxy', function() {
       request
           .on('response', function(res) {
             try {
-              expect(res.code).to.eql('5.00');
-              expect(res.payload.toString()).to.match(/ENOTFOUND|EAI_AGAIN/);
+              expect(res.code).to.eql('5.00')
+              expect(res.payload.toString()).to.match(/ENOTFOUND|EAI_AGAIN/)
             } catch (err) {
-              return done(err);
+              return done(err)
             }
             done()
           })
@@ -252,7 +252,7 @@ describe('proxy', function() {
 
       request
           .on('response', function(res) {
-            expect(res.payload.toString()).to.contain('Standard response');
+            expect(res.payload.toString()).to.contain('Standard response')
             done()
           })
           .end()
@@ -278,7 +278,7 @@ describe('proxy', function() {
 
       request
         .on('response', function(res) {
-          expect(res.payload.toString()).to.contain('Standard response');
+          expect(res.payload.toString()).to.contain('Standard response')
           done()
         })
         .end()
@@ -290,32 +290,32 @@ describe('proxy', function() {
           observe: true,
           query: 'a=b'
         }),
-        count = 0;
+        count = 0
 
       target.on('request', function(req, res) {
         console.log('should not get here')
       })
 
       server.on('request', function(req, res) {
-        res.setOption('Observe', 1);
-        res.write('This is the first response');
+        res.setOption('Observe', 1)
+        res.write('This is the first response')
 
         setTimeout(function() {
-          res.setOption('Observe', 1);
-          res.write('And this is the second');
-        }, 200);
+          res.setOption('Observe', 1)
+          res.write('And this is the second')
+        }, 200)
       })
 
       request
         .on('response', function(res) {
           res.on('data', function(chunk) {
-            count++;
+            count++
 
             if (count === 1) {
-              expect(chunk.toString('utf8')).to.contain('This is the first response');
-              clock.tick(300);
+              expect(chunk.toString('utf8')).to.contain('This is the first response')
+              clock.tick(300)
             } else if (count === 2) {
-              expect(chunk.toString('utf8')).to.contain('And this is the second');
+              expect(chunk.toString('utf8')).to.contain('And this is the second')
               done()
             }
           })

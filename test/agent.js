@@ -15,17 +15,17 @@ var coap     = require('../')
 describe('Agent config', function() {
   it('should get agent instance through custom config', function(done) {
     var agent = coap.Agent({ type: 'udp4', port: 62754 })
-    expect(agent._sock.type).to.eql('udp4');
-    expect(agent._sock._bindState).to.eql(1);
+    expect(agent._sock.type).to.eql('udp4')
+    expect(agent._sock._bindState).to.eql(1)
     done()
   })
 
   it('should get agent instance through custom socket', function(done) {
     var socket = dgram.createSocket('udp6')
     var agent = coap.Agent({ socket, type: 'udp4', port: 62754 })
-    expect(agent._opts.type).to.eql('udp6');
-    expect(agent._sock.type).to.eql('udp6');
-    expect(agent._sock._bindState).to.eql(0);
+    expect(agent._opts.type).to.eql('udp6')
+    expect(agent._sock.type).to.eql('udp6')
+    expect(agent._sock._bindState).to.eql(0)
     done()
   })
 })
@@ -65,7 +65,7 @@ describe('Agent', function() {
 
     server.on('message', function(msg, rsinfo) {
       if (firstRsinfo) {
-        expect(rsinfo.port).to.eql(firstRsinfo.port);
+        expect(rsinfo.port).to.eql(firstRsinfo.port)
         done()
       } else {
         firstRsinfo = rsinfo
@@ -102,7 +102,7 @@ describe('Agent', function() {
     server.on('message', function(msg, rsinfo) {
       var packet = parse(msg)
       if (firstToken) {
-        expect(packet.token).not.to.eql(firstToken);
+        expect(packet.token).not.to.eql(firstToken)
         done()
       } else {
         firstToken = packet.token
@@ -119,7 +119,7 @@ describe('Agent', function() {
     server.on('message', function(msg, rsinfo) {
       var packet = parse(msg)
       if (firstMessageId) {
-        expect(packet.messageId).not.to.eql(firstMessageId);
+        expect(packet.messageId).not.to.eql(firstMessageId)
         done()
       } else {
         firstMessageId = packet.messageId
@@ -289,7 +289,7 @@ describe('Agent', function() {
       server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
 
       if (firstRsinfo) {
-        expect(rsinfo.port).not.to.eql(firstRsinfo.port);
+        expect(rsinfo.port).not.to.eql(firstRsinfo.port)
         done()
       } else {
         firstRsinfo = rsinfo
@@ -431,7 +431,7 @@ describe('Agent', function() {
 
       server.on('message', function(msg, rsinfo) {
         if (firstRsinfo) {
-          expect(rsinfo.port).not.to.eql(firstRsinfo.port);
+          expect(rsinfo.port).not.to.eql(firstRsinfo.port)
           done()
         } else {
           firstRsinfo = rsinfo

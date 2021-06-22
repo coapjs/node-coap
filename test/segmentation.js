@@ -6,7 +6,7 @@
  * See the included LICENSE file for more details.
  */
 
-const segment = require('../lib/segmentation');
+const segment = require('../lib/segmentation')
 
 describe('Segmentation', () =>{
 
@@ -14,11 +14,11 @@ describe('Segmentation', () =>{
         it('Should throw invalid block size error', (done) =>{
             expect(() => {
                 segment.SegmentedTransmission(-1, 0, 0)
-            }).to.throw("invalid block size -1");
+            }).to.throw("invalid block size -1")
             expect(() => {
                 segment.SegmentedTransmission(7, 0, 0)
             }).to.throw("invalid block size 7")
-            setImmediate(done);
+            setImmediate(done)
         })
         
     })
@@ -28,7 +28,7 @@ describe('Segmentation', () =>{
             let v = new segment.SegmentedTransmission(1, 1, {payload: [1]})
             v.setBlockSizeExp(6)
             expect(v.blockState.blockSize).to.eql(6)
-            expect(v.byteSize).to.eql(1024);
+            expect(v.byteSize).to.eql(1024)
             setImmediate(done)
         })
     })
@@ -39,13 +39,13 @@ describe('Segmentation', () =>{
         it('Should return true', (done) => {
             let v = new segment.SegmentedTransmission(1, 1, {payload: [1]})
             let value = v.isCorrectACK(1, {sequenceNumber: 0})
-            expect(value).to.eql(true);
+            expect(value).to.eql(true)
             setImmediate(done)
         })
         it('Should return false', (done) => {
             let v = new segment.SegmentedTransmission(1, 1, {payload: [1]})
             let value = v.isCorrectACK(1, {sequenceNumber: 1})
-            expect(value).to.eql(false);
+            expect(value).to.eql(false)
             setImmediate(done)
         })
     })
@@ -53,11 +53,11 @@ describe('Segmentation', () =>{
     describe('Resend Previous Packet', () => {
         it('Should increment resend count', (done) => {
             let v = new segment.SegmentedTransmission(1, 1, {payload: [1]})
-            v.resendCount = 2;
-            v.totalLength = 0;
-            v.currentByte = 1;
+            v.resendCount = 2
+            v.totalLength = 0
+            v.currentByte = 1
             v.resendPreviousPacket()
-            expect(v.resendCount).to.eql(3);
+            expect(v.resendCount).to.eql(3)
             setImmediate(done)
         })
         // should send next packet
@@ -85,9 +85,9 @@ describe('Segmentation', () =>{
             }
             let v = new segment.SegmentedTransmission(1, req, {payload: [1]})
             v.receiveACK(1, {blockSize: 1})
-            v.totalLength = 0;
-            v.currentByte = 0;
-            expect(v.resendCount).to.eql(0);
+            v.totalLength = 0
+            v.currentByte = 0
+            expect(v.resendCount).to.eql(0)
             setImmediate(done)
         })
     })
@@ -95,9 +95,9 @@ describe('Segmentation', () =>{
     describe('Remaining', () => {
         it('Should return a value', (done) => {
             let v = new segment.SegmentedTransmission(1, 1, {payload: [1]})
-            v.totalLength = 0;
-            v.currentByte = 0;
-            expect(v.remaining()).to.eql(0);
+            v.totalLength = 0
+            v.currentByte = 0
+            expect(v.remaining()).to.eql(0)
             setImmediate(done)
         })
     })
