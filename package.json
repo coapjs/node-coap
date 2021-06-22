@@ -29,6 +29,7 @@
   "license": "MIT",
   "devDependencies": {
     "chai": "^4.2.0",
+    "eslint": "^7.13.0",
     "mocha": "^8.0.1",
     "nyc": "^15.1.0",
     "pre-commit": "1.2.2",
@@ -43,5 +44,18 @@
     "fastseries": "^2.0.0",
     "lru-cache": "^5.1.1",
     "readable-stream": "^3.6.0"
+  },
+  "eslintConfig": {
+    "env": {
+      "commonjs": true,
+      "es6": true,
+      "node": true
+    },
+    "rules": {
+      "semi": [
+        "error",
+        "never"
+      ]
+    }
   }
 }
