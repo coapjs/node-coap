@@ -6,8 +6,8 @@
   "scripts": {
     "test": "nyc mocha --exit",
     "coverage": "nyc report --reporter=lcov --reporter=text-summary",
-    "lint": "standard --verbose | snazzy",
-    "lint:fix": "standard --fix"
+    "lint": "standardx --verbose | snazzy",
+    "lint:fix": "standardx --fix"
   },
   "repository": {
     "type": "git",
@@ -32,12 +32,19 @@
   "devDependencies": {
     "chai": "^4.3.4",
     "eslint": "^7.32.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-config-standard-jsx": "^10.0.0",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-react": "^7.21.5",
+    "eslint-plugin-standard": "^5.0.0",
     "mocha": "^9.0.3",
     "nyc": "^15.1.0",
     "pre-commit": "1.2.2",
     "sinon": "^9.0.2",
     "snazzy": "^9.0.0",
-    "standard": "^16.0.1",
+    "standardx": "^7.0.0",
     "timekeeper": "^1.0.0"
   },
   "dependencies": {
@@ -52,7 +59,7 @@
   "engines": {
     "node": ">=10"
   },
-  "standard": {
+  "standardx": {
     "env": ["jest"]
   },
   "eslintConfig": {
