@@ -1,10 +1,10 @@
 const coap = require('../') // or coap
 const req = coap.request({
-  observe: true
+    observe: true
 })
 
 req.on('response', function (res) {
-  res.pipe(process.stdout)
+    res.pipe(process.stdout)
 })
 
 req.end()
