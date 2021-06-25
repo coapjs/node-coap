@@ -28,10 +28,10 @@ intended to be used in very simple electronics devices that allows them
 to communicate interactively over the Internet. -  Wikipedia
 
 This library follows:
-* [draft-18](http://tools.ietf.org/html/draft-ietf-core-coap-18) of CoAP.
-* [observe-11](http://tools.ietf.org/html/draft-ietf-core-observe-11)
-  for the observe specification.
-* [block-14](http://tools.ietf.org/id/draft-ietf-core-block-14.txt) for
+* [RFC 7252](https://datatracker.ietf.org/doc/html/rfc7252) for CoAP,
+* [RFC 7641](https://datatracker.ietf.org/doc/html/rfc7641)
+  for the observe specification,
+* [RFC 7959](https://datatracker.ietf.org/doc/html/rfc7959) for
   the blockwise specification.
 
 It does not parse the protocol but it use
