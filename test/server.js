@@ -1265,7 +1265,7 @@ describe('server block cache', function() {
 
 })
 
-describe('server LRU', function() {
+describe('Client Identifier', function() {
   var server
       , port
       , clientPort
