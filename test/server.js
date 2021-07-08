@@ -1264,3 +1264,103 @@ describe('server block cache', function() {
   })
 
 })
+
+describe('Client Identifier', function() {
+  var server
+      , port
+      , clientPort
+      , client
+      , clock
+
+  const packet = function(key) {
+    return {
+      confirmable: true
+      , messageId: 4242
+      , token: new Buffer(5)
+      , options: [
+        {name: 2109, value: Buffer.from(key) }
+      ]
+    }
+  }
+
+  beforeEach(function (done) {
+    clock = sinon.useFakeTimers()
+    port = nextPort()
+
+    server = coap.createServer({
+      clientIdentifier: (request) => {
+        const authenticationHeader = request.options.find(o => o.name === '2109')
+
+        if (typeof authenticationHeader !== 'undefined') {
+          return `auth:${authenticationHeader.value.toString()}`
+
+        }
+        return `unauth:${request.rsinfo.address}:${request.rsinfo.port}`
+      },
+    })
+    server.listen(port, done)
+  })
+
+  beforeEach(function (done) {
+    clientPort = nextPort()
+    client = dgram.createSocket('udp4')
+    client.bind(clientPort, done)
+  })
+
+  afterEach(function () {
+    clock.restore()
+    client.close()
+    server.close()
+    tk.reset()
+  })
+
+  function send(message) {
+    client.send(message, 0, message.length, port, '127.0.0.1')
+  }
+
+  it('should share the cache between two requests of the same client', function (done) {
+    let messagesSent = 0
+    let messagesReceived = 0
+
+    server.on('request', function (req, res) {
+      res.end(`${messagesSent}`)
+      messagesSent += 1
+    })
+
+    client.on('message', function(msg) {
+      const result = parse(msg)
+      expect(result.payload.toString(), '0')
+      messagesReceived += 1
+
+      if (messagesReceived === 2) {
+        done()
+      }
+    })
+
+    send(generate(packet('key1')))
+    send(generate(packet('key1')))
+  })
+
+  it('should not share the cache between requests of different clients', function (done) {
+    let messagesSent = 0
+    let messagesReceived = 0
+
+    server.on('request', function (req, res) {
+      res.end(`${messagesSent}`)
+      messagesSent += 1
+    })
+
+    client.on('message', function(msg) {
+      const result = parse(msg)
+      expect(result.payload.toString(), `${messagesReceived}`)
+      messagesReceived += 1
+
+      if (messagesReceived === 2) {
+        done()
+      }
+    })
+
+    send(generate(packet('key1')))
+    send(generate(packet('key2')))
+  })
+})
