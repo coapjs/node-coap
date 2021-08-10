@@ -6,7 +6,7 @@
 * (everhardt/JKRhb) feat: add clientIdentifier option to createServer
 * (JKRhb) feat: add more content-formats
 * (ats-org/Jamezo97/invaderb) feat: Type-1 Block-wise transfer
-* (sjlongland/pekkanikander ) feat: Add support for de-registering observations
+* (sjlongland/pekkanikander) feat: Add support for de-registering observations
 * (phretor) maintenance: let client handle invalid formats themselves instead throwing an error in the library
 * (JKRhb) fix: handling of block2 reponses to multicast requests
 * (JKRhb) fix: copy all listeners when using block2 multicast
