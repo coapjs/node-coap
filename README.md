@@ -56,20 +56,20 @@ The following example opens a UDP server and sends a
 CoAP message to it:
 
 ```js
-var coap        = require('coap')
-  , server      = coap.createServer()
+const coap = require('coap')
+const server = coap.createServer()
 
-server.on('request', function(req, res) {
+server.on('request', function (req, res) {
   res.end('Hello ' + req.url.split('/')[1] + '\n')
 })
 
 // the default CoAP port is 5683
-server.listen(function() {
-  var req = coap.request('coap://localhost/Matteo')
+server.listen(function () {
+  const req = coap.request('coap://localhost/Matteo')
 
-  req.on('response', function(res) {
+  req.on('response', function (res) {
     res.pipe(process.stdout)
-    res.on('end', function() {
+    res.on('end', function () {
       process.exit(0)
     })
   })
@@ -81,8 +81,8 @@ server.listen(function() {
 or on IPv6:
 
 ```js
-var coap        = require('coap')
-  , server      = coap.createServer({ type: 'udp6' })
+const coap = require('coap')
+const server = coap.createServer({ type: 'udp6' })
 
 server.on('request', function(req, res) {
   res.end('Hello ' + req.url.split('/')[1] + '\n')
@@ -90,7 +90,7 @@ server.on('request', function(req, res) {
 
 // the default CoAP port is 5683
 server.listen(function() {
-  var req = coap.request('coap://[::1]/Matteo')
+  const req = coap.request('coap://[::1]/Matteo')
 
   req.on('response', function(res) {
     res.pipe(process.stdout)
@@ -305,11 +305,15 @@ a number as key and a `Buffer` as value.
 
 Example:
 
-    message.setOption("Content-Format", "application/json");
+```js
+message.setOption('Content-Format', 'application/json')
+```
 
 or
 
-    message.setOption("555", [Buffer.from('abcde'),Buffer.from('ghi')]);
+```js
+message.setOption('555', [Buffer.from('abcde'), Buffer.from('ghi')])
+```
 
 `setOption` is also aliased as `setHeader` for HTTP API
 compatibility.
@@ -562,14 +566,14 @@ The default [`Agent`](#agent) for IPv6.
 You can update the CoAP timing settings, take a look at the examples:
 
 ```js
-var coapTiming = {
-  ackTimeout:0.25,
+const coapTiming = {
+  ackTimeout: 0.25,
   ackRandomFactor: 1.0,
   maxRetransmit: 3,
   maxLatency: 2,
   piggybackReplyMs: 10
-};
-coap.updateTiming(coapTiming);
+}
+coap.updateTiming(coapTiming)
 ```
 
 -------------------------------------------------------
