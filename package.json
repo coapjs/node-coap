@@ -28,22 +28,25 @@
   "author": "Matteo Collina <hello@matteocollina.com>",
   "license": "MIT",
   "devDependencies": {
-    "chai": "^4.2.0",
-    "eslint": "^7.13.0",
-    "mocha": "^8.0.1",
+    "chai": "^4.3.4",
+    "eslint": "^7.32.0",
+    "mocha": "^9.0.3",
     "nyc": "^15.1.0",
     "pre-commit": "1.2.2",
-    "sinon": "^9.0.2",
-    "timekeeper": "^1.0.0"
+    "sinon": "^11.1.2",
+    "timekeeper": "^2.2.0"
   },
   "dependencies": {
-    "bl": "^4.0.2",
+    "bl": "^5.0.0",
     "capitalize": "^2.0.3",
     "coap-packet": "^0.1.14",
-    "debug": "^4.1.1",
+    "debug": "^4.3.2",
     "fastseries": "^2.0.0",
-    "lru-cache": "^5.1.1",
+    "lru-cache": "^6.0.0",
     "readable-stream": "^3.6.0"
+  },
+  "engines": {
+    "node": ">=10"
   },
   "eslintConfig": {
     "env": {
