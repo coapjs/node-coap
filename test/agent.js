@@ -212,6 +212,94 @@ describe('Agent', function () {
         })
     })
 
+    it('should be able to handle unallowed Content-Formats', function (done) {
+        const req = doReq()
+
+        // it is needed to keep the agent open
+        doReq()
+
+        server.once('message', function (msg, rsinfo) {
+            const packet = parse(msg)
+            const toSend = generate({
+                messageId: packet.messageId,
+                token: packet.token,
+                code: '2.00',
+                confirmable: false,
+                payload: Buffer.alloc(5),
+                options: [{
+                    name: 'Content-Format',
+                    value: Buffer.of(0xff, 0xff, 0x1)
+                }]
+            })
+
+            server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+        })
+
+        req.on('response', function (res) {
+            expect(res.headers['Content-Format']).to.equal(undefined)
+            done()
+        })
+    })
+
+    it('should discard the request after receiving the payload for piggyback CON requests', function (done) {
+        const req = doReq(true)
+
+        // it is needed to keep the agent open
+        doReq(true)
+
+        server.once('message', function (msg, rsinfo) {
+            const packet = parse(msg)
+            const toSend = generate({
+                messageId: packet.messageId,
+                token: packet.token,
+                code: '2.00',
+                confirmable: false,
+                ack: true,
+                payload: Buffer.alloc(5)
+            })
+
+            server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+
+            // duplicate, as there was some retransmission
+            server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+        })
+
+        req.on('response', function (res) {
+            // fails if it emits 'response' twice
+            done()
+        })
+    })
+
+    it('should close the socket if there are no pending requests', function (done) {
+        let firstRsinfo
+        const req = doReq()
+
+        server.on('message', function (msg, rsinfo) {
+            const packet = parse(msg)
+            const toSend = generate({
+                messageId: packet.messageId,
+                token: packet.token,
+                code: '2.00',
+                confirmable: false,
+                ack: true,
+                payload: Buffer.alloc(5)
+            })
+
+            server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+
+            if (firstRsinfo) {
+                expect(rsinfo.port).not.to.eql(firstRsinfo.port)
+                done()
+            } else {
+                firstRsinfo = rsinfo
+            }
+        })
+
+        req.on('response', function (res) {
+            setImmediate(doReq)
+        })
+    })
+
     it('should send only RST for unrecognized CON', function (done) {
     // In order to have a running agent, it must wait for something
         doReq(true)
@@ -250,53 +338,96 @@ describe('Agent', function () {
                 break
             }
         })
+    })
 
-        it('should discard the request after receiving the payload for piggyback CON requests', function (done) {
-            const req = doReq(true)
+    describe('observe problems', function () {
+        function sendObserve (opts) {
+            const toSend = generate({
+                messageId: opts.messageId,
+                token: opts.token,
+                code: '2.05',
+                confirmable: opts.confirmable,
+                ack: opts.ack,
+                payload: Buffer.alloc(5),
+                options: [{
+                    name: 'Observe',
+                    value: Buffer.of(opts.num)
+                }]
+            })
 
-            // it is needed to keep the agent open
-            doReq(true)
+            server.send(toSend, 0, toSend.length, opts.rsinfo.port, opts.rsinfo.address)
+        }
+
+        it('should discard the request after receiving the payload for piggyback CON requests with observe request', function (done) {
+            const req = request({
+                port: port,
+                agent: agent,
+                observe: true,
+                confirmable: true
+            }).end()
 
             server.once('message', function (msg, rsinfo) {
                 const packet = parse(msg)
-                const toSend = generate({
+
+                sendObserve({
+                    num: 1,
                     messageId: packet.messageId,
                     token: packet.token,
-                    code: '2.00',
                     confirmable: false,
                     ack: true,
-                    payload: Buffer.alloc(5)
+                    rsinfo: rsinfo
                 })
 
-                server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
-
                 // duplicate, as there was some retransmission
-                server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
+                sendObserve({
+                    num: 1,
+                    messageId: packet.messageId,
+                    token: packet.token,
+                    confirmable: false,
+                    ack: true,
+                    rsinfo: rsinfo
+                })
+
+                // some more data
+                sendObserve({
+                    num: 2,
+                    token: packet.token,
+                    confirmable: true,
+                    ack: false,
+                    rsinfo: rsinfo
+                })
             })
 
             req.on('response', function (res) {
-            // fails if it emits 'response' twice
+                // fails if it emits 'response' twice
                 done()
             })
         })
 
         it('should close the socket if there are no pending requests', function (done) {
             let firstRsinfo
-            const req = doReq()
 
-            server.on('message', function (msg, rsinfo) {
+            const req = request({
+                port: port,
+                agent: agent,
+                observe: true,
+                confirmable: true
+            }).end()
+
+            server.once('message', function (msg, rsinfo) {
                 const packet = parse(msg)
-                const toSend = generate({
+
+                sendObserve({
+                    num: 1,
                     messageId: packet.messageId,
                     token: packet.token,
-                    code: '2.00',
                     confirmable: false,
                     ack: true,
-                    payload: Buffer.alloc(5)
+                    rsinfo: rsinfo
                 })
+            })
 
-                server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
-
+            server.on('message', function (msg, rsinfo) {
                 if (firstRsinfo) {
                     expect(rsinfo.port).not.to.eql(firstRsinfo.port)
                     done()
@@ -306,151 +437,9 @@ describe('Agent', function () {
             })
 
             req.on('response', function (res) {
+                res.close()
+
                 setImmediate(doReq)
-            })
-        })
-
-        it('should send only RST for unrecognized CON', function (done) {
-            // In order to have a running agent, it must wait for something
-            doReq(true)
-            let step = 0
-
-            server.on('message', function (msg, rsinfo) {
-                const packet = parse(msg)
-
-                switch (++step) {
-                case 1: {
-                // Request message from the client
-                // Ensure the message sent by the server does not match any
-                // current request.
-                    const invalidMid = packet.messageId + 1
-                    const invalidTkn = Buffer.from(packet.token)
-                    ++invalidTkn[0]
-
-                    const toSend = generate({
-                        messageId: invalidMid,
-                        token: invalidTkn,
-                        code: '2.00',
-                        confirmable: true,
-                        ack: false,
-                        payload: Buffer.alloc(5)
-                    })
-                    server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
-                    break
-                }
-                case 2:
-                    expect(packet.reset).to.be.true // eslint-disable-line no-unused-expressions
-                    done()
-                    break
-
-                case 3:
-                    done(Error('Got two answers'))
-                    break
-                }
-            })
-        })
-
-        describe('observe problems', function () {
-            function sendObserve (opts) {
-                const toSend = generate({
-                    messageId: opts.messageId,
-                    token: opts.token,
-                    code: '2.05',
-                    confirmable: opts.confirmable,
-                    ack: opts.ack,
-                    payload: Buffer.alloc(5),
-                    options: [{
-                        name: 'Observe',
-                        value: Buffer.of(opts.num)
-                    }]
-                })
-
-                server.send(toSend, 0, toSend.length, opts.rsinfo.port, opts.rsinfo.address)
-            }
-
-            it('should discard the request after receiving the payload for piggyback CON requests with observe request', function (done) {
-                const req = request({
-                    port: port,
-                    agent: agent,
-                    observe: true,
-                    confirmable: true
-                }).end()
-
-                server.once('message', function (msg, rsinfo) {
-                    const packet = parse(msg)
-
-                    sendObserve({
-                        num: 1,
-                        messageId: packet.messageId,
-                        token: packet.token,
-                        confirmable: false,
-                        ack: true,
-                        rsinfo: rsinfo
-                    })
-
-                    // duplicate, as there was some retransmission
-                    sendObserve({
-                        num: 1,
-                        messageId: packet.messageId,
-                        token: packet.token,
-                        confirmable: false,
-                        ack: true,
-                        rsinfo: rsinfo
-                    })
-
-                    // some more data
-                    sendObserve({
-                        num: 2,
-                        token: packet.token,
-                        confirmable: true,
-                        ack: false,
-                        rsinfo: rsinfo
-                    })
-                })
-
-                req.on('response', function (res) {
-                // fails if it emits 'response' twice
-                    done()
-                })
-            })
-
-            it('should close the socket if there are no pending requests', function (done) {
-                let firstRsinfo
-
-                const req = request({
-                    port: port,
-                    agent: agent,
-                    observe: true,
-                    confirmable: true
-                }).end()
-
-                server.once('message', function (msg, rsinfo) {
-                    const packet = parse(msg)
-
-                    sendObserve({
-                        num: 1,
-                        messageId: packet.messageId,
-                        token: packet.token,
-                        confirmable: false,
-                        ack: true,
-                        rsinfo: rsinfo
-                    })
-                })
-
-                server.on('message', function (msg, rsinfo) {
-                    if (firstRsinfo) {
-                        expect(rsinfo.port).not.to.eql(firstRsinfo.port)
-                        done()
-                    } else {
-                        firstRsinfo = rsinfo
-                    }
-                })
-
-                req.on('response', function (res) {
-                    res.close()
-
-                    setImmediate(doReq)
-                })
             })
         })
     })
