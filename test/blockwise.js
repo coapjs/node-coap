@@ -47,7 +47,9 @@ describe('blockwise2', function () {
     }
 
     function nextBufferVal () {
-        if (bufferVal > 255) { bufferVal = 0 }
+        if (bufferVal > 255) {
+            bufferVal = 0
+        }
         return bufferVal++
     }
 
@@ -242,7 +244,11 @@ describe('blockwise2', function () {
         let nreq = 1
         server.on('request', function (req, res) {
             // only two request to upper level, blockwise transfer completed from cache
-            if (nreq === 1) { res.end(payloadReq1) } else if (nreq === 2) { res.end(payloadReq2) }
+            if (nreq === 1) {
+                res.end(payloadReq1)
+            } else if (nreq === 2) {
+                res.end(payloadReq2)
+            }
 
             checkNReq(nreq)
 
@@ -267,7 +273,9 @@ describe('blockwise2', function () {
             } else {
                 // No more blocks, transfer completed.
                 req1Done = true
-                if (req1Done && req2Done) { setImmediate(done) }
+                if (req1Done && req2Done) {
+                    setImmediate(done)
+                }
             }
         })
 
@@ -282,7 +290,9 @@ describe('blockwise2', function () {
             checkNormalReq(res, payloadReq2)
 
             req2Done = true
-            if (req1Done && req2Done) { setImmediate(done) }
+            if (req1Done && req2Done) {
+                setImmediate(done)
+            }
         })
     }
 

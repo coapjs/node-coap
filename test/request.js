@@ -34,7 +34,9 @@ describe('request', function () {
     afterEach(function () {
         server.close()
 
-        if (server2) { server2.close() }
+        if (server2) {
+            server2.close()
+        }
 
         server = server2 = null
 
@@ -43,7 +45,9 @@ describe('request', function () {
 
     function fastForward (increase, max) {
         clock.tick(increase)
-        if (increase < max) { originalSetImmediate(fastForward.bind(null, increase, max - increase)) }
+        if (increase < max) {
+            originalSetImmediate(fastForward.bind(null, increase, max - increase))
+        }
     }
 
     function ackBack (msg, rsinfo) {
@@ -841,7 +845,9 @@ describe('request', function () {
 
         function fastForward (increase, max) {
             clock.tick(increase)
-            if (increase < max) { originalSetImmediate(fastForward.bind(null, increase, max - increase)) }
+            if (increase < max) {
+                originalSetImmediate(fastForward.bind(null, increase, max - increase))
+            }
         }
 
         it('should timeout after ~202 seconds', function (done) {
@@ -938,7 +944,9 @@ describe('request', function () {
 
         function fastForward (increase, max) {
             clock.tick(increase)
-            if (increase < max) { originalSetImmediate(fastForward.bind(null, increase, max - increase)) }
+            if (increase < max) {
+                originalSetImmediate(fastForward.bind(null, increase, max - increase))
+            }
         }
 
         it('should error after ~247 seconds', function (done) {
@@ -976,7 +984,9 @@ describe('request', function () {
             server.on('message', function (msg) {
                 const packet = parse(msg)
 
-                if (!messageId) { messageId = packet.messageId }
+                if (!messageId) {
+                    messageId = packet.messageId
+                }
 
                 expect(packet.messageId).to.eql(messageId)
             })
@@ -1035,7 +1045,9 @@ describe('request', function () {
             server.on('message', function (msg, rsinfo) {
                 const packet = parse(msg)
 
-                if (packet.ack) { return }
+                if (packet.ack) {
+                    return
+                }
 
                 ssend(rsinfo, {
                     messageId: packet.messageId,
@@ -1090,7 +1102,9 @@ describe('request', function () {
             doObserve()
 
             server.on('message', function (msg) {
-                if (parse(msg).ack) { done() }
+                if (parse(msg).ack) {
+                    done()
+                }
             })
         })
 
@@ -1151,7 +1165,9 @@ describe('request', function () {
 
                     server.on('message', function (msg, rsinfo) {
                         const packet = parse(msg)
-                        if (packet.ack && (packet.code === '0.00')) { return }
+                        if (packet.ack && (packet.code === '0.00')) {
+                            return
+                        }
 
                         try {
                             expect(packet.options.length).to.be.least(1)
@@ -1350,7 +1366,9 @@ describe('request', function () {
 
         function fastForward (increase, max) {
             clock.tick(increase)
-            if (increase < max) { originalSetImmediate(fastForward.bind(null, increase, max - increase)) }
+            if (increase < max) {
+                originalSetImmediate(fastForward.bind(null, increase, max - increase))
+            }
         }
 
         it('should timeout if the response token size doesn\'t match the request\'s', function (done) {

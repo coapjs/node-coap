@@ -40,7 +40,9 @@ describe('server', function () {
     })
 
     afterEach(function () {
-        if (clock) { clock.restore() }
+        if (clock) {
+            clock.restore()
+        }
         client.close()
         server.close()
         tk.reset()
@@ -52,7 +54,9 @@ describe('server', function () {
 
     function fastForward (increase, max) {
         clock.tick(increase)
-        if (increase < max) { originalSetImmediate(fastForward.bind(null, increase, max - increase)) }
+        if (increase < max) {
+            originalSetImmediate(fastForward.bind(null, increase, max - increase))
+        }
     }
 
     it('should receive a CoAP message', function (done) {
@@ -784,7 +788,9 @@ describe('server', function () {
         const token = Buffer.alloc(3)
 
         function doObserve (method) {
-            if (!method) { method = 'GET' }
+            if (!method) {
+                method = 'GET'
+            }
 
             send(generate({
                 code: method,

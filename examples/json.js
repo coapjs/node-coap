@@ -19,7 +19,9 @@ coap.createServer(function (req, res) {
         })
         .on('response', function (res) {
             console.log('response code', res.code)
-            if (res.code !== '2.05') { return process.exit(1) }
+            if (res.code !== '2.05') {
+                return process.exit(1)
+            }
 
             res.pipe(bl(function (err, data) {
                 if (err) {

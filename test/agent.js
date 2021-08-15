@@ -49,7 +49,9 @@ describe('Agent', function () {
     })
 
     function doReq (confirmable) {
-        if (!confirmable) { confirmable = false }
+        if (!confirmable) {
+            confirmable = false
+        }
 
         return request({
             port: port,
@@ -147,11 +149,15 @@ describe('Agent', function () {
         })
 
         req1.once('response', function (res) {
-            if (++responses === 2) { done() }
+            if (++responses === 2) {
+                done()
+            }
         })
 
         req2.once('response', function (res) {
-            if (++responses === 2) { done() }
+            if (++responses === 2) {
+                done()
+            }
         })
     })
 

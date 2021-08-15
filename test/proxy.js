@@ -109,7 +109,11 @@ describe('proxy', function () {
 
         req.on('response', function (res) {
             res.on('data', function (msg) {
-                if (counter === 2) { done() } else { counter++ }
+                if (counter === 2) {
+                    done()
+                } else {
+                    counter++
+                }
 
                 clock.tick(600)
             })

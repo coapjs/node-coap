@@ -335,9 +335,13 @@ describe('end-to-end', function () {
             let local = 2
             req.on('response', function (res) {
                 res.on('data', function (data) {
-                    if (--local === 0) { --completed }
+                    if (--local === 0) {
+                        --completed
+                    }
 
-                    if (completed === 0) { done() }
+                    if (completed === 0) {
+                        done()
+                    }
                 })
             })
         })
@@ -358,7 +362,9 @@ describe('end-to-end', function () {
 
         server.on('request', function (req, res) {
             res.end('hello')
-            if (!first) { first = req.rsinfo } else {
+            if (!first) {
+                first = req.rsinfo
+            } else {
                 expect(req.rsinfo).to.eql(first)
                 done()
             }
@@ -377,7 +383,9 @@ describe('end-to-end', function () {
 
         server.on('request', function (req, res) {
             res.end('hello')
-            if (!first) { first = req.rsinfo } else {
+            if (!first) {
+                first = req.rsinfo
+            } else {
                 expect(req.rsinfo).not.to.eql(first)
                 done()
             }
