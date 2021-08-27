@@ -8,24 +8,22 @@
 
 const segment = require('../lib/segmentation')
 
-describe('Segmentation', () =>{
-
+describe('Segmentation', () => {
     describe('Segmented Transmission', () => {
-        it('Should throw invalid block size error', (done) =>{
+        it('Should throw invalid block size error', (done) => {
             expect(() => {
                 segment.SegmentedTransmission(-1, 0, 0)
-            }).to.throw("invalid block size -1")
+            }).to.throw('invalid block size -1')
             expect(() => {
                 segment.SegmentedTransmission(7, 0, 0)
-            }).to.throw("invalid block size 7")
+            }).to.throw('invalid block size 7')
             setImmediate(done)
         })
-        
     })
 
     describe('Set Block Size Exponent', () => {
         it('should set bytesize to value', (done) => {
-            let v = new segment.SegmentedTransmission(1, 1, {payload: [1]})
+            const v = new segment.SegmentedTransmission(1, 1, { payload: [1] })
             v.setBlockSizeExp(6)
             expect(v.blockState.blockSize).to.eql(6)
             expect(v.byteSize).to.eql(1024)
@@ -37,14 +35,14 @@ describe('Segmentation', () =>{
 
     describe('Is Correct Acknowledgement', () => {
         it('Should return true', (done) => {
-            let v = new segment.SegmentedTransmission(1, 1, {payload: [1]})
-            let value = v.isCorrectACK(1, {sequenceNumber: 0})
+            const v = new segment.SegmentedTransmission(1, 1, { payload: [1] })
+            const value = v.isCorrectACK(1, { sequenceNumber: 0 })
             expect(value).to.eql(true)
             setImmediate(done)
         })
         it('Should return false', (done) => {
-            let v = new segment.SegmentedTransmission(1, 1, {payload: [1]})
-            let value = v.isCorrectACK(1, {sequenceNumber: 1})
+            const v = new segment.SegmentedTransmission(1, 1, { payload: [1] })
+            const value = v.isCorrectACK(1, { sequenceNumber: 1 })
             expect(value).to.eql(false)
             setImmediate(done)
         })
@@ -52,7 +50,7 @@ describe('Segmentation', () =>{
 
     describe('Resend Previous Packet', () => {
         it('Should increment resend count', (done) => {
-            let v = new segment.SegmentedTransmission(1, 1, {payload: [1]})
+            const v = new segment.SegmentedTransmission(1, 1, { payload: [1] })
             v.resendCount = 2
             v.totalLength = 0
             v.currentByte = 1
@@ -62,29 +60,29 @@ describe('Segmentation', () =>{
         })
         // should send next packet
         it('Should throw error', (done) => {
-            let v = new segment.SegmentedTransmission(1, 1, {payload: [1]})
+            const v = new segment.SegmentedTransmission(1, 1, { payload: [1] })
             v.resendCount = 6
             expect(() => {
                 v.resendPreviousPacket()
-            }).throw("Too many block re-transfers")
+            }).throw('Too many block re-transfers')
             setImmediate(done)
         })
     })
 
     describe('Recieve Acknowledgement', () => {
-        // Should re-set block size exp
-        // should send next packet
+    // Should re-set block size exp
+    // should send next packet
         it('Should set resend count to 0', (done) => {
-            let req = {
-                setOption: ()=> {return},
+            const req = {
+                setOption: () => {},
                 sender: {
-                    reset: () => {return}
+                    reset: () => {}
                 },
-                emit: () => {return}
+                emit: () => {}
 
             }
-            let v = new segment.SegmentedTransmission(1, req, {payload: [1]})
-            v.receiveACK(1, {blockSize: 1})
+            const v = new segment.SegmentedTransmission(1, req, { payload: [1] })
+            v.receiveACK(1, { blockSize: 1 })
             v.totalLength = 0
             v.currentByte = 0
             expect(v.resendCount).to.eql(0)
@@ -94,7 +92,7 @@ describe('Segmentation', () =>{
 
     describe('Remaining', () => {
         it('Should return a value', (done) => {
-            let v = new segment.SegmentedTransmission(1, 1, {payload: [1]})
+            const v = new segment.SegmentedTransmission(1, 1, { payload: [1] })
             v.totalLength = 0
             v.currentByte = 0
             expect(v.remaining()).to.eql(0)
@@ -103,6 +101,4 @@ describe('Segmentation', () =>{
     })
 
     // Send Next
-  
 })
-  
