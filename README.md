@@ -32,7 +32,8 @@ This library follows:
 * [RFC 7641](https://datatracker.ietf.org/doc/html/rfc7641)
   for the observe specification,
 * [RFC 7959](https://datatracker.ietf.org/doc/html/rfc7959) for
-  the blockwise specification.
+  the blockwise specification,
+* [RFC 8132](https://datatracker.ietf.org/doc/html/rfc8132) for the PATCH, FETCH, and iPATCH methods.
 
 It does not parse the protocol but it use
 [CoAP-packet](http://github.com/mcollina/coap-packet) instead.
