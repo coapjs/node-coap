@@ -1,8 +1,7 @@
 const coap = require('../') // or coap
-const url = require('url')
 
 coap.createServer((req, res) => {
-    const path = url.parse(req.url) // eslint-disable-line node/no-deprecated-api
+    const path = new URL(req.url)
     const time = parseInt(path.search.split('=')[1])
     const pathname = path.pathname.split('/')[1]
 

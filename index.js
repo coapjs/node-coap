@@ -12,24 +12,53 @@ const Server = require('./lib/server')
 const Agent = require('./lib/agent')
 const parameters = require('./lib/parameters')
 const net = require('net')
-const URL = require('url')
 const globalAgent = new Agent({ type: 'udp4' })
 const globalAgentV6 = new Agent({ type: 'udp6' })
 
-module.exports.request = (url) => {
-    let agent
+function _getHostname (url) {
+    const hostname = url.hostname
 
-    if (typeof url === 'string') {
-        url = URL.parse(url) // eslint-disable-line node/no-deprecated-api
+    // Remove brackets from literal IPv6 addresses
+    if (hostname.startsWith('[') && hostname.endsWith(']')) {
+        return hostname.substring(1, hostname.length - 1)
     }
 
-    const ipv6 = net.isIPv6(url.hostname || url.host)
+    return hostname
+}
 
-    if (url.agent) {
-        agent = url.agent
-    } else if (url.agent === false && !ipv6) {
+function _getQueryParamsFromSearch (url) {
+    if (url.search != null) {
+        return url.search.substring(1)
+    }
+}
+
+function _parseUrl (url) {
+    const requestParams = {}
+
+    const parsedUrl = new URL(url)
+
+    requestParams.hostname = _getHostname(parsedUrl)
+    requestParams.query = _getQueryParamsFromSearch(parsedUrl)
+    requestParams.port = parsedUrl.port
+    requestParams.pathname = parsedUrl.pathname
+
+    return requestParams
+}
+
+module.exports.request = (requestParams) => {
+    let agent
+
+    if (typeof requestParams === 'string') {
+        requestParams = _parseUrl(requestParams)
+    }
+
+    const ipv6 = net.isIPv6(requestParams.hostname || requestParams.host)
+
+    if (requestParams.agent) {
+        agent = requestParams.agent
+    } else if (requestParams.agent === false && !ipv6) {
         agent = new Agent({ type: 'udp4' })
-    } else if (url.agent === false && ipv6) {
+    } else if (requestParams.agent === false && ipv6) {
         agent = new Agent({ type: 'udp6' })
     } else if (ipv6) {
         agent = exports.globalAgentIPv6
@@ -37,7 +66,7 @@ module.exports.request = (url) => {
         agent = exports.globalAgent
     }
 
-    return agent.request(url)
+    return agent.request(requestParams)
 }
 
 module.exports.createServer = (options, listener) => {
