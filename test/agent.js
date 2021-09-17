@@ -88,7 +88,7 @@ describe('Agent', function () {
             if (total === 2) {
                 // nothing to do
             } else if (total === 1) {
-                expect(parse(msg).messageId).to.eql(1)
+                expect(parse(msg).messageId).to.eql(0)
                 done()
             }
 
