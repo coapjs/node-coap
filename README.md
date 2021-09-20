@@ -495,7 +495,7 @@ modules.
 Register a new format to be interpreted and sent in CoAP
 `Content-Format` option.
 Each format is identified by a number, see the [Content-Format
-registry](http://tools.ietf.org/html/draft-ietf-core-coap-18#section-12.3).
+registry](https://www.iana.org/assignments/core-parameters/core-parameters.xhtml#content-formats).
 
 These are the defaults formats:
 ```js
