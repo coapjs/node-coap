@@ -152,7 +152,7 @@ describe('end-to-end', function () {
     })
 
     describe('formats', function () {
-        const formats = ['text/plain', 'application/link-format',
+        const formats = ['text/plain; charset=utf-8', 'application/link-format',
             'application/xml', 'application/octet-stream',
             'application/exi', 'application/json', 'application/cbor']
 
@@ -243,6 +243,19 @@ describe('end-to-end', function () {
         server.once('request', (req) => {
             expect(req.options[0].name).to.equal('Content-Format')
             expect(req.options[0].value).to.equal('application/json')
+            done()
+        })
+    })
+
+    it('should support the \'Content-Format\' text/plain', function (done) {
+        const req = coap.request('coap://localhost:' + port)
+
+        req.setOption('Content-Format', 'text/plain')
+        req.end()
+
+        server.once('request', function (req) {
+            expect(req.options[0].name).to.equal('Content-Format')
+            expect(req.options[0].value).to.equal('text/plain; charset=utf-8')
             done()
         })
     })

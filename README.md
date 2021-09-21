@@ -501,6 +501,7 @@ registry](https://www.iana.org/assignments/core-parameters/core-parameters.xhtml
 These are the defaults formats:
 ```js
 registerFormat('text/plain', 0)
+registerFormat('text/plain; charset=utf-8', 0)
 registerFormat('application/link-format', 40)
 registerFormat('application/xml', 41)
 registerFormat('application/octet-stream', 42)

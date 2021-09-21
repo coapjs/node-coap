@@ -663,7 +663,7 @@ describe('request', function () {
     })
 
     const formatsString = {
-        'text/plain': Buffer.of(0),
+        'text/plain; charset=utf-8': Buffer.of(0),
         'application/link-format': Buffer.of(40),
         'application/xml': Buffer.of(41),
         'application/octet-stream': Buffer.of(42),

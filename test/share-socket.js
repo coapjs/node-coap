@@ -147,7 +147,7 @@ describe('share-socket', function () {
     })
 
     describe('formats', function () {
-        const formats = ['text/plain', 'application/link-format',
+        const formats = ['text/plain; charset=utf-8', 'application/link-format',
             'application/xml', 'application/octet-stream',
             'application/exi', 'application/json', 'application/cbor']
 
