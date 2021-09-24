@@ -12,10 +12,10 @@ describe('Segmentation', () => {
     describe('Segmented Transmission', () => {
         it('Should throw invalid block size error', (done) => {
             expect(() => {
-                segment.SegmentedTransmission(-1, 0, 0)
+                new segment.SegmentedTransmission(-1, 0, 0) // eslint-disable-line no-new
             }).to.throw('invalid block size -1')
             expect(() => {
-                segment.SegmentedTransmission(7, 0, 0)
+                new segment.SegmentedTransmission(7, 0, 0) // eslint-disable-line no-new
             }).to.throw('invalid block size 7')
             setImmediate(done)
         })
