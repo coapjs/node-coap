@@ -7,22 +7,22 @@ const server2 = coap.createServer({
 })
 
 // Create servers
-server.listen(5683, function () {
+server.listen(5683, () => {
     console.log('Server 1 is listening')
 })
 
-server2.listen(5683, function () {
+server2.listen(5683, () => {
     console.log('Server 2 is listening')
 })
 
-server.on('request', function (msg, res) {
+server.on('request', (msg, res) => {
     console.log('Server 1 has received message')
     res.end('Ok')
 
     server.close()
 })
 
-server2.on('request', function (msg, res) {
+server2.on('request', (msg, res) => {
     console.log('Server 2 has received message')
     res.end('Ok')
 

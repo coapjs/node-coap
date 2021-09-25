@@ -1,7 +1,7 @@
 const coap = require('../') // or coap
 const bl = require('bl')
 
-coap.createServer(function (req, res) {
+coap.createServer((req, res) => {
     if (req.headers.Accept !== 'application/json') {
         res.code = '4.06'
         return res.end()
@@ -10,20 +10,20 @@ coap.createServer(function (req, res) {
     res.setOption('Content-Format', 'application/json')
 
     res.end(JSON.stringify({ hello: 'world' }))
-}).listen(function () {
+}).listen(() => {
     coap
         .request({
             pathname: '/Matteo',
             options: {
             }
         })
-        .on('response', function (res) {
+        .on('response', (res) => {
             console.log('response code', res.code)
             if (res.code !== '2.05') {
                 return process.exit(1)
             }
 
-            res.pipe(bl(function (err, data) {
+            res.pipe(bl((err, data) => {
                 if (err) {
                     process.exit(1)
                 } else {

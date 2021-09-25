@@ -1,7 +1,7 @@
 const coap = require('../') // or coap
 const req = coap.request('coap://localhost/Matteo')
 
-req.on('response', function (res) {
+req.on('response', (res) => {
     res.pipe(process.stdout)
 })
 
