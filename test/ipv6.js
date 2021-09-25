@@ -38,9 +38,9 @@ describe('IPv6', function () {
 
         it('should receive a CoAP message specifying the type', function (done) {
             server = coap.createServer({ type: 'udp6' })
-            server.listen(port, function () {
+            server.listen(port, () => {
                 send(generate())
-                server.on('request', function (req, res) {
+                server.on('request', (req, res) => {
                     done()
                 })
             })
@@ -48,9 +48,9 @@ describe('IPv6', function () {
 
         it('should automatically discover the type based on the host', function (done) {
             server = coap.createServer()
-            server.listen(port, '::1', function () {
+            server.listen(port, '::1', () => {
                 send(generate())
-                server.on('request', function (req, res) {
+                server.on('request', (req, res) => {
                     done()
                 })
             })
@@ -78,7 +78,7 @@ describe('IPv6', function () {
                 const req = coap.request(createUrl())
                 req.end(Buffer.from('hello world'))
 
-                server.on('message', function (msg, rsinfo) {
+                server.on('message', (msg, rsinfo) => {
                     const packet = parse(msg)
                     const toSend = generate({
                         messageId: packet.messageId,
@@ -120,7 +120,7 @@ describe('IPv6', function () {
 
         it('should receive a request at a path with some query', function (done) {
             coap.request('coap://[::1]:' + port + '/abcd/ef/gh/?foo=bar&beep=bop').end()
-            server.on('request', function (req) {
+            server.on('request', (req) => {
                 expect(req.url).to.eql('/abcd/ef/gh?foo=bar&beep=bop')
                 done()
             })

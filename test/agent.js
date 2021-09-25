@@ -66,7 +66,7 @@ describe('Agent', function () {
         doReq()
         doReq()
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             if (firstRsinfo) {
                 expect(rsinfo.port).to.eql(firstRsinfo.port)
                 done()
@@ -84,7 +84,7 @@ describe('Agent', function () {
         agent._lastMessageId = Math.pow(2, 16) - 1
         doReq()
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             if (total === 2) {
                 // nothing to do
             } else if (total === 1) {
@@ -102,7 +102,7 @@ describe('Agent', function () {
         doReq()
         doReq()
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             const packet = parse(msg)
             if (firstToken) {
                 expect(packet.token).not.to.eql(firstToken)
@@ -119,7 +119,7 @@ describe('Agent', function () {
         doReq()
         doReq()
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             const packet = parse(msg)
             if (firstMessageId) {
                 expect(packet.messageId).not.to.eql(firstMessageId)
@@ -135,7 +135,7 @@ describe('Agent', function () {
         const req1 = doReq()
         const req2 = doReq()
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             const packet = parse(msg)
             const toSend = generate({
                 messageId: packet.messageId,
@@ -148,13 +148,13 @@ describe('Agent', function () {
             server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
         })
 
-        req1.once('response', function (res) {
+        req1.once('response', (res) => {
             if (++responses === 2) {
                 done()
             }
         })
 
-        req2.once('response', function (res) {
+        req2.once('response', (res) => {
             if (++responses === 2) {
                 done()
             }
@@ -167,7 +167,7 @@ describe('Agent', function () {
         // it is needed to keep the agent open
         doReq()
 
-        server.once('message', function (msg, rsinfo) {
+        server.once('message', (msg, rsinfo) => {
             const packet = parse(msg)
             const toSend = generate({
                 messageId: packet.messageId,
@@ -183,7 +183,7 @@ describe('Agent', function () {
             server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
         })
 
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             // fails if it emits 'response' twice
             done()
         })
@@ -195,7 +195,7 @@ describe('Agent', function () {
         // it is needed to keep the agent open
         doReq()
 
-        server.once('message', function (msg, rsinfo) {
+        server.once('message', (msg, rsinfo) => {
             const packet = parse(msg)
             const toSend = generate({
                 messageId: packet.messageId,
@@ -212,7 +212,7 @@ describe('Agent', function () {
             server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
         })
 
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             expect(res.headers['Content-Format']).to.equal(1542)
             done()
         })
@@ -224,7 +224,7 @@ describe('Agent', function () {
         // it is needed to keep the agent open
         doReq()
 
-        server.once('message', function (msg, rsinfo) {
+        server.once('message', (msg, rsinfo) => {
             const packet = parse(msg)
             const toSend = generate({
                 messageId: packet.messageId,
@@ -241,7 +241,7 @@ describe('Agent', function () {
             server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
         })
 
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             expect(res.headers['Content-Format']).to.equal(undefined)
             done()
         })
@@ -253,7 +253,7 @@ describe('Agent', function () {
         // it is needed to keep the agent open
         doReq(true)
 
-        server.once('message', function (msg, rsinfo) {
+        server.once('message', (msg, rsinfo) => {
             const packet = parse(msg)
             const toSend = generate({
                 messageId: packet.messageId,
@@ -270,7 +270,7 @@ describe('Agent', function () {
             server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
         })
 
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             // fails if it emits 'response' twice
             done()
         })
@@ -280,7 +280,7 @@ describe('Agent', function () {
         let firstRsinfo
         const req = doReq()
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             const packet = parse(msg)
             const toSend = generate({
                 messageId: packet.messageId,
@@ -301,7 +301,7 @@ describe('Agent', function () {
             }
         })
 
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             setImmediate(doReq)
         })
     })
@@ -311,7 +311,7 @@ describe('Agent', function () {
         doReq(true)
         let step = 0
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             const packet = parse(msg)
 
             switch (++step) {
@@ -372,7 +372,7 @@ describe('Agent', function () {
                 confirmable: true
             }).end()
 
-            server.once('message', function (msg, rsinfo) {
+            server.once('message', (msg, rsinfo) => {
                 const packet = parse(msg)
 
                 sendObserve({
@@ -404,7 +404,7 @@ describe('Agent', function () {
                 })
             })
 
-            req.on('response', function (res) {
+            req.on('response', (res) => {
                 // fails if it emits 'response' twice
                 done()
             })
@@ -420,7 +420,7 @@ describe('Agent', function () {
                 confirmable: true
             }).end()
 
-            server.once('message', function (msg, rsinfo) {
+            server.once('message', (msg, rsinfo) => {
                 const packet = parse(msg)
 
                 sendObserve({
@@ -433,7 +433,7 @@ describe('Agent', function () {
                 })
             })
 
-            server.on('message', function (msg, rsinfo) {
+            server.on('message', (msg, rsinfo) => {
                 if (firstRsinfo) {
                     expect(rsinfo.port).not.to.eql(firstRsinfo.port)
                     done()
@@ -442,7 +442,7 @@ describe('Agent', function () {
                 }
             })
 
-            req.on('response', function (res) {
+            req.on('response', (res) => {
                 res.close()
 
                 setImmediate(doReq)

@@ -31,13 +31,13 @@ describe('proxy', function () {
         server = coap.createServer({
             proxy: true
         })
-        server.listen(port, function () {
+        server.listen(port, () => {
             clientPort = nextPort()
             client = dgram.createSocket('udp4')
             targetPort = nextPort()
             target = coap.createServer()
 
-            client.bind(clientPort, function () {
+            client.bind(clientPort, () => {
                 target.listen(targetPort, done)
             })
         })
@@ -55,9 +55,9 @@ describe('proxy', function () {
 
         clock.restore()
 
-        closeSocket(client, function () {
-            closeSocket(server, function () {
-                closeSocket(target, function () {
+        closeSocket(client, () => {
+            closeSocket(server, () => {
+                closeSocket(target, () => {
                     tk.reset()
                     done()
                 })
@@ -77,7 +77,7 @@ describe('proxy', function () {
             }]
         }))
 
-        target.on('request', function (req, res) {
+        target.on('request', (req, res) => {
             done()
         })
     })
@@ -88,11 +88,11 @@ describe('proxy', function () {
         clock.restore()
 
         function sendObservation (message) {
-            target.on('request', function (req, res) {
+            target.on('request', (req, res) => {
                 res.setOption('Observe', 1)
                 res.write('Pruebas')
 
-                setTimeout(function () {
+                setTimeout(() => {
                     res.write('Pruebas2')
                     res.end('Last msg')
                 }, 500)
@@ -107,8 +107,8 @@ describe('proxy', function () {
 
         const req = sendObservation()
 
-        req.on('response', function (res) {
-            res.on('data', function (msg) {
+        req.on('response', (res) => {
+            res.on('data', (msg) => {
                 if (counter === 2) {
                     done()
                 } else {
@@ -121,11 +121,11 @@ describe('proxy', function () {
     })
 
     it('should not process the request as a standard server request', function (done) {
-        target.on('request', function (req, res) {
+        target.on('request', (req, res) => {
             done()
         })
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
         })
 
         send(generate({
@@ -144,11 +144,11 @@ describe('proxy', function () {
             }]
         }))
 
-        target.on('request', function (req, res) {
+        target.on('request', (req, res) => {
             res.end('The response')
         })
 
-        client.on('message', function (msg) {
+        client.on('message', (msg) => {
             const packet = parse(msg)
             expect(packet.payload.toString()).to.eql('The response')
             done()
@@ -164,7 +164,7 @@ describe('proxy', function () {
                 query: 'a=b'
             })
 
-            target.on('request', function (req, res) {
+            target.on('request', (req, res) => {
                 done()
             })
 
@@ -178,11 +178,11 @@ describe('proxy', function () {
                 query: 'a=b'
             })
 
-            target.on('request', function (req, res) {
+            target.on('request', (req, res) => {
                 res.end('This is the response')
             })
 
-            request.on('response', function (res) {
+            request.on('response', (res) => {
                 expect(res.payload.toString()).to.eql('This is the response')
                 done()
             })
@@ -201,15 +201,14 @@ describe('proxy', function () {
                 query: 'a=b'
             })
 
-            target.on('request', function (req, res) {
+            target.on('request', (req, res) => {
                 console.log('should not get here')
             })
 
-            server.on('error', function (req, res) {
-            })
+            server.on('error', (req, res) => {})
 
             request
-                .on('response', function (res) {
+                .on('response', (res) => {
                     try {
                         expect(res.code).to.eql('5.00')
                         expect(res.payload.toString()).to.match(/ENOTFOUND|EAI_AGAIN/)
@@ -230,16 +229,16 @@ describe('proxy', function () {
                 query: 'a=b'
             })
 
-            target.on('request', function (req, res) {
+            target.on('request', (req, res) => {
                 console.log('should not get here')
             })
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 res.end('Standard response')
             })
 
             request
-                .on('response', function (res) {
+                .on('response', (res) => {
                     expect(res.payload.toString()).to.contain('Standard response')
                     done()
                 })
@@ -256,16 +255,16 @@ describe('proxy', function () {
                 query: 'a=b'
             })
 
-            target.on('request', function (req, res) {
+            target.on('request', (req, res) => {
                 console.log('should not get here')
             })
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 res.end('Standard response')
             })
 
             request
-                .on('response', function (res) {
+                .on('response', (res) => {
                     expect(res.payload.toString()).to.contain('Standard response')
                     done()
                 })
@@ -280,23 +279,23 @@ describe('proxy', function () {
             })
             let count = 0
 
-            target.on('request', function (req, res) {
+            target.on('request', (req, res) => {
                 console.log('should not get here')
             })
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 res.setOption('Observe', 1)
                 res.write('This is the first response')
 
-                setTimeout(function () {
+                setTimeout(() => {
                     res.setOption('Observe', 1)
                     res.write('And this is the second')
                 }, 200)
             })
 
             request
-                .on('response', function (res) {
-                    res.on('data', function (chunk) {
+                .on('response', (res) => {
+                    res.on('data', (chunk) => {
                         count++
 
                         if (count === 1) {

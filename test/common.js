@@ -9,6 +9,6 @@
 global.expect = require('chai').expect
 
 let portCounter = 9042
-global.nextPort = function () {
+global.nextPort = () => {
     return ++portCounter
 }
