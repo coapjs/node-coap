@@ -501,7 +501,6 @@ describe('request', function () {
 
         server.on('message', (msg, rsinfo) => {
             const packet = parse(msg)
-            console.log(packet)
             const toSend = generate({
                 messageId: packet.messageId,
                 code: '0.00',
