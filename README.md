@@ -59,17 +59,17 @@ CoAP message to it:
 const coap = require('coap')
 const server = coap.createServer()
 
-server.on('request', function (req, res) {
+server.on('request', (req, res) => {
   res.end('Hello ' + req.url.split('/')[1] + '\n')
 })
 
 // the default CoAP port is 5683
-server.listen(function () {
+server.listen(() => {
   const req = coap.request('coap://localhost/Matteo')
 
-  req.on('response', function (res) {
+  req.on('response', (res) => {
     res.pipe(process.stdout)
-    res.on('end', function () {
+    res.on('end', () => {
       process.exit(0)
     })
   })
@@ -84,17 +84,17 @@ or on IPv6:
 const coap = require('coap')
 const server = coap.createServer({ type: 'udp6' })
 
-server.on('request', function(req, res) {
+server.on('request', (req, res) => {
   res.end('Hello ' + req.url.split('/')[1] + '\n')
 })
 
 // the default CoAP port is 5683
-server.listen(function() {
+server.listen(() => {
   const req = coap.request('coap://[::1]/Matteo')
 
-  req.on('response', function(res) {
+  req.on('response', (res) => {
     res.pipe(process.stdout)
-    res.on('end', function() {
+    res.on('end', () => {
       process.exit(0)
     })
   })
