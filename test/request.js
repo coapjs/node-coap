@@ -501,6 +501,7 @@ describe('request', function () {
 
         server.on('message', (msg, rsinfo) => {
             const packet = parse(msg)
+            console.log(packet)
             const toSend = generate({
                 messageId: packet.messageId,
                 code: '0.00',
@@ -521,9 +522,9 @@ describe('request', function () {
         setTimeout(() => {
             expect(messages).to.eql(5)
             done()
-        }, 45 * 1000)
+        }, 50 * 1000)
 
-        fastForward(100, 45 * 1000)
+        fastForward(100, 50 * 1000)
     })
 
     it('should allow to add an option', function (done) {
