@@ -58,7 +58,7 @@ function TestPut () {
             pathname: '/test',
             method: 'PUT'
         })
-        request.setOption('Block1', Buffer.from(0x6))
+        request.setOption('Block1', Buffer.alloc(0x6))
 
         request.on('response', (res) => {
             console.log('Client Received Response: ' + res.payload.toString('utf-8'))

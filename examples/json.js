@@ -15,6 +15,7 @@ coap.createServer((req, res) => {
         .request({
             pathname: '/Matteo',
             options: {
+                Accept: 'application/json'
             }
         })
         .on('response', (res) => {
