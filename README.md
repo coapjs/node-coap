@@ -140,16 +140,16 @@ first ten come from different ports.
 
 -------------------------------------------------------
 <a name="request"></a>
-### request(url)
+### request(requestParams)
 
-Execute a CoAP request. `url` can be a string or an object.
-If it is a string, it is parsed using `require('url').parse(url)`.
+Execute a CoAP request. `requestParams` can be a string or an object.
+If it is a string, it is parsed using `new URL(requestParams)`.
 If it is an object:
 
 - `host`: A domain name or IP address of the server to issue the request
   to.
   Defaults to `'localhost'`.
-- `hostname`: To support `url.parse()` `hostname` is preferred over
+- `hostname`: To support `URL` `hostname` is preferred over
   `host`
 - `port`: Port of remote server. Defaults to 5683.
 - `method`: A string specifying the CoAP request method. Defaults to
