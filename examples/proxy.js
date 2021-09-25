@@ -37,7 +37,7 @@ function createProxy (callback) {
 }
 
 function sendRequest (proxied) {
-    return function (n, callback) {
+    return (n, callback) => {
         const req = {
             host: 'localhost',
             port: 8976,
@@ -52,7 +52,7 @@ function sendRequest (proxied) {
 
         const request = coap.request(req)
 
-        request.on('response', function (res) {
+        request.on('response', (res) => {
             console.log('Client receives [%s] in port [%s] from [%s]', res.payload, res.outSocket.port, res.rsinfo.port)
             callback()
         })
@@ -64,7 +64,7 @@ function sendRequest (proxied) {
 }
 
 function executeTest (proxied) {
-    return function (callback) {
+    return (callback) => {
         if (proxied) {
             console.log(formatTitle('Executing tests with proxy'))
         } else {
@@ -76,7 +76,7 @@ function executeTest (proxied) {
 }
 
 function cleanUp (callback) {
-    targetServer.close(function () {
+    targetServer.close(() => {
         proxy.close(callback)
     })
 }

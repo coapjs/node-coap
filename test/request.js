@@ -75,7 +75,7 @@ describe('request', function () {
         const req = request('coap://localhost:' + port)
         req.end(Buffer.from('hello world'))
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             ackBack(msg, rsinfo)
             expect(parse(msg).payload.toString()).to.eql('hello world')
             done()
@@ -86,7 +86,7 @@ describe('request', function () {
         const req = request('coap://localhost:' + port)
         req.end(Buffer.from('hello world'))
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             ackBack(msg, rsinfo)
             expect(parse(msg).confirmable).to.be.true // eslint-disable-line no-unused-expressions
             done()
@@ -97,7 +97,7 @@ describe('request', function () {
         this.timeout(20000)
         const req = request('coap://aaa.eee:' + 1234)
 
-        req.once('error', function () {
+        req.once('error', () => {
             coap.globalAgent.abort(req)
             done()
         })
@@ -108,7 +108,7 @@ describe('request', function () {
     it('should error if the message is too big', function (done) {
         const req = request('coap://localhost:' + port)
 
-        req.on('error', function () {
+        req.on('error', () => {
             done()
         })
 
@@ -118,11 +118,11 @@ describe('request', function () {
     it('should imply a default port', function (done) {
         server2 = dgram.createSocket('udp4')
 
-        server2.bind(5683, function () {
+        server2.bind(5683, () => {
             request('coap://localhost').end()
         })
 
-        server2.on('message', function (msg, rsinfo) {
+        server2.on('message', (msg, rsinfo) => {
             ackBack(msg, rsinfo)
             done()
         })
@@ -132,7 +132,7 @@ describe('request', function () {
         const req = request('coap://localhost:' + port + '/hello')
         req.end(Buffer.from('hello world'))
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             ackBack(msg, rsinfo)
 
             const packet = parse(msg)
@@ -147,7 +147,7 @@ describe('request', function () {
         const req = request('coap://localhost:' + port + '/hello/world')
         req.end(Buffer.from('hello world'))
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             ackBack(msg, rsinfo)
 
             const packet = parse(msg)
@@ -168,7 +168,7 @@ describe('request', function () {
 
         req.end(Buffer.from('hello world'))
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             ackBack(msg, rsinfo)
 
             const packet = parse(msg)
@@ -184,7 +184,7 @@ describe('request', function () {
         const req = request('coap://localhost:' + port + '?a=b&c=d')
         req.end(Buffer.from('hello world'))
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             ackBack(msg, rsinfo)
 
             const packet = parse(msg)
@@ -202,7 +202,7 @@ describe('request', function () {
             method: 'POST'
         }).end()
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             ackBack(msg, rsinfo)
 
             const packet = parse(msg)
@@ -217,7 +217,7 @@ describe('request', function () {
             token: Buffer.from([1, 2, 3, 4, 5, 6, 7, 8])
         }).end()
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             try {
                 ackBack(msg, rsinfo)
 
@@ -236,7 +236,7 @@ describe('request', function () {
             token: Buffer.from([])
         }).end()
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             try {
                 ackBack(msg, rsinfo)
 
@@ -255,7 +255,7 @@ describe('request', function () {
             token: Buffer.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
         })
 
-        rq.on('error', function (err) {
+        rq.on('error', (err) => {
             if (err.message === 'Token may be no longer than 8 bytes.') {
                 // Success, this is what we were expecting
                 done()
@@ -267,7 +267,7 @@ describe('request', function () {
 
         rq.end()
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             // We should not see this!
             ackBack(msg, rsinfo)
             done(new Error('Message should not have been sent!'))
@@ -280,7 +280,7 @@ describe('request', function () {
             confirmable: true
         })
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             const packet = parse(msg)
             const toSend = generate({
                 messageId: packet.messageId,
@@ -292,8 +292,8 @@ describe('request', function () {
             server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
         })
 
-        req.on('response', function (res) {
-            res.pipe(bl(function (err, data) {
+        req.on('response', (res) => {
+            res.pipe(bl((err, data) => {
                 if (err) {
                     done(err)
                 } else {
@@ -312,7 +312,7 @@ describe('request', function () {
             confirmable: true
         })
 
-        server.once('message', function (msg, rsinfo) {
+        server.once('message', (msg, rsinfo) => {
             const packet = parse(msg)
             let toSend = generate({
                 messageId: packet.messageId,
@@ -332,8 +332,8 @@ describe('request', function () {
             server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
         })
 
-        req.on('response', function (res) {
-            res.pipe(bl(function (err, data) {
+        req.on('response', (res) => {
+            res.pipe(bl((err, data) => {
                 if (err) {
                     done(err)
                 } else {
@@ -352,7 +352,7 @@ describe('request', function () {
             confirmable: true
         })
 
-        server.once('message', function (msg, rsinfo) {
+        server.once('message', (msg, rsinfo) => {
             let packet = parse(msg)
             let toSend = generate({
                 messageId: packet.messageId,
@@ -370,7 +370,7 @@ describe('request', function () {
 
             server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
 
-            server.once('message', function (msg, rsinfo) {
+            server.once('message', (msg, rsinfo) => {
                 packet = parse(msg)
                 expect(packet.code).to.eql('0.00')
                 expect(packet.ack).to.be.true // eslint-disable-line no-unused-expressions
@@ -388,15 +388,15 @@ describe('request', function () {
             confirmable: true
         })
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             ackBack(msg, rsinfo)
-            setTimeout(function () {
+            setTimeout(() => {
                 done()
             }, 20)
             fastForward(5, 25)
         })
 
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             done(new Error('Unexpected response'))
         })
 
@@ -409,7 +409,7 @@ describe('request', function () {
             confirmable: false
         })
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             const packet = parse(msg)
             const toSend = generate({
                 messageId: packet.messageId,
@@ -420,8 +420,8 @@ describe('request', function () {
             server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
         })
 
-        req.on('response', function (res) {
-            res.pipe(bl(function (err, data) {
+        req.on('response', (res) => {
+            res.pipe(bl((err, data) => {
                 if (err) {
                     done(err)
                 }
@@ -438,7 +438,7 @@ describe('request', function () {
             port: port
         })
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             const packet = parse(msg)
             const toSend = generate({
                 messageId: packet.messageId,
@@ -449,7 +449,7 @@ describe('request', function () {
             server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
         })
 
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             if (res.code === '0.00') {
                 done()
             } else {
@@ -466,7 +466,7 @@ describe('request', function () {
         })
         let messages = 0
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             const packet = parse(msg)
             const toSend = generate({
                 messageId: packet.messageId,
@@ -478,14 +478,14 @@ describe('request', function () {
             server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
         })
 
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             if (res.code !== '0.00') {
                 done(new Error('Unexpected response'))
             }
         })
         req.end()
 
-        setTimeout(function () {
+        setTimeout(() => {
             expect(messages).to.eql(1)
             done()
         }, 45 * 1000)
@@ -499,7 +499,7 @@ describe('request', function () {
         })
         let messages = 0
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             const packet = parse(msg)
             const toSend = generate({
                 messageId: packet.messageId,
@@ -512,13 +512,13 @@ describe('request', function () {
             server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
         })
 
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             done(new Error('Unexpected response'))
         })
 
         req.end()
 
-        setTimeout(function () {
+        setTimeout(() => {
             expect(messages).to.eql(5)
             done()
         }, 45 * 1000)
@@ -535,7 +535,7 @@ describe('request', function () {
         req.setOption('ETag', buf)
         req.end()
 
-        server.on('message', function (msg) {
+        server.on('message', (msg) => {
             expect(parse(msg).options[0].name).to.eql('ETag')
             expect(parse(msg).options[0].value).to.eql(buf)
             done()
@@ -551,7 +551,7 @@ describe('request', function () {
         req.setOption('content-type', buf)
         req.end()
 
-        server.on('message', function (msg) {
+        server.on('message', (msg) => {
             expect(parse(msg).options[0].name).to.eql('Content-Format')
             expect(parse(msg).options[0].value).to.eql(buf)
             done()
@@ -568,7 +568,7 @@ describe('request', function () {
         req.setOption('ETag', buf)
         req.end()
 
-        server.on('message', function (msg) {
+        server.on('message', (msg) => {
             expect(parse(msg).options[0].value).to.eql(buf)
             done()
         })
@@ -583,7 +583,7 @@ describe('request', function () {
         req.setHeader('ETag', buf)
         req.end()
 
-        server.on('message', function (msg) {
+        server.on('message', (msg) => {
             expect(parse(msg).options[0].value).to.eql(buf)
             done()
         })
@@ -599,7 +599,7 @@ describe('request', function () {
         req.setOption('433', [buf1, buf2])
         req.end()
 
-        server.on('message', function (msg) {
+        server.on('message', (msg) => {
             expect(parse(msg).options[0].value).to.eql(buf1)
             expect(parse(msg).options[1].value).to.eql(buf2)
             done()
@@ -614,7 +614,7 @@ describe('request', function () {
         req.setOption('Content-Type', Buffer.of(0))
         req.end()
 
-        server.on('message', function (msg) {
+        server.on('message', (msg) => {
             expect(parse(msg).options[0].name).to.eql('Content-Format')
             expect(parse(msg).options[0].value).to.eql(Buffer.of(0))
             done()
@@ -627,7 +627,7 @@ describe('request', function () {
             confirmable: true
         })
 
-        server.once('message', function (msg, rsinfo) {
+        server.once('message', (msg, rsinfo) => {
             const packet = parse(msg)
             let toSend = generate({
                 token: packet.token,
@@ -648,8 +648,8 @@ describe('request', function () {
             server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
         })
 
-        req.on('response', function (res) {
-            res.pipe(bl(function (err, data) {
+        req.on('response', (res) => {
+            res.pipe(bl((err, data) => {
                 if (err) {
                     done(err)
                 } else {
@@ -682,7 +682,7 @@ describe('request', function () {
                 req.setOption('Content-Format', format)
                 req.end()
 
-                server.on('message', function (msg) {
+                server.on('message', (msg) => {
                     expect(parse(msg).options[0].value).to.eql(value)
                     done()
                 })
@@ -704,7 +704,7 @@ describe('request', function () {
                 req.setHeader('Accept', format)
                 req.end()
 
-                server.on('message', function (msg) {
+                server.on('message', (msg) => {
                     expect(parse(msg).options[0].value).to.eql(value)
                     done()
                 })
@@ -718,7 +718,7 @@ describe('request', function () {
 
     describe('with the \'Content-Format\' in the response', function () {
         function buildResponse (value) {
-            return function (msg, rsinfo) {
+            return (msg, rsinfo) => {
                 const packet = parse(msg)
                 const toSend = generate({
                     messageId: packet.messageId,
@@ -741,7 +741,7 @@ describe('request', function () {
 
                 server.on('message', buildResponse(value))
 
-                req.on('response', function (res) {
+                req.on('response', (res) => {
                     expect(res.options[0].value).to.eql(format)
                     done()
                 })
@@ -756,7 +756,7 @@ describe('request', function () {
 
                 server.on('message', buildResponse(value))
 
-                req.on('response', function (res) {
+                req.on('response', (res) => {
                     expect(res.headers['Content-Format']).to.eql(format)
                     expect(res.headers['Content-Type']).to.eql(format)
                     done()
@@ -776,7 +776,7 @@ describe('request', function () {
             port: port
         })
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             const packet = parse(msg)
             const toSend = generate({
                 messageId: packet.messageId,
@@ -790,7 +790,7 @@ describe('request', function () {
             server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
         })
 
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             expect(res.headers).to.have.property('ETag', 'abcdefgh')
             done()
         })
@@ -803,7 +803,7 @@ describe('request', function () {
             port: port
         })
 
-        server.on('message', function (msg, rsinfo) {
+        server.on('message', (msg, rsinfo) => {
             const packet = parse(msg)
             const toSend = generate({
                 messageId: packet.messageId,
@@ -814,7 +814,7 @@ describe('request', function () {
             server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
         })
 
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             expect(res).to.have.property('rsinfo')
             expect(res).to.have.property('outSocket')
             expect(res.outSocket).to.have.property('address')
@@ -853,10 +853,10 @@ describe('request', function () {
         it('should timeout after ~202 seconds', function (done) {
             const req = doReq()
 
-            req.on('error', function () {
+            req.on('error', () => {
             })
 
-            req.on('timeout', function (err) {
+            req.on('timeout', (err) => {
                 expect(err).to.have.property('message', 'No reply in 202s')
                 expect(err).to.have.property('retransmitTimeout', 202)
                 done()
@@ -869,11 +869,11 @@ describe('request', function () {
             const req = doReq()
             let messages = 0
 
-            server.on('message', function (msg) {
+            server.on('message', (msg) => {
                 messages++
             })
 
-            req.on('timeout', function () {
+            req.on('timeout', () => {
                 expect(messages).to.eql(1)
                 done()
             })
@@ -885,11 +885,11 @@ describe('request', function () {
             doReq()
             let messages = 0
 
-            server.on('message', function (msg) {
+            server.on('message', (msg) => {
                 messages++
             })
 
-            setTimeout(function () {
+            setTimeout(() => {
                 expect(messages).to.eql(1)
                 done()
             }, 45 * 1000)
@@ -901,7 +901,7 @@ describe('request', function () {
             doReq()
             let messages = 0
 
-            server.on('message', function (msg, rsinfo) {
+            server.on('message', (msg, rsinfo) => {
                 messages++
                 const packet = parse(msg)
                 const toSend = generate({
@@ -915,7 +915,7 @@ describe('request', function () {
                 server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
             })
 
-            setTimeout(function () {
+            setTimeout(() => {
                 expect(messages).to.eql(1)
                 done()
             }, 45 * 1000)
@@ -952,7 +952,7 @@ describe('request', function () {
         it('should error after ~247 seconds', function (done) {
             const req = doReq()
 
-            req.on('error', function (err) {
+            req.on('error', (err) => {
                 expect(err).to.have.property('message', 'No reply in 247s')
                 done()
             })
@@ -964,11 +964,11 @@ describe('request', function () {
             const req = doReq()
             let messages = 0
 
-            server.on('message', function (msg) {
+            server.on('message', (msg) => {
                 messages++
             })
 
-            req.on('error', function () {
+            req.on('error', () => {
                 // original one plus 4 retries
                 expect(messages).to.eql(5)
                 done()
@@ -981,7 +981,7 @@ describe('request', function () {
             const req = doReq()
             let messageId
 
-            server.on('message', function (msg) {
+            server.on('message', (msg) => {
                 const packet = parse(msg)
 
                 if (!messageId) {
@@ -991,7 +991,7 @@ describe('request', function () {
                 expect(packet.messageId).to.eql(messageId)
             })
 
-            req.on('error', function () {
+            req.on('error', () => {
                 done()
             })
 
@@ -1002,11 +1002,11 @@ describe('request', function () {
             doReq()
             let messages = 0
 
-            server.on('message', function (msg) {
+            server.on('message', (msg) => {
                 messages++
             })
 
-            setTimeout(function () {
+            setTimeout(() => {
                 // original one plus 4 retries
                 expect(messages).to.eql(5)
                 done()
@@ -1019,7 +1019,7 @@ describe('request', function () {
             doReq()
             let messages = 0
 
-            server.on('message', function (msg, rsinfo) {
+            server.on('message', (msg, rsinfo) => {
                 messages++
                 const packet = parse(msg)
                 const toSend = generate({
@@ -1031,7 +1031,7 @@ describe('request', function () {
                 server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
             })
 
-            setTimeout(function () {
+            setTimeout(() => {
                 expect(messages).to.eql(1)
                 done()
             }, 45 * 1000)
@@ -1042,7 +1042,7 @@ describe('request', function () {
 
     describe('observe', function () {
         function doObserve () {
-            server.on('message', function (msg, rsinfo) {
+            server.on('message', (msg, rsinfo) => {
                 const packet = parse(msg)
 
                 if (packet.ack) {
@@ -1101,7 +1101,7 @@ describe('request', function () {
         it('should ack the update', function (done) {
             doObserve()
 
-            server.on('message', function (msg) {
+            server.on('message', (msg) => {
                 if (parse(msg).ack) {
                     done()
                 }
@@ -1111,13 +1111,13 @@ describe('request', function () {
         it('should emit any more data after close', function (done) {
             const req = doObserve()
 
-            req.on('response', function (res) {
-                res.once('data', function (data) {
+            req.on('response', (res) => {
+                res.once('data', (data) => {
                     expect(data.toString()).to.eql('42')
                     res.close()
                     done()
 
-                    res.on('data', function (data) {
+                    res.on('data', (data) => {
                         done(new Error('this should never happen'))
                     })
                 })
@@ -1127,8 +1127,8 @@ describe('request', function () {
         it('should send origin and destination socket data along with the response', function (done) {
             const req = doObserve()
 
-            req.on('response', function (res) {
-                res.once('data', function (data) {
+            req.on('response', (res) => {
+                res.once('data', (data) => {
                     expect(res).to.have.property('rsinfo')
                     expect(res).to.have.property('outSocket')
                     expect(res.outSocket).to.have.property('address')
@@ -1142,13 +1142,13 @@ describe('request', function () {
         it('should emit any more data after close', function (done) {
             const req = doObserve()
 
-            req.on('response', function (res) {
-                res.once('data', function (data) {
+            req.on('response', (res) => {
+                res.once('data', (data) => {
                     expect(data.toString()).to.eql('42')
                     res.close()
                     done()
 
-                    res.on('data', function (data) {
+                    res.on('data', (data) => {
                         done(new Error('this should never happen'))
                     })
                 })
@@ -1158,12 +1158,12 @@ describe('request', function () {
         it('should send deregister request if close(eager=true)', function (done) {
             const req = doObserve()
 
-            req.on('response', function (res) {
-                res.once('data', function (data) {
+            req.on('response', (res) => {
+                res.once('data', (data) => {
                     expect(data.toString()).to.eql('42')
                     res.close(true)
 
-                    server.on('message', function (msg, rsinfo) {
+                    server.on('message', (msg, rsinfo) => {
                         const packet = parse(msg)
                         if (packet.ack && (packet.code === '0.00')) {
                             return
@@ -1188,7 +1188,7 @@ describe('request', function () {
                 observe: true
             }).end()
 
-            server.on('message', function (msg, rsinfo) {
+            server.on('message', (msg, rsinfo) => {
                 const packet = parse(msg)
                 expect(packet.options[0].name).to.eql('Observe')
                 expect(packet.options[0].value).to.eql(Buffer.alloc(0))
@@ -1202,7 +1202,7 @@ describe('request', function () {
                 observe: 1
             }).end()
 
-            server.on('message', function (msg, rsinfo) {
+            server.on('message', (msg, rsinfo) => {
                 const packet = parse(msg)
                 try {
                     expect(packet.options[0].name).to.eql('Observe')
@@ -1216,7 +1216,7 @@ describe('request', function () {
         })
 
         it('should allow multiple notifications', function (done) {
-            server.once('message', function (msg, rsinfo) {
+            server.once('message', (msg, rsinfo) => {
                 const req = parse(msg)
 
                 sendNotification(rsinfo, req, { num: 0, payload: 'zero' })
@@ -1229,7 +1229,7 @@ describe('request', function () {
                 confirmable: false
             }).end()
 
-            req.on('response', function (res) {
+            req.on('response', (res) => {
                 let ndata = 0
 
                 res.on('data', function (data) {
@@ -1249,7 +1249,7 @@ describe('request', function () {
         })
 
         it('should drop out of order notifications', function (done) {
-            server.once('message', function (msg, rsinfo) {
+            server.once('message', (msg, rsinfo) => {
                 const req = parse(msg)
 
                 sendNotification(rsinfo, req, { num: 1, payload: 'one' })
@@ -1263,10 +1263,10 @@ describe('request', function () {
                 confirmable: false
             }).end()
 
-            req.on('response', function (res) {
+            req.on('response', (res) => {
                 let ndata = 0
 
-                res.on('data', function (data) {
+                res.on('data', (data) => {
                     ndata++
                     if (ndata === 1) {
                         expect(res.headers.Observe).to.equal(1)
@@ -1283,11 +1283,11 @@ describe('request', function () {
         })
 
         it('should allow repeating order after 128 seconds', function (done) {
-            server.once('message', function (msg, rsinfo) {
+            server.once('message', (msg, rsinfo) => {
                 const req = parse(msg)
 
                 sendNotification(rsinfo, req, { num: 1, payload: 'one' })
-                setTimeout(function () {
+                setTimeout(() => {
                     sendNotification(rsinfo, req, { num: 1, payload: 'two' })
                 }, 128 * 1000 + 200)
             })
@@ -1298,10 +1298,10 @@ describe('request', function () {
                 confirmable: false
             }).end()
 
-            req.on('response', function (res) {
+            req.on('response', (res) => {
                 let ndata = 0
 
-                res.on('data', function (data) {
+                res.on('data', (data) => {
                     ndata++
                     if (ndata === 1) {
                         expect(res.headers.Observe).to.equal(1)
@@ -1320,7 +1320,7 @@ describe('request', function () {
         })
 
         it('should allow Observe option 24bit overflow', function (done) {
-            server.once('message', function (msg, rsinfo) {
+            server.once('message', (msg, rsinfo) => {
                 const req = parse(msg)
 
                 sendNotification(rsinfo, req, { num: 0xffffff, payload: 'max' })
@@ -1333,10 +1333,10 @@ describe('request', function () {
                 confirmable: false
             }).end()
 
-            req.on('response', function (res) {
+            req.on('response', (res) => {
                 let ndata = 0
 
-                res.on('data', function (data) {
+                res.on('data', (data) => {
                     ndata++
                     if (ndata === 1) {
                         expect(res.headers.Observe).to.equal(0xffffff)
@@ -1376,7 +1376,7 @@ describe('request', function () {
                 port: port
             })
 
-            server.on('message', function (msg, rsinfo) {
+            server.on('message', (msg, rsinfo) => {
                 const packet = parse(msg)
                 const toSend = generate({
                     messageId: packet.messageId,
@@ -1386,9 +1386,9 @@ describe('request', function () {
                 server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
             })
 
-            req.on('error', function () {})
+            req.on('error', () => {})
 
-            req.on('timeout', function () {
+            req.on('timeout', () => {
                 done()
             })
 
@@ -1402,7 +1402,7 @@ describe('request', function () {
                 port: port
             })
 
-            server.on('message', function (msg, rsinfo) {
+            server.on('message', (msg, rsinfo) => {
                 const packet = parse(msg)
                 const toSend = generate({
                     messageId: packet.messageId,
@@ -1412,9 +1412,9 @@ describe('request', function () {
                 server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
             })
 
-            req.on('error', function () {})
+            req.on('error', () => {})
 
-            req.on('timeout', function () {
+            req.on('timeout', () => {
                 done()
             })
 
@@ -1439,7 +1439,7 @@ describe('request', function () {
 
         beforeEach(function (done) {
             sock = dgram.createSocket('udp4')
-            sock.bind(port2, function () {
+            sock.bind(port2, () => {
                 server.addMembership(MULTICAST_ADDR)
                 sock.addMembership(MULTICAST_ADDR)
                 done()
@@ -1453,7 +1453,7 @@ describe('request', function () {
         it('should be non-confirmable', function (done) {
             doReq()
 
-            server.on('message', function (msg, rsinfo) {
+            server.on('message', (msg, rsinfo) => {
                 const packet = parse(msg)
                 expect(packet).to.have.property('confirmable', false)
                 done()
@@ -1464,7 +1464,7 @@ describe('request', function () {
             const req = doReq()
             let token
 
-            server.on('message', function (msg, rsinfo) {
+            server.on('message', (msg, rsinfo) => {
                 const packet = parse(msg)
                 token = packet.token
 
@@ -1479,7 +1479,7 @@ describe('request', function () {
                 server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
             })
 
-            req.on('response', function (res) {
+            req.on('response', (res) => {
                 const packet = res._packet
                 expect(packet).to.have.property('confirmable', false)
                 expect(packet).to.have.property('reset', false)
@@ -1494,8 +1494,8 @@ describe('request', function () {
             const servers = [undefined, undefined]
             const mids = [0, 0]
 
-            servers.forEach(function (_, i) {
-                servers[i] = coap.createServer(function (req, res) {
+            servers.forEach((_, i) => {
+                servers[i] = coap.createServer((req, res) => {
                     const mid = _req._packet.messageId + i + 1
                     res._packet.messageId = mid
                     mids[i] = mid
@@ -1509,9 +1509,9 @@ describe('request', function () {
                 port: port2,
                 confirmable: false,
                 multicast: true
-            }).on('response', function (res) {
+            }).on('response', (res) => {
                 if (++counter === servers.length) {
-                    mids.forEach(function (mid, i) {
+                    mids.forEach((mid, i) => {
                         expect(mid).to.eql(_req._packet.messageId + i + 1)
                     })
                     done()
@@ -1534,7 +1534,7 @@ describe('request', function () {
                 pathname: '/hello',
                 confirmable: false,
                 multicast: true
-            }).on('response', function (res) {
+            }).on('response', (res) => {
                 expect(res.payload.toString()).to.eql(payload.toString())
                 done()
             }).end()
@@ -1555,11 +1555,11 @@ describe('request', function () {
                 multicast: true
             })
 
-            _req.on('bestEventEver', function () {
+            _req.on('bestEventEver', () => {
                 done()
             })
 
-            _req.on('response', function (res) {
+            _req.on('response', (res) => {
                 expect(res.payload.toString()).to.eql(payload.toString())
                 _req.emit('bestEventEver')
             }).end()
@@ -1585,11 +1585,11 @@ describe('request', function () {
                 port: port2,
                 confirmable: false,
                 multicast: true
-            }).on('response', function (res) {
+            }).on('response', (res) => {
                 counter++
             }).end()
 
-            setTimeout(function () {
+            setTimeout(() => {
                 expect(counter).to.eql(1)
                 done()
             }, 45 * 1000)

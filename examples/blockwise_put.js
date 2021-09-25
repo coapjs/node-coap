@@ -20,16 +20,16 @@ testBuffer.write(containedData, testBuffer.length - containedData.length, contai
  * Tests the GET Block2 method transfer. Sends data in 1024 byte chunks
 */
 function TestGet () { // eslint-disable-line no-unused-vars
-    coap.createServer(function (req, res) {
+    coap.createServer((req, res) => {
     // Respond with the test buffer.
         res.end(testBuffer)
-    }).listen(function () {
+    }).listen(() => {
     // GET Request resources /test with block transfer with 1024 byte size
         const req = coap.request('/test')
 
         req.setOption('Block2', Buffer.from(0x6))
 
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             console.log('Client Received ' + res.payload.length + ' bytes')
             process.exit(0)
         })
@@ -41,7 +41,7 @@ function TestGet () { // eslint-disable-line no-unused-vars
  * Tests the PUT Block1 method transfer. Sends data in 1024 byte chunks
 */
 function TestPut () {
-    coap.createServer(function (req, res) {
+    coap.createServer((req, res) => {
         setTimeout(() => {
             console.log('Server Received ' + req.payload.length + ' bytes')
             console.log(req.payload.slice(0, containedData.length * 2).toString('utf-8'))
@@ -51,7 +51,7 @@ function TestPut () {
             res.end('Congratulations!')
             console.log('Sent back')
         }, 500)
-    }).listen(function () {
+    }).listen(() => {
         const request = coap.request({
             hostname: this.hostname,
             port: this.port,
@@ -60,7 +60,7 @@ function TestPut () {
         })
         request.setOption('Block1', Buffer.from(0x6))
 
-        request.on('response', function (res) {
+        request.on('response', (res) => {
             console.log('Client Received Response: ' + res.payload.toString('utf-8'))
             console.log('Client Received Response: ' + res.code)
             process.exit(0)
@@ -75,7 +75,7 @@ function TestPut () {
  * Start up an external CoAP client and try it out.
 */
 function TestServer () { // eslint-disable-line no-unused-vars
-    coap.createServer(function (req, res) {
+    coap.createServer((req, res) => {
         console.log('Got request. Waiting 500ms')
         setTimeout(() => {
             res.setOption('Block2', Buffer.from(0x6))
@@ -98,7 +98,7 @@ function TestClient () { // eslint-disable-line no-unused-vars
     })
     request.setOption('Block1', Buffer.from(0))
 
-    request.on('response', function (res) {
+    request.on('response', (res) => {
         console.log('Client Received ' + res.payload.length + ' bytes in response')
         process.exit(0)
     })

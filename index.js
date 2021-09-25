@@ -16,7 +16,7 @@ const URL = require('url')
 const globalAgent = new Agent({ type: 'udp4' })
 const globalAgentV6 = new Agent({ type: 'udp6' })
 
-module.exports.request = function (url) {
+module.exports.request = (url) => {
     let agent
 
     if (typeof url === 'string') {
@@ -40,7 +40,7 @@ module.exports.request = function (url) {
     return agent.request(url)
 }
 
-module.exports.createServer = function (options, listener) {
+module.exports.createServer = (options, listener) => {
     return new Server(options, listener)
 }
 

@@ -66,7 +66,7 @@ describe('blockwise2', function () {
         coap.request({
             port: port
         })
-            .on('response', function (res) {
+            .on('response', (res) => {
                 let blockwiseResponse = false
                 for (const i in res.options) {
                     if (res.options[i].name === 'Block2') {
@@ -79,7 +79,7 @@ describe('blockwise2', function () {
                 setImmediate(done)
             })
             .end()
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end(payload)
         })
     })
@@ -88,7 +88,7 @@ describe('blockwise2', function () {
         coap.request({
             port: port
         })
-            .on('response', function (res) {
+            .on('response', (res) => {
                 let blockwiseResponse = false
                 for (const i in res.options) {
                     if (res.options[i].name === 'Block2') {
@@ -101,7 +101,7 @@ describe('blockwise2', function () {
                 setImmediate(done)
             })
             .end()
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end(payload)
         })
     })
@@ -110,13 +110,13 @@ describe('blockwise2', function () {
         coap.request({
             port: port
         })
-            .on('response', function (res) {
+            .on('response', (res) => {
                 expect(typeof res.headers.ETag).to.eql('string')
                 // expect(cache.get(res._packet.token.toString())).to.not.be.undefined
                 setImmediate(done)
             })
             .end()
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end(payload)
         })
     })
@@ -126,7 +126,7 @@ describe('blockwise2', function () {
             port: port
         })
             .setOption('Block2', Buffer.of(0x02))
-            .on('response', function (res) {
+            .on('response', (res) => {
                 let block2
                 for (const i in res.options) {
                     if (res.options[i].name === 'Block2') {
@@ -140,7 +140,7 @@ describe('blockwise2', function () {
                 setImmediate(done)
             })
             .end()
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end(payload)
         })
     })
@@ -150,13 +150,13 @@ describe('blockwise2', function () {
             port: port
         })
             .setOption('Block2', Buffer.of(0x07)) // request for block 0, with overload size of 2**(7+4)
-            .on('response', function (res) {
+            .on('response', (res) => {
                 expect(res.code).to.eql('4.02')
                 // expect(cache.get(res._packet.token.toString())).to.be.undefined
                 setImmediate(done)
             })
             .end()
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end(payload)
         })
     })
@@ -169,13 +169,13 @@ describe('blockwise2', function () {
             port: port
         })
             .setOption('Block2', Buffer.of(0x3D)) // request for block index 3
-            .on('response', function (res) {
+            .on('response', (res) => {
                 expect(res.code).to.eql('4.02')
                 // expect(cache.get(res._packet.token.toString())).to.be.undefined
                 setImmediate(done)
             })
             .end()
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end(payload)
         })
     })
@@ -185,13 +185,13 @@ describe('blockwise2', function () {
             port: port
         })
             .setOption('Block2', Buffer.of(0x10)) // request from block 1, with size = 16
-            .on('response', function (res) {
+            .on('response', (res) => {
                 expect(res.payload).to.eql(payload.slice(1 * 16, payload.length + 1))
                 // expect(cache.get(res._packet.token.toString())).to.not.be.undefined
                 setImmediate(done)
             })
             .end()
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end(payload)
         })
     })
@@ -202,13 +202,13 @@ describe('blockwise2', function () {
             port: port
         })
             .setOption('Block2', Buffer.of(0x0)) // early negotation with block size = 16, almost 10000/16 = 63 blocks
-            .on('response', function (res) {
+            .on('response', (res) => {
                 expect(res.payload).to.eql(payload)
                 // expect(cache.get(res._packet.token.toString())).to.not.be.undefined
                 setImmediate(done)
             })
             .end()
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end(payload)
         })
     })
@@ -242,7 +242,7 @@ describe('blockwise2', function () {
         fillPayloadBuffer(req1Token)
 
         let nreq = 1
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             // only two request to upper level, blockwise transfer completed from cache
             if (nreq === 1) {
                 res.end(payloadReq1)
@@ -258,7 +258,7 @@ describe('blockwise2', function () {
         // Send first request, initiate blockwise transfer from server
         sendNextBlock2(req1Token, req1Block2Num)
 
-        client.on('message', function (msg, rinfo) {
+        client.on('message', (msg, rinfo) => {
             checkBlock2Message(msg, payloadReq1, req1Block2Num, payloadLength)
 
             const expectMore = (req1Block2Num + 1) * 16 <= payloadLength
@@ -266,7 +266,7 @@ describe('blockwise2', function () {
                 // Request next block after 50 msec delay
                 req1Block2Num++
 
-                setTimeout(function () {
+                setTimeout(() => {
                     // Send next request, fetch next block of blockwise transfer from server
                     sendNextBlock2(req1Token, req1Block2Num)
                 }, 50)
@@ -282,11 +282,11 @@ describe('blockwise2', function () {
         reqClient2.setOption('Block2', Buffer.of(0x10)) // request from block 1, with size = 16
 
         // Delay second request so that first request gets first packet
-        setTimeout(function () {
+        setTimeout(() => {
             reqClient2.end()
         }, 1)
 
-        reqClient2.on('response', function (res) {
+        reqClient2.on('response', (res) => {
             checkNormalReq(res, payloadReq2)
 
             req2Done = true
@@ -300,7 +300,7 @@ describe('blockwise2', function () {
     }
 
     it('should two parallel block2 requests should result only two requests to upper level', function (done) {
-        const checkNreq = function (nreq) {
+        const checkNreq = (nreq) => {
             expect(nreq).to.within(1, 2)
         }
 
@@ -308,14 +308,14 @@ describe('blockwise2', function () {
     })
 
     it('should have code 2.05 for all block2 messages of successful parallel requests', function (done) {
-        const checkBlock2Code = function (msg) {
+        const checkBlock2Code = (msg) => {
             const res = parse(msg)
 
             // Have correct code?
             expect(res.code).to.eql('2.05')
         }
 
-        const checkNormalRespCode = function (res) {
+        const checkNormalRespCode = (res) => {
             // Have correct code?
             expect(res.code).to.eql('2.05')
         }
@@ -324,7 +324,7 @@ describe('blockwise2', function () {
     })
 
     it('should have correct block2 option for parallel requests', function (done) {
-        const checkBlock2Option = function (msg, payloadReq1, req1Block2Num, payloadLength) {
+        const checkBlock2Option = (msg, payloadReq1, req1Block2Num, payloadLength) => {
             const res = parse(msg)
 
             // Have block2 option?
@@ -345,14 +345,14 @@ describe('blockwise2', function () {
     })
 
     it('should have correct payload in block2 messages for parallel requests', function (done) {
-        const checkBlock2Payload = function (msg, payloadReq1, req1Block2Num) {
+        const checkBlock2Payload = (msg, payloadReq1, req1Block2Num) => {
             const res = parse(msg)
 
             // Have correct payload?
             expect(res.payload).to.eql(payloadReq1.slice(req1Block2Num * 16, req1Block2Num * 16 + 16))
         }
 
-        const checkNormalRespPayload = function (res, payloadReq2) {
+        const checkNormalRespPayload = (res, payloadReq2) => {
             // Have correct payload?
             expect(res.payload).to.eql(payloadReq2.slice(1 * 16, payload.length + 1))
         }

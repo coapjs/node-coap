@@ -61,7 +61,7 @@ describe('server', function () {
 
     it('should receive a CoAP message', function (done) {
         send(generate())
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             done()
         })
     })
@@ -70,7 +70,7 @@ describe('server', function () {
         port = 5683
         server.close() // refresh
         server = coap.createServer()
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             done()
         })
         server.listen()
@@ -81,14 +81,14 @@ describe('server', function () {
         port = 5683
         server.close() // refresh
         server = coap.createServer()
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             done()
         })
 
         const sock = new events.EventEmitter()
-        sock.send = function () { }
+        sock.send = () => { }
 
-        server.listen(sock, function () {
+        server.listen(sock, () => {
             expect(server._sock).to.eql(sock)
             sock.emit('message', generate(), { address: '127.0.0.1', port: nextPort() })
         })
@@ -97,7 +97,7 @@ describe('server', function () {
     it('should use the listener passed as a parameter in the creation', function (done) {
         port = 5683
         server.close() // refresh
-        server = coap.createServer({}, function (req, res) {
+        server = coap.createServer({}, (req, res) => {
             done()
         })
         server.listen()
@@ -108,10 +108,10 @@ describe('server', function () {
         server.close() // we need to change port
         server = coap.createServer()
         port = 5683
-        server.listen(function () {
+        server.listen(() => {
             send(generate())
         })
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             done()
         })
     })
@@ -119,8 +119,8 @@ describe('server', function () {
     it('should receive a request that can be piped', function (done) {
         const buf = Buffer.alloc(25)
         send(generate({ payload: buf }))
-        server.on('request', function (req, res) {
-            req.pipe(bl(function (err, data) {
+        server.on('request', (req, res) => {
+            req.pipe(bl((err, data) => {
                 if (err) {
                     done(err)
                 } else {
@@ -134,7 +134,7 @@ describe('server', function () {
     it('should expose the payload', function (done) {
         const buf = Buffer.alloc(25)
         send(generate({ payload: buf }))
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             expect(req.payload).to.eql(buf)
             done()
         })
@@ -143,7 +143,7 @@ describe('server', function () {
     it('should include an URL in the request', function (done) {
         const buf = Buffer.alloc(25)
         send(generate({ payload: buf }))
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             expect(req).to.have.property('url', '/')
             done()
         })
@@ -152,7 +152,7 @@ describe('server', function () {
     it('should include the code', function (done) {
         const buf = Buffer.alloc(25)
         send(generate({ payload: buf }))
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             expect(req).to.have.property('code', '0.01')
             done()
         })
@@ -160,7 +160,7 @@ describe('server', function () {
 
     it('should include a rsinfo', function (done) {
         send(generate())
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             expect(req).to.have.property('rsinfo')
             expect(req.rsinfo).to.have.property('address')
             expect(req.rsinfo).to.have.property('port')
@@ -172,7 +172,7 @@ describe('server', function () {
     ;['GET', 'POST', 'PUT', 'DELETE'].forEach(function (method) {
         it('should include the \'' + method + '\' method', function (done) {
             send(generate({ code: method }))
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 expect(req).to.have.property('method', method)
                 done()
             })
@@ -190,7 +190,7 @@ describe('server', function () {
             }]
         }))
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             expect(req).to.have.property('url', '/hello/world')
             done()
         })
@@ -207,7 +207,7 @@ describe('server', function () {
             }]
         }))
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             expect(req).to.have.property('url', '/?a=b&b=c')
             done()
         })
@@ -230,7 +230,7 @@ describe('server', function () {
             }]
         }))
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             expect(req).to.have.property('url', '/hello/world?a=b&b=c')
             done()
         })
@@ -246,7 +246,7 @@ describe('server', function () {
             options: options
         }))
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             expect(req.options).to.eql(options)
             done()
         })
@@ -256,7 +256,7 @@ describe('server', function () {
         const buf = Buffer.alloc(25)
         const tok = Buffer.alloc(4)
         send(generate({ payload: buf, token: tok }))
-        client.on('message', function (msg, rinfo) {
+        client.on('message', (msg, rinfo) => {
             const result = parse(msg)
             expect(result.code).to.eql('0.00')
             expect(result.reset).to.eql(true)
@@ -265,13 +265,13 @@ describe('server', function () {
             expect(result.payload.length).to.eql(0)
             done()
         })
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.reset()
         })
     })
 
     it('should only close once', function (done) {
-        server.close(function () {
+        server.close(() => {
             server.close(done)
         })
     })
@@ -305,7 +305,7 @@ describe('server', function () {
                     }]
                 }))
 
-                server.on('request', function (req) {
+                server.on('request', (req) => {
                     expect(req.options[0].value).to.eql(format)
                     done()
                 })
@@ -319,7 +319,7 @@ describe('server', function () {
                     }]
                 }))
 
-                server.on('request', function (req) {
+                server.on('request', (req) => {
                     expect(req.headers).to.have.property(option, format)
                     done()
                 })
@@ -341,7 +341,7 @@ describe('server', function () {
                 }]
             }))
 
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 const response = parse(msg)
 
                 expect(response.code).to.equal('2.05')
@@ -349,7 +349,7 @@ describe('server', function () {
                 done()
             })
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 expect(req.headers['Content-Format']).to.equal(1542)
                 res.end()
             })
@@ -363,7 +363,7 @@ describe('server', function () {
                 }]
             }))
 
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 const response = parse(msg)
 
                 expect(response.code).to.equal('2.05')
@@ -371,7 +371,7 @@ describe('server', function () {
                 done()
             })
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 expect(req.headers['Content-Format']).to.equal(undefined)
                 res.end()
             })
@@ -387,7 +387,7 @@ describe('server', function () {
 
         function sendAndRespond (status) {
             send(generate(packet))
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 if (status) {
                     res.statusCode = status
                 }
@@ -398,7 +398,7 @@ describe('server', function () {
 
         it('should reply with a payload to a NON message', function (done) {
             sendAndRespond()
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 expect(parse(msg).payload).to.eql(Buffer.from('42'))
                 done()
             })
@@ -406,7 +406,7 @@ describe('server', function () {
 
         it('should include the original messageId', function (done) {
             sendAndRespond()
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 expect(parse(msg).messageId).to.eql(4242)
                 done()
             })
@@ -414,7 +414,7 @@ describe('server', function () {
 
         it('should include the token', function (done) {
             sendAndRespond()
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 expect(parse(msg).token).to.eql(packet.token)
                 done()
             })
@@ -422,7 +422,7 @@ describe('server', function () {
 
         it('should respond with a different code', function (done) {
             sendAndRespond('2.04')
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 expect(parse(msg).code).to.eql('2.04')
                 done()
             })
@@ -430,7 +430,7 @@ describe('server', function () {
 
         it('should respond with a numeric code', function (done) {
             sendAndRespond(204)
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 expect(parse(msg).code).to.eql('2.04')
                 done()
             })
@@ -441,12 +441,12 @@ describe('server', function () {
 
             send(generate(packet))
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 res.setOption('ETag', buf)
                 res.end('42')
             })
 
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 expect(parse(msg).options[0].name).to.eql('ETag')
                 expect(parse(msg).options[0].value).to.eql(buf)
                 done()
@@ -458,13 +458,13 @@ describe('server', function () {
 
             send(generate(packet))
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 res.setOption('ETag', Buffer.alloc(3))
                 res.setOption('ETag', buf)
                 res.end('42')
             })
 
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 expect(parse(msg).options[0].value).to.eql(buf)
                 done()
             })
@@ -473,12 +473,12 @@ describe('server', function () {
         it('should alias setOption to setHeader', function (done) {
             send(generate(packet))
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 res.setHeader('ETag', 'hello world')
                 res.end('42')
             })
 
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 expect(parse(msg).options[0].name).to.eql('ETag')
                 expect(parse(msg).options[0].value).to.eql(Buffer.from('hello world'))
                 done()
@@ -491,12 +491,12 @@ describe('server', function () {
 
             send(generate(packet))
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 res.setOption('433', [buf1, buf2])
                 res.end('42')
             })
 
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 expect(parse(msg).options[0].value).to.eql(buf1)
                 expect(parse(msg).options[1].value).to.eql(buf2)
                 done()
@@ -507,7 +507,7 @@ describe('server', function () {
             send(generate(packet))
             send(generate(packet))
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 res.end('42')
 
                 // this will error if called twice
@@ -520,11 +520,11 @@ describe('server', function () {
             let first = true
             const delay = (params.exchangeLifetime * 1000) + 1
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 if (first) {
                     res.end('42')
                     first = false
-                    setTimeout(function () {
+                    setTimeout(() => {
                         send(generate(packet))
                     }, delay)
 
@@ -541,12 +541,12 @@ describe('server', function () {
         it('should include \'ETag\' in the response options', function (done) {
             send(generate())
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 res.setOption('ETag', 'abcdefgh')
                 res.end('42')
             })
 
-            client.on('message', function (msg, rsinfo) {
+            client.on('message', (msg, rsinfo) => {
                 expect(parse(msg).options[0].name).to.eql('ETag')
                 expect(parse(msg).options[0].value).to.eql(Buffer.from('abcdefgh'))
                 done()
@@ -556,12 +556,12 @@ describe('server', function () {
         it('should include \'Content-Format\' in the response options', function (done) {
             send(generate())
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 res.setOption('Content-Format', 'text/plain')
                 res.end('42')
             })
 
-            client.on('message', function (msg, rsinfo) {
+            client.on('message', (msg, rsinfo) => {
                 expect(parse(msg).options[0].name).to.eql('Content-Format')
                 expect(parse(msg).options[0].value).to.eql(Buffer.of(0))
                 done()
@@ -570,7 +570,7 @@ describe('server', function () {
 
         it('should reply with a \'5.00\' if it cannot parse the packet', function (done) {
             send(Buffer.alloc(3))
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 expect(parse(msg).code).to.eql('5.00')
                 done()
             })
@@ -582,15 +582,15 @@ describe('server', function () {
             let messages = 0
 
             send(generate(packet))
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 res.end('42')
             })
 
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 messages++
             })
 
-            setTimeout(function () {
+            setTimeout(() => {
                 expect(messages).to.eql(1)
                 done()
             }, 45 * 1000)
@@ -608,11 +608,11 @@ describe('server', function () {
 
         it('should reply in piggyback', function (done) {
             send(generate(packet))
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 res.end('42')
             })
 
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 const response = parse(msg)
                 expect(response.ack).to.be.true // eslint-disable-line no-unused-expressions
                 expect(response.messageId).to.eql(packet.messageId)
@@ -624,7 +624,7 @@ describe('server', function () {
         it('should ack the message if it does not reply in 50ms', function (done) {
             send(generate(packet))
 
-            client.once('message', function (msg) {
+            client.once('message', (msg) => {
                 const response = parse(msg)
                 expect(response.ack).to.be.true // eslint-disable-line no-unused-expressions
                 expect(response.code).to.eql('0.00')
@@ -640,17 +640,17 @@ describe('server', function () {
             clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
 
             send(generate(packet))
-            server.on('request', function (req, res) {
-                setTimeout(function () {
+            server.on('request', (req, res) => {
+                setTimeout(() => {
                     res.end('42')
                 }, 200)
             })
 
-            client.once('message', function (msg) {
+            client.once('message', (msg) => {
                 const response = parse(msg)
                 expect(response.ack).to.be.true // eslint-disable-line no-unused-expressions
 
-                client.once('message', function (msg) {
+                client.once('message', (msg) => {
                     const response = parse(msg)
 
                     expect(response.confirmable).to.be.true // eslint-disable-line no-unused-expressions
@@ -668,19 +668,19 @@ describe('server', function () {
             let messages = 0
 
             send(generate(packet))
-            server.on('request', function (req, res) {
-                setTimeout(function () {
+            server.on('request', (req, res) => {
+                setTimeout(() => {
                     res.end('42')
                 }, 200)
             })
 
-            client.once('message', function (msg) {
-                client.on('message', function (msg) {
+            client.once('message', (msg) => {
+                client.on('message', (msg) => {
                     messages++
                 })
             })
 
-            setTimeout(function () {
+            setTimeout(() => {
                 try {
                     // original one plus 4 retries
                     expect(messages).to.eql(5)
@@ -699,14 +699,14 @@ describe('server', function () {
             let messages = 0
 
             send(generate(packet))
-            server.on('request', function (req, res) {
-                setTimeout(function () {
+            server.on('request', (req, res) => {
+                setTimeout(() => {
                     res.end('42')
                 }, 200)
             })
 
-            client.once('message', function (msg) {
-                client.on('message', function (msg) {
+            client.once('message', (msg) => {
+                client.on('message', (msg) => {
                     const res = parse(msg)
                     send(generate({
                         code: '0.00',
@@ -717,7 +717,7 @@ describe('server', function () {
                 })
             })
 
-            setTimeout(function () {
+            setTimeout(() => {
                 expect(messages).to.eql(1)
                 done()
             }, 45 * 1000)
@@ -731,15 +731,15 @@ describe('server', function () {
             let messages = 0
 
             send(generate(packet))
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 res.end('42')
             })
 
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 messages++
             })
 
-            setTimeout(function () {
+            setTimeout(() => {
                 expect(messages).to.eql(1)
                 done()
             }, 45 * 1000)
@@ -751,13 +751,13 @@ describe('server', function () {
             clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
 
             send(generate(packet))
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 // needed to avoid sending a piggyback response
-                setTimeout(function () {
+                setTimeout(() => {
                     res.end('42')
                 }, 200)
 
-                res.on('error', function (err) {
+                res.on('error', (err) => {
                     expect(err).to.have.property('retransmitTimeout', 247)
                     done()
                 })
@@ -806,11 +806,11 @@ describe('server', function () {
         ['PUT', 'POST', 'DELETE'].forEach(function (method) {
             it('should return an error when try to observe in a ' + method, function (done) {
                 doObserve(method)
-                server.on('request', function () {
+                server.on('request', () => {
                     done(new Error('A request should not be emitted'))
                 })
 
-                client.on('message', function (msg) {
+                client.on('message', (msg) => {
                     expect(parse(msg).code).to.eql('5.00')
                     done()
                 })
@@ -819,7 +819,7 @@ describe('server', function () {
 
         it('should include a rsinfo', function (done) {
             doObserve()
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 expect(req).to.have.property('rsinfo')
                 expect(req.rsinfo).to.have.property('address')
                 expect(req.rsinfo).to.have.property('port')
@@ -830,7 +830,7 @@ describe('server', function () {
 
         it('should emit a request with \'Observe\' in the headers', function (done) {
             doObserve()
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 expect(req.headers).to.have.property('Observe')
                 res.end('hello')
                 done()
@@ -840,7 +840,7 @@ describe('server', function () {
         it('should send multiple messages for multiple writes', function (done) {
             doObserve()
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 res.write('hello')
                 originalSetImmediate(function () {
                     res.end('world')
@@ -848,7 +848,7 @@ describe('server', function () {
             })
 
             // the first one is an ack
-            client.once('message', function (msg) {
+            client.once('message', (msg) => {
                 expect(parse(msg).payload.toString()).to.eql('hello')
                 expect(parse(msg).options[0].name).to.eql('Observe')
                 expect(parse(msg).options[0].value).to.eql(Buffer.of(1))
@@ -856,7 +856,7 @@ describe('server', function () {
                 expect(parse(msg).code).to.eql('2.05')
                 expect(parse(msg).ack).to.be.true // eslint-disable-line no-unused-expressions
 
-                client.once('message', function (msg) {
+                client.once('message', (msg) => {
                     expect(parse(msg).payload.toString()).to.eql('world')
                     expect(parse(msg).options[0].name).to.eql('Observe')
                     expect(parse(msg).options[0].value).to.eql(Buffer.of(2))
@@ -875,7 +875,7 @@ describe('server', function () {
 
             doObserve()
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 // the first is the current status
                 // it's in piggyback on the ack
                 res.write('hello')
@@ -883,7 +883,7 @@ describe('server', function () {
                 // the second status is on the observe
                 res.write('hello2')
 
-                res.on('finish', function () {
+                res.on('finish', () => {
                     done()
                 })
             })
@@ -894,15 +894,15 @@ describe('server', function () {
         it('should emit a \'finish\' if the client do a reset', function (done) {
             doObserve()
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 res.write('hello')
                 res.write('world')
-                res.on('finish', function () {
+                res.on('finish', () => {
                     done()
                 })
             })
 
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 const packet = parse(msg)
                 send(generate({
                     reset: true,
@@ -915,11 +915,11 @@ describe('server', function () {
         it('should send a \'RST\' to the client if the msg.reset() method is invoked', function (done) {
             doObserve()
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 res.reset()
             })
 
-            client.on('message', function (msg) {
+            client.on('message', (msg) => {
                 const result = parse(msg)
                 expect(result.code).to.eql('0.00')
                 expect(result.reset).to.eql(true)
@@ -933,7 +933,7 @@ describe('server', function () {
         it('should correctly generate two-byte long sequence numbers', function (done) {
             doObserve()
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 // hack to override the message counter
                 res._counter = 4242
 
@@ -944,10 +944,10 @@ describe('server', function () {
             })
 
             // the first one is an ack
-            client.once('message', function (msg) {
+            client.once('message', (msg) => {
                 expect(parse(msg).options[0].value).to.eql(Buffer.of(0x10, 0x93))
 
-                client.once('message', function (msg) {
+                client.once('message', (msg) => {
                     expect(parse(msg).options[0].value).to.eql(Buffer.of(0x10, 0x94))
                     done()
                 })
@@ -957,7 +957,7 @@ describe('server', function () {
         it('should correctly generate three-byte long sequence numbers', function (done) {
             doObserve()
 
-            server.on('request', function (req, res) {
+            server.on('request', (req, res) => {
                 // hack to override the message counter
                 res._counter = 65535
 
@@ -968,10 +968,10 @@ describe('server', function () {
             })
 
             // the first one is an ack
-            client.once('message', function (msg) {
+            client.once('message', (msg) => {
                 expect(parse(msg).options[0].value).to.eql(Buffer.of(1, 0, 0))
 
-                client.once('message', function (msg) {
+                client.once('message', (msg) => {
                     expect(parse(msg).options[0].value).to.eql(Buffer.of(1, 0, 1))
                     done()
                 })
@@ -989,7 +989,7 @@ describe('server', function () {
 
             server.listen(port)
 
-            server.on('request', function (msg) {
+            server.on('request', (msg) => {
                 done()
             })
 
@@ -1029,14 +1029,14 @@ describe('validate custom server options', function () {
         let messages = 0
         server = coap.createServer({ piggybackReplyMs: piggyBackTimeout })
         server.listen(port)
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end('42')
         })
-        client.on('message', function (msg) {
+        client.on('message', (msg) => {
             messages++
         })
         send(Buffer.alloc(3))
-        setTimeout(function () {
+        setTimeout(() => {
             expect(messages).to.eql(1)
             expect(server._options.piggybackReplyMs).to.eql(piggyBackTimeout)
             done()
@@ -1100,10 +1100,10 @@ describe('validate custom server options', function () {
     it('should send ACK for non-confirmable message, sendAcksForNonConfirmablePackets=true', function (done) {
         server = coap.createServer({ sendAcksForNonConfirmablePackets: true })
         server.listen(port)
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end('42')
         })
-        client.on('message', function (msg) {
+        client.on('message', (msg) => {
             done()
         })
         sendNonConfirmableMessage()
@@ -1113,14 +1113,14 @@ describe('validate custom server options', function () {
         let messages = 0
         server = coap.createServer({ sendAcksForNonConfirmablePackets: false })
         server.listen(port)
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end('42')
         })
-        client.on('message', function (msg) {
+        client.on('message', (msg) => {
             messages++
         })
         sendNonConfirmableMessage()
-        setTimeout(function () {
+        setTimeout(() => {
             expect(messages).to.eql(0)
             done()
         }, 30)
@@ -1129,10 +1129,10 @@ describe('validate custom server options', function () {
     it('should send ACK for confirmable message, sendAcksForNonConfirmablePackets=true', function (done) {
         server = coap.createServer({ sendAcksForNonConfirmablePackets: true })
         server.listen(port)
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end('42')
         })
-        client.on('message', function (msg) {
+        client.on('message', (msg) => {
             done()
         })
         sendConfirmableMessage()
@@ -1178,7 +1178,7 @@ describe('server LRU', function () {
 
     it('should remove old packets after < exchangeLifetime x 1.5', function (done) {
         send(generate(packet))
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end()
 
             expect(server._lru.itemCount, 1)
@@ -1233,7 +1233,7 @@ describe('server block cache', function () {
 
     it('should have block1Cache return {}', function (done) {
         send(generate(packet))
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end()
             expect(server._block1Cache._factory()).to.eql({})
             done()
@@ -1242,7 +1242,7 @@ describe('server block cache', function () {
 
     it('should have block2Cache return null', function (done) {
         send(generate(packet))
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end()
             expect(server._block2Cache._factory()).to.eql(null)
             done()
@@ -1257,7 +1257,7 @@ describe('Client Identifier', function () {
         client,
         clock
 
-    const packet = function (key) {
+    const packet = (key) => {
         return {
             confirmable: true,
             messageId: 4242,
@@ -1306,12 +1306,12 @@ describe('Client Identifier', function () {
         let messagesSent = 0
         let messagesReceived = 0
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end(`${messagesSent}`)
             messagesSent += 1
         })
 
-        client.on('message', function (msg) {
+        client.on('message', (msg) => {
             const result = parse(msg)
             expect(result.payload.toString(), '0')
             messagesReceived += 1
@@ -1329,12 +1329,12 @@ describe('Client Identifier', function () {
         let messagesSent = 0
         let messagesReceived = 0
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end(`${messagesSent}`)
             messagesSent += 1
         })
 
-        client.on('message', function (msg) {
+        client.on('message', (msg) => {
             const result = parse(msg)
             expect(result.payload.toString(), `${messagesReceived}`)
             messagesReceived += 1

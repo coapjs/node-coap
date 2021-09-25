@@ -25,13 +25,13 @@ describe('end-to-end', function () {
     server.on('error', function() {})
   }) */
 
-    process.on('uncaughtException', function (err) {
+    process.on('uncaughtException', (err) => {
         console.log('Caught exception: ' + err)
     })
 
     it('should receive a request at a path with some query', function (done) {
         coap.request('coap://localhost:' + port + '/abcd/ef/gh/?foo=bar&beep=bop').end()
-        server.on('request', function (req) {
+        server.on('request', (req) => {
             expect(req.url).to.eql('/abcd/ef/gh?foo=bar&beep=bop')
             setImmediate(done)
         })
@@ -39,12 +39,12 @@ describe('end-to-end', function () {
 
     it('should return code 2.05 by default', function (done) {
         const req = coap.request('coap://localhost:' + port + '/abcd/ef/gh/?foo=bar&beep=bop').end()
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             expect(res.code).to.eql('2.05')
             setImmediate(done)
         })
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end('hello')
         })
     })
@@ -52,13 +52,13 @@ describe('end-to-end', function () {
     it('should return code using res.code attribute', function (done) {
         coap
             .request('coap://localhost:' + port)
-            .on('response', function (res) {
+            .on('response', (res) => {
                 expect(res.code).to.eql('4.04')
                 setImmediate(done)
             })
             .end()
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.code = '4.04'
             res.end('hello')
         })
@@ -67,13 +67,13 @@ describe('end-to-end', function () {
     it('should return code using res.statusCode attribute', function (done) {
         coap
             .request('coap://localhost:' + port)
-            .on('response', function (res) {
+            .on('response', (res) => {
                 expect(res.code).to.eql('4.04')
                 setImmediate(done)
             })
             .end()
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.statusCode = '4.04'
             res.end('hello')
         })
@@ -85,17 +85,17 @@ describe('end-to-end', function () {
             observe: true
         }).end()
 
-        req.on('response', function (res) {
-            res.once('data', function (data) {
+        req.on('response', (res) => {
+            res.once('data', (data) => {
                 expect(data.toString()).to.eql('hello')
-                res.once('data', function (data) {
+                res.once('data', (data) => {
                     expect(data.toString()).to.eql('world')
                     done()
                 })
             })
         })
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.write('hello')
             res.end('world')
         })
@@ -107,12 +107,12 @@ describe('end-to-end', function () {
             observe: true
         }).end()
 
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             expect(res.code).to.eql('4.04')
             done()
         })
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.statusCode = '4.04'
             res.end()
         })
@@ -124,13 +124,13 @@ describe('end-to-end', function () {
             observe: true
         }).end()
 
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             expect(res.code).to.eql('4.04')
             res.on('end', done)
             res.resume()
         })
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.statusCode = '4.04'
             res.end()
         })
@@ -144,7 +144,7 @@ describe('end-to-end', function () {
             pathname: '/\u210e/\u0065\u0301'
         }).end()
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             expect(req.url).to.equal('/\u210e/\u00e9')
             done()
             res.end()
@@ -163,7 +163,7 @@ describe('end-to-end', function () {
                     req.setOption(option, format)
                     req.end()
 
-                    server.once('request', function (req) {
+                    server.once('request', (req) => {
                         expect(req.options[0].name).to.eql(option)
                         expect(req.options[0].value).to.eql(format)
                         done()
@@ -180,7 +180,7 @@ describe('end-to-end', function () {
 
                     coap.request(req).end()
 
-                    server.once('request', function (req) {
+                    server.once('request', (req) => {
                         expect(req.options[0].name).to.eql(option)
                         expect(req.options[0].value).to.eql(format)
                         done()
@@ -197,7 +197,7 @@ describe('end-to-end', function () {
 
                     coap.request(req).end()
 
-                    server.once('request', function (req) {
+                    server.once('request', (req) => {
                         expect(req.headers[option]).to.eql(format)
                         done()
                     })
@@ -208,7 +208,7 @@ describe('end-to-end', function () {
                     req.setOption(option, format)
                     req.end()
 
-                    server.once('request', function (req) {
+                    server.once('request', (req) => {
                         expect(req.headers[option]).to.eql(format)
                         done()
                     })
@@ -221,12 +221,12 @@ describe('end-to-end', function () {
                 const req = coap.request('coap://localhost:' + port)
                 req.end()
 
-                server.once('request', function (req, res) {
+                server.once('request', (req, res) => {
                     res.setOption('Content-Format', format)
                     res.end()
                 })
 
-                req.on('response', function (res) {
+                req.on('response', (res) => {
                     expect(res.headers['Content-Format']).to.eql(format)
                     done()
                 })
@@ -240,7 +240,7 @@ describe('end-to-end', function () {
         req.setOption('Content-Format', 'application/json; charset=utf8')
         req.end()
 
-        server.once('request', function (req) {
+        server.once('request', (req) => {
             expect(req.options[0].name).to.equal('Content-Format')
             expect(req.options[0].value).to.equal('application/json')
             done()
@@ -253,7 +253,7 @@ describe('end-to-end', function () {
         req.setOption('Max-Age', 26763)
         req.end()
 
-        server.once('request', function (req) {
+        server.once('request', (req) => {
             expect(req.options[0].name).to.equal('Max-Age')
             expect(req.options[0].value).to.equal(26763)
             done()
@@ -263,12 +263,12 @@ describe('end-to-end', function () {
     it('should provide a writeHead() method', function (done) {
         const req = coap.request('coap://localhost:' + port)
         req.end()
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             expect(res.headers['Content-Format']).to.equal('application/json')
             done()
         })
 
-        server.once('request', function (req, res) {
+        server.once('request', (req, res) => {
             res.writeHead(200, { 'Content-Format': 'application/json' })
             res.write(JSON.stringify({}))
             res.end()
@@ -281,12 +281,12 @@ describe('end-to-end', function () {
             method: 'PUT'
         }).end()
 
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             expect(res.headers).to.have.property('Location-Path', '/hello')
             done()
         })
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.setOption('Location-Path', '/hello')
             res.end('hello')
         })
@@ -298,12 +298,12 @@ describe('end-to-end', function () {
             method: 'PUT'
         }).end()
 
-        req.on('response', function (res) {
+        req.on('response', (res) => {
             expect(res.headers).to.have.property('Location-Query', 'a=b')
             done()
         })
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.setOption('Location-Query', 'a=b')
             res.end('hello')
         })
@@ -324,17 +324,17 @@ describe('end-to-end', function () {
         }).end()
         let completed = 2
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.write('hello')
-            setTimeout(function () {
+            setTimeout(() => {
                 res.end('world')
             }, 10)
         })
 
-        ;[req1, req2].forEach(function (req) {
+        ;[req1, req2].forEach((req) => {
             let local = 2
-            req.on('response', function (res) {
-                res.on('data', function (data) {
+            req.on('response', (res) => {
+                res.on('data', (data) => {
                     if (--local === 0) {
                         --completed
                     }
@@ -360,7 +360,7 @@ describe('end-to-end', function () {
         }).end()
         let first
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end('hello')
             if (!first) {
                 first = req.rsinfo
@@ -381,7 +381,7 @@ describe('end-to-end', function () {
         }).end()
         let first
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end('hello')
             if (!first) {
                 first = req.rsinfo
@@ -391,8 +391,8 @@ describe('end-to-end', function () {
             }
         })
 
-        req1.on('response', function () {
-            setImmediate(function () {
+        req1.on('response', () => {
+            setImmediate(() => {
                 coap.request({
                     port: port,
                     method: 'GET',
@@ -411,7 +411,7 @@ describe('end-to-end', function () {
             agent: agent
         }).end()
 
-        server.on('request', function (req, res) {
+        server.on('request', (req, res) => {
             res.end('hello')
             expect(req.rsinfo.port).eql(3636)
             done()
@@ -423,7 +423,7 @@ describe('end-to-end', function () {
         req.setOption('Cache-Control', 'private')
         req.end()
 
-        server.on('request', function (req) {
+        server.on('request', (req) => {
             expect(req.headers).not.to.have.property('Cache-Control')
             done()
         })
