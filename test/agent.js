@@ -16,7 +16,7 @@ const request = coap.request
 
 describe('Agent config', function () {
     it('should get agent instance through custom config', function (done) {
-        const agent = coap.Agent({ type: 'udp4', port: 62754 })
+        const agent = new coap.Agent({ type: 'udp4', port: 62754 })
         expect(agent._sock.type).to.eql('udp4')
         expect(agent._sock._bindState).to.eql(1)
         done()
@@ -24,7 +24,7 @@ describe('Agent config', function () {
 
     it('should get agent instance through custom socket', function (done) {
         const socket = dgram.createSocket('udp6')
-        const agent = coap.Agent({ socket, type: 'udp4', port: 62754 })
+        const agent = new coap.Agent({ socket, type: 'udp4', port: 62754 })
         expect(agent._opts.type).to.eql('udp6')
         expect(agent._sock.type).to.eql('udp6')
         expect(agent._sock._bindState).to.eql(0)

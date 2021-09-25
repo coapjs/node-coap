@@ -40,7 +40,9 @@ module.exports.request = function (url) {
     return agent.request(url)
 }
 
-module.exports.createServer = Server
+module.exports.createServer = function (options, listener) {
+    return new Server(options, listener)
+}
 
 module.exports.Agent = Agent
 module.exports.globalAgent = globalAgent

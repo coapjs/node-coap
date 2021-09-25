@@ -22,12 +22,12 @@ describe('RetrySend', function () {
     })
 
     it('should use default retry count, using the retry_send factory method', function () {
-        const result = RetrySend({}, 1234, 'localhost')
+        const result = new RetrySend({}, 1234, 'localhost')
         expect(result._maxRetransmit).to.eql(parameters.maxRetransmit)
     })
 
     it('should use a custom retry count, using the retry_send factory method', function () {
-        const result = RetrySend({}, 1234, 'localhost', 55)
+        const result = new RetrySend({}, 1234, 'localhost', 55)
         expect(result._maxRetransmit).to.eql(55)
     })
 })
