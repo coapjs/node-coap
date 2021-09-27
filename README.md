@@ -226,6 +226,7 @@ The constructor can be given an optional options object, containing one of the f
   piggyback response. Default 50.
 * `sendAcksForNonConfirmablePackets`: Optional. Use this to suppress sending ACK messages for non-confirmable packages
 * `clientIdentifier`: Optional. If specified, it should be a callback function with a signature like `clientIdentifier(request)`, where request is an `IncomingMessage`. The function should return a string that the caches can assume will uniquely identify the client.
+* `reuseAddr`: Optional. Use this to specify whether it should be possible to have multiple server instances listening to the same port. Default `true`.
 
 #### Event: 'request'
 
