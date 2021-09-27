@@ -3,8 +3,10 @@
   "version": "0.25.0",
   "description": "A CoAP library for node modelled after 'http'",
   "main": "index.js",
+  "types": "./index.d.ts",
   "scripts": {
-    "test": "nyc mocha --exit",
+    "tstest": "tsc && node ./dist/test.js",
+    "test": "nyc mocha --exit && npm run tstest",
     "coverage": "nyc report --reporter=lcov --reporter=text-summary",
     "lint": "standardx --verbose | snazzy",
     "lint:fix": "standardx --fix"
@@ -45,9 +47,12 @@
     "sinon": "^11.1.2",
     "snazzy": "^9.0.0",
     "standardx": "^7.0.0",
-    "timekeeper": "^2.2.0"
+    "timekeeper": "^2.2.0",
+    "typescript": "^4.4.3"
   },
   "dependencies": {
+    "@types/bl": "^5.0.1",
+    "@types/node": "^16.10.1",
     "bl": "^5.0.0",
     "capitalize": "^2.0.3",
     "coap-packet": "^1.0.0",
