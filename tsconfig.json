@@ -3,9 +3,10 @@
       "strictNullChecks": true,
       "target": "es5",
       "module": "commonjs",
+      "outDir": "dist",
       "lib": [
           "es5"
-      ],
-      "noEmit": true
-  }
+      ]
+  },
+  "files": ["index.d.ts", "ts/test.ts"]
 }

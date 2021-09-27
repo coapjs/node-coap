@@ -44,3 +44,6 @@ lib-cov
 
 #local builds
 *.tgz
+
+# typescript output
+dist

@@ -5,7 +5,8 @@
   "main": "index.js",
   "types": "./index.d.ts",
   "scripts": {
-    "test": "nyc mocha --exit",
+    "tstest": "tsc && node ./dist/test.js",
+    "test": "nyc mocha --exit && npm run tstest",
     "coverage": "nyc report --reporter=lcov --reporter=text-summary",
     "lint": "standardx --verbose | snazzy",
     "lint:fix": "standardx --fix"
