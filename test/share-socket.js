@@ -8,7 +8,7 @@
 
 /* global nextPort */
 
-const coap = require('../')
+const coap = require('../index')
 const sinon = require('sinon')
 const originalSetImmediate = setImmediate
 

@@ -6,7 +6,7 @@
  * See the included LICENSE file for more details.
  */
 
-const coap = require('../')
+const coap = require('../index')
 const parameters = coap.parameters
 const RetrySend = require('../lib/retry_send')
 

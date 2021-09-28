@@ -8,7 +8,7 @@
 
 /* global nextPort */
 
-const coap = require('../')
+const coap = require('../index')
 const parse = require('coap-packet').parse
 const generate = require('coap-packet').generate
 const dgram = require('dgram')

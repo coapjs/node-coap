@@ -8,7 +8,7 @@
 
 /* global nextPort */
 
-const coap = require('../')
+const coap = require('../index')
 const toBinary = require('../lib/option_converter').toBinary
 const parse = require('coap-packet').parse
 const generate = require('coap-packet').generate

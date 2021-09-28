@@ -8,7 +8,7 @@
 
 /* global nextPort */
 
-const coap = require('../')
+const coap = require('../index')
 
 describe('end-to-end', function () {
     let server,

@@ -6,7 +6,7 @@
  * See the included LICENSE file for more details.
  */
 
-const coap = require('../')
+const coap = require('../index')
 const parameters = coap.parameters
 
 describe('Parameters', function () {
