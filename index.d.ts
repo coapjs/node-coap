@@ -1,7 +1,16 @@
+/*
+ * Copyright (c) 2021 node-coap contributors.
+ *
+ * node-coap is licensed under an MIT +no-false-attribs license.
+ * All rights not explicitly granted in the MIT license are reserved.
+ * See the included LICENSE file for more details.
+ */
+
 import Agent from './lib/agent'
 import Server from './lib/server'
 import IncomingMessage from './lib/incoming_message'
 import OutgoingMessage from './lib/outgoing_message'
+import ObserveReadStream from './lib/observe_read_stream'
 import { CoapMethod, OptionName } from 'coap-packet'
 import { Socket } from 'dgram'
 
@@ -64,7 +73,7 @@ export const parameters: Parameters
 export const globalAgent: Agent
 export const globalAgentIPv6: Agent
 
-export { IncomingMessage, OutgoingMessage, Agent, Server }
+export { IncomingMessage, OutgoingMessage, ObserveReadStream, Agent, Server }
 
 export function requestListener(req: IncomingMessage, res: OutgoingMessage): void
 export function updateTiming(values: Parameters): void
