@@ -8,7 +8,8 @@
 
 import { OptionName, ParsedPacket } from 'coap-packet'
 import { Writable } from 'stream'
-import { OptionValue, setOption } from '..'
+import { OptionValue } from '..'
+import { setOption } from './helpers'
 
 export default class OutgoingMessage extends Writable {
     _packet: ParsedPacket

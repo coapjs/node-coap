@@ -8,7 +8,7 @@
 
 import { Writable } from 'stream'
 import { ParsedPacket } from 'coap-packet'
-import { setOption } from '../index'
+import { setOption } from './helpers'
 
 // TODO: Inherit from OutgoingMessage
 export default class ObserveWriteStream extends Writable {
