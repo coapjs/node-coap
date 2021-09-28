@@ -327,7 +327,7 @@ them by adding a `req.setOption('Block2', Buffer.of(0x2))` to the
 output of [request](#request).
 
 And since v0.25.0, this library supports rudimentry type 1 blockwise transfers, you can trigger
-them by adding a `req.setOption('Block1', new Buffer([0x2]))` to the
+them by adding a `req.setOption('Block1', Buffer.of(0x2))` to the
 options of [request](#request).
 
 (The hex value 0x2 specifies the size of the blocks to transfer with.
