@@ -2,6 +2,7 @@ import Agent from './lib/agent'
 import Server from './lib/server'
 import IncomingMessage from './lib/incoming_message'
 import OutgoingMessage from './lib/outgoing_message'
+import ObserveReadStream from './lib/observe_read_stream'
 import { CoapMethod, OptionName } from 'coap-packet'
 import { Socket } from 'dgram'
 
@@ -64,7 +65,7 @@ export const parameters: Parameters
 export const globalAgent: Agent
 export const globalAgentIPv6: Agent
 
-export { IncomingMessage, OutgoingMessage, Agent, Server }
+export { IncomingMessage, OutgoingMessage, ObserveReadStream, Agent, Server }
 
 export function requestListener(req: IncomingMessage, res: OutgoingMessage): void
 export function updateTiming(values: Parameters): void
