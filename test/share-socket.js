@@ -149,7 +149,8 @@ describe('share-socket', function () {
     describe('formats', function () {
         const formats = ['text/plain', 'application/link-format',
             'application/xml', 'application/octet-stream',
-            'application/exi', 'application/json', 'application/cbor']
+            'application/exi', 'application/json', 'application/cbor',
+            'application/pkcs7-mime; smime-type=server-generated-key']
 
     ;['Accept', 'Content-Format'].forEach(function (option) {
             formats.forEach(function (format) {
