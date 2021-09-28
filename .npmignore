@@ -1,1 +1,8 @@
 *~
+*.swp
+.vscode
+*code-workspace
+.idea
+.nyc_output
+coverage
+*.tgz
