@@ -6,6 +6,7 @@
  * See the included LICENSE file for more details.
  */
 
+import { Writable } from 'readable-stream'
 import {
     request,
     createServer,
@@ -67,7 +68,8 @@ createServer(serverOptions, (req: IncomingMessage, res: OutgoingMessage) => {
 }).listen(() => {
     const req = request(requestOptions)
 
-    req.on('response', (res: IncomingMessage) => {
+    req.on('response', (res: any) => {
+        // FIXME: Typed versions currently do not work
         res.pipe(process.stdout)
         res.on('end', () => {
             process.exit(0)
