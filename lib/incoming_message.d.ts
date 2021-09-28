@@ -1,13 +1,12 @@
 import { Readable } from 'stream'
-import { ParsedPacket, CoapMethod, OptionName } from 'coap-packet'
+import { ParsedPacket, OptionName } from 'coap-packet'
 import { AddressInfo } from 'net'
 import { Socket } from 'dgram'
-import { Option, OptionValue } from '..'
-
-
+import { Option } from '..'
 
 export default class IncomingMessage extends Readable {
     _packet: ParsedPacket
+    _payloadIndex: number
     url: string
     payload: Buffer
     options: Array<Option>
