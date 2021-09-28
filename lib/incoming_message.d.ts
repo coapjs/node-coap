@@ -10,7 +10,7 @@ import { Readable } from 'stream'
 import { ParsedPacket, OptionName } from 'coap-packet'
 import { AddressInfo } from 'net'
 import { Socket } from 'dgram'
-import { Option } from '..'
+import { Option } from '../index'
 
 export default class IncomingMessage extends Readable {
     _packet: ParsedPacket

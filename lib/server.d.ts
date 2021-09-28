@@ -7,14 +7,14 @@
  */
 
 import { EventEmitter } from 'events'
-import { CoapServerOptions } from '..'
+import { CoapServerOptions, requestListener } from '../index'
 import { AddressInfo } from 'net'
 import { ParsedPacket } from 'coap-packet'
 import { Socket } from 'dgram'
 
 export default class Server extends EventEmitter {
     _sock: Socket
-    constructor (options: CoapServerOptions, listener: Function)
+    constructor (options?: CoapServerOptions | typeof requestListener, listener?: typeof requestListener)
     _sendError (payload: Buffer, rsinfo: AddressInfo, packet: ParsedPacket): void
     _sendProxied (packet: ParsedPacket, proxyUri: string, callback?: (error: Error | null, bytes: number) => void): void
     _sendReverseProxied (packet: ParsedPacket, rsinfo: AddressInfo, callback?: (error: Error | null, bytes: number) => void): void
