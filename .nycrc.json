@@ -1,4 +1,4 @@
 {
     "reporter": [ "html", "text-summary" ],
-    "exclude": "dist/test"
+    "extends": "@istanbuljs/nyc-config-typescript"
 }
