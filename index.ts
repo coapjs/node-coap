@@ -9,16 +9,13 @@
 import { CoapMethod, OptionName } from 'coap-packet'
 import { Socket } from 'dgram'
 
-const ObserveReadStream = require("./lib/observe_read_stream")
-const ObserveWriteStream = require("./lib/observe_write_stream")
-const OutgoingMessage = require("./lib/outgoing_message")
-const IncomingMessage = require("./lib/incoming_message")
-const Server = require("./lib/server")
-const Agent = require("./lib/agent")
-
-const optionsConv = require('./lib/option_converter')
-const parameters = require('./lib/parameters')
-const net = require('net')
+import ObserveReadStream = require('./lib/observe_read_stream')
+import ObserveWriteStream = require('./lib/observe_write_stream')
+import OutgoingMessage = require('./lib/outgoing_message')
+import IncomingMessage = require('./lib/incoming_message')
+import Server = require('./lib/server')
+import Agent = require('./lib/agent')
+import net = require('net')
 
 
 export type OptionValue = string | number | Buffer | Array<Buffer>
@@ -52,7 +49,7 @@ export interface CoapRequestParams {
     query?: string,
     options?: Partial<Record<OptionName, OptionValue>>,
     headers?: Partial<Record<OptionName, OptionValue>>,
-    agent?: typeof Agent | false,
+    agent?: Agent | false,
     proxyUri?: string,
     multicast?: boolean,
     multicastTimeout?: number,
@@ -66,7 +63,7 @@ export interface CoapServerOptions {
     multicastInterface?: string,
     piggybackReplyMs?: number,
     sendAcksForNonConfirmablePackets?: boolean,
-    clientIdentifier?: (request: typeof IncomingMessage) => string,
+    clientIdentifier?: (request: IncomingMessage) => string,
     reuseAddr?: boolean
 }
 
@@ -108,8 +105,8 @@ function _parseUrl (url: string) {
 export const globalAgent = new Agent({ type: 'udp4' })
 export const globalAgentV6 = new Agent({ type: 'udp6' })
 
-export function request (requestParams: CoapRequestParams) {
-    let agent: typeof Agent
+export function request (requestParams: CoapRequestParams | string) {
+    let agent: Agent
 
     if (typeof requestParams === 'string') {
         requestParams = _parseUrl(requestParams)
@@ -132,17 +129,15 @@ export function request (requestParams: CoapRequestParams) {
     return agent.request(requestParams)
 }
 
-export declare function requestListener(req: typeof IncomingMessage, res: typeof OutgoingMessage): void
+export declare function requestListener(req: IncomingMessage, res: OutgoingMessage): void
 
-module.exports.createServer = (options?: CoapServerOptions | typeof requestListener, listener?: typeof requestListener) => {
+export function createServer (options?: CoapServerOptions | typeof requestListener, listener?: typeof requestListener) {
     return new Server(options, listener)
 }
 
+import{ registerOption, registerFormat, ignoreOption } from './lib/option_converter'
+const parameters = require('./lib/parameters')
+const updateTiming = parameters.refreshTiming
+const defaultTiming = parameters.defaultTiming
 
-module.exports.registerOption = optionsConv.registerOption
-module.exports.registerFormat = optionsConv.registerFormat
-module.exports.ignoreOption = optionsConv.ignoreOption
-
-module.exports.parameters = parameters
-module.exports.updateTiming = parameters.refreshTiming
-module.exports.defaultTiming = parameters.defaultTiming
+export { registerOption, registerFormat, ignoreOption, parameters, updateTiming, defaultTiming }
