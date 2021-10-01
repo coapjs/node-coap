@@ -439,7 +439,7 @@ describe('share-socket', function () {
         }
 
         req.on('error', (err) => {
-            expect(err).to.have.property('message', 'No reply in 247s')
+            expect(err).to.have.property('message', 'No reply in 247 seconds.')
             clock.restore()
             done()
         })

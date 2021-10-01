@@ -67,7 +67,8 @@ createServer(serverOptions, (req: IncomingMessage, res: OutgoingMessage) => {
 }).listen(() => {
     const req = request(requestOptions)
 
-    req.on('response', (res: IncomingMessage) => {
+    // TODO: Type IncomingMessage does not work with pipe yet
+    req.on('response', (res: any) => {
         res.pipe(process.stdout)
         res.on('end', () => {
             process.exit(0)

@@ -858,7 +858,7 @@ describe('request', function () {
             })
 
             req.on('timeout', (err) => {
-                expect(err).to.have.property('message', 'No reply in 202s')
+                expect(err).to.have.property('message', 'No reply in 202 seconds.')
                 expect(err).to.have.property('retransmitTimeout', 202)
                 done()
             })
@@ -954,7 +954,7 @@ describe('request', function () {
             const req = doReq()
 
             req.on('error', (err) => {
-                expect(err).to.have.property('message', 'No reply in 247s')
+                expect(err).to.have.property('message', 'No reply in 247 seconds.')
                 done()
             })
 
