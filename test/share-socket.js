@@ -8,7 +8,7 @@
 
 const { nextPort } = require('./common')
 
-const coap = require('../')
+const coap = require('../index')
 const sinon = require('sinon')
 const originalSetImmediate = setImmediate
 const { expect } = require('chai')

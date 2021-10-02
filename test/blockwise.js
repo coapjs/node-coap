@@ -8,7 +8,7 @@
 
 const { nextPort } = require('./common')
 
-const coap = require('../')
+const coap = require('../index')
 const parse = require('coap-packet').parse
 const generate = require('coap-packet').generate
 const getOption = require('../lib/helpers').getOption

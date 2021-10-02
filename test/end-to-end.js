@@ -8,7 +8,7 @@
 
 const { nextPort } = require('./common')
 
-const coap = require('../')
+const coap = require('../index')
 const { expect } = require('chai')
 
 describe('end-to-end', function () {
