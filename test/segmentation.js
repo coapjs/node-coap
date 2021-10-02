@@ -83,7 +83,7 @@ describe('Segmentation', () => {
 
             }
             const v = new segment.SegmentedTransmission(1, req, { payload: [1] })
-            v.receiveACK(1, { size: 1 })
+            v.receiveACK({}, { size: 1, more: 0, num: 0 })
             v.totalLength = 0
             v.currentByte = 0
             expect(v.resendCount).to.eql(0)
