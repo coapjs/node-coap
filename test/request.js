@@ -506,7 +506,7 @@ describe('request', function () {
                 messageId: packet.messageId,
                 code: '0.00',
                 ack: true,
-                payload: 'this payload invalidates empty message'
+                payload: Buffer.from('this payload invalidates empty message')
             })
             expect(packet.code).to.be.eq('0.01')
             messages++

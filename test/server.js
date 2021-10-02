@@ -61,7 +61,7 @@ describe('server', function () {
     }
 
     it('should receive a CoAP message', function (done) {
-        send(generate())
+        send(generate({}))
         server.on('request', (req, res) => {
             done()
         })
@@ -75,7 +75,7 @@ describe('server', function () {
             done()
         })
         server.listen()
-        send(generate())
+        send(generate({}))
     })
 
     it('should use a custom socket passed to listen()', function (done) {
@@ -91,7 +91,7 @@ describe('server', function () {
 
         server.listen(sock, () => {
             expect(server._sock).to.eql(sock)
-            sock.emit('message', generate(), { address: '127.0.0.1', port: nextPort() })
+            sock.emit('message', generate({}), { address: '127.0.0.1', port: nextPort() })
         })
     })
 
@@ -102,7 +102,7 @@ describe('server', function () {
             done()
         })
         server.listen()
-        send(generate())
+        send(generate({}))
     })
 
     it('should listen by default to 5683', function (done) {
@@ -110,7 +110,7 @@ describe('server', function () {
         server = coap.createServer()
         port = 5683
         server.listen(() => {
-            send(generate())
+            send(generate({}))
         })
         server.on('request', (req, res) => {
             done()
@@ -121,7 +121,7 @@ describe('server', function () {
         const buf = Buffer.alloc(25)
         send(generate({ payload: buf }))
         server.on('request', (req, res) => {
-            req.pipe(bl((err, data) => {
+            req.pipe(new bl((err, data) => {
                 if (err != null) {
                     done(err)
                 } else {
@@ -160,7 +160,7 @@ describe('server', function () {
     })
 
     it('should include a rsinfo', function (done) {
-        send(generate())
+        send(generate({}))
         server.on('request', (req, res) => {
             expect(req).to.have.property('rsinfo')
             expect(req.rsinfo).to.have.property('address')
@@ -557,7 +557,7 @@ describe('server', function () {
         })
 
         it('should include \'ETag\' in the response options', function (done) {
-            send(generate())
+            send(generate({}))
 
             server.on('request', (req, res) => {
                 res.setOption('ETag', 'abcdefgh')
@@ -572,7 +572,7 @@ describe('server', function () {
         })
 
         it('should include \'Content-Format\' in the response options', function (done) {
-            send(generate())
+            send(generate({}))
 
             server.on('request', (req, res) => {
                 res.setOption('Content-Format', 'text/plain')

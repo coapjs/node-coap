@@ -40,7 +40,7 @@ describe('IPv6', function () {
         it('should receive a CoAP message specifying the type', function (done) {
             server = coap.createServer({ type: 'udp6' })
             server.listen(port, () => {
-                send(generate())
+                send(generate({}))
                 server.on('request', (req, res) => {
                     done()
                 })
@@ -50,7 +50,7 @@ describe('IPv6', function () {
         it('should automatically discover the type based on the host', function (done) {
             server = coap.createServer()
             server.listen(port, '::1', () => {
-                send(generate())
+                send(generate({}))
                 server.on('request', (req, res) => {
                     done()
                 })
