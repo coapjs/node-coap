@@ -1199,14 +1199,14 @@ describe('server LRU', function () {
         server.on('request', (req, res) => {
             res.end()
 
-            expect(server._lru.itemCount, 1)
+            expect(server._lru.itemCount).to.be.equal(1)
 
             clock.tick(params.exchangeLifetime * 500)
 
-            expect(server._lru.itemCount, 1)
+            expect(server._lru.itemCount).to.be.equal(1)
 
             clock.tick(params.exchangeLifetime * 1000)
-            expect(server._lru.itemCount, 0)
+            expect(server._lru.itemCount).to.be.equal(0)
             done()
         })
     })
