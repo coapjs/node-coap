@@ -19,8 +19,8 @@ describe('Helpers', () => {
     describe('Has Options', () => {
         it('Should return true', (done) => {
             const options = [
-                { name: 'test' },
-                { name: 'test2' }
+                { name: 'test', value: 'hello' },
+                { name: 'test2', value: 'world' }
             ]
             expect(hasOption(options, 'test')).to.eql(true)
             setImmediate(done)
@@ -28,7 +28,7 @@ describe('Helpers', () => {
 
         it('Should return null', (done) => {
             const options = [
-                { name: 'test2' }
+                { name: 'test2', value: 'world' }
             ]
             expect(hasOption(options, 'test')).to.eql(null)
             setImmediate(done)
