@@ -33,7 +33,15 @@ export interface Parameters {
     piggybackReplyMs?: number,
     coapPort?: number,
     maxPacketSize?: number,
-    sendAcksForNonConfirmablePackets?: boolean
+    sendAcksForNonConfirmablePackets?: boolean,
+    pruneTimerPeriod?: number,
+    maxTransmitSpan?: number,
+    maxTransmitWait?: number,
+    processingDelay?: number,
+    exchangeLifetime?: number,
+    maxRTT?: number,
+    defaultTiming?(): void,
+    refreshTiming?(parameters?: Parameters): void,
 }
 
 export interface CoapRequestParams {
