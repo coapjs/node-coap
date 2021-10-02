@@ -86,6 +86,7 @@ describe('server', function () {
             done()
         })
 
+        /** @type {any} */
         const sock = new events.EventEmitter()
         sock.send = () => { }
 
@@ -1068,7 +1069,9 @@ describe('validate custom server options', function () {
     })
 
     it('ignore invalid piggyBackTimeout time and use default (50ms)', function (done) {
-        server = coap.createServer({ piggybackReplyMs: 'foo' })
+        /** @type {any} */
+        const input = 'foo'
+        server = coap.createServer({ piggybackReplyMs: input })
         expect(server._options.piggybackReplyMs).to.eql(50)
         done()
     })
@@ -1092,7 +1095,9 @@ describe('validate custom server options', function () {
     })
 
     it('define invalid sendAcksForNonConfirmablePackets setting', function (done) {
-        server = coap.createServer({ sendAcksForNonConfirmablePackets: 'moo' })
+        /** @type {any} */
+        const input = 'moo'
+        server = coap.createServer({ sendAcksForNonConfirmablePackets: input })
         expect(server._options.sendAcksForNonConfirmablePackets).to.eql(true)
         done()
     })
