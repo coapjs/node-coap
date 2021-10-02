@@ -6,6 +6,7 @@
  * See the included LICENSE file for more details.
  */
 
+const toCode = require('../lib/helpers').toCode
 const getOption = require('../lib/helpers').getOption
 const hasOption = require('../lib/helpers').hasOption
 const removeOption = require('../lib/helpers').removeOption
@@ -136,11 +137,26 @@ describe('Helpers', () => {
         })
     })
 
+    describe('Convert Codes', () => {
+        it('Should keep codes with type string', (done) => {
+            expect(toCode('2.05')).to.eql('2.05')
+            setImmediate(done)
+        })
+
+        it('Should convert numeric codes with zeros inbetween', (done) => {
+            expect(toCode(404)).to.eql('4.04')
+            setImmediate(done)
+        })
+
+        it('Should convert numeric codes', (done) => {
+            expect(toCode(415)).to.eql('4.15')
+            setImmediate(done)
+        })
+    })
+
     // genAck
 
     // addSetOptions
-
-    // toCode
 
     // packetToMessage
 
