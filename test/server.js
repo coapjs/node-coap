@@ -16,7 +16,7 @@ const bl = require('bl')
 const request = coap.request
 const tk = require('timekeeper')
 const sinon = require('sinon')
-const params = require('../lib/parameters')
+const params = require('../lib/parameters').parameters
 const events = require('events')
 const originalSetImmediate = setImmediate
 

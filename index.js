@@ -10,7 +10,7 @@
 const optionsConv = require('./lib/option_converter')
 const Server = require('./lib/server')
 const Agent = require('./lib/agent')
-const parameters = require('./lib/parameters')
+const { parameters, refreshTiming, defaultTiming } = require('./lib/parameters')
 const net = require('net')
 const globalAgent = new Agent({ type: 'udp4' })
 const globalAgentV6 = new Agent({ type: 'udp6' })
@@ -82,5 +82,5 @@ module.exports.registerFormat = optionsConv.registerFormat
 module.exports.ignoreOption = optionsConv.ignoreOption
 
 module.exports.parameters = parameters
-module.exports.updateTiming = parameters.refreshTiming
-module.exports.defaultTiming = parameters.defaultTiming
+module.exports.updateTiming = refreshTiming
+module.exports.defaultTiming = defaultTiming
