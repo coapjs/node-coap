@@ -1292,7 +1292,7 @@ describe('Client Identifier', function () {
 
         server = coap.createServer({
             clientIdentifier: (request) => {
-                const authenticationHeader = request.options.find(o => o.name === '2109')
+                const authenticationHeader = request._packet.options.find(o => o.name === '2109')
 
                 if (typeof authenticationHeader !== 'undefined') {
                     return `auth:${authenticationHeader.value.toString()}`
