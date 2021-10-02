@@ -12,7 +12,7 @@ const coap = require('../')
 const parse = require('coap-packet').parse
 const generate = require('coap-packet').generate
 const dgram = require('dgram')
-const bl = require('bl')
+const BufferListStream = require('bl')
 const request = coap.request
 const tk = require('timekeeper')
 const sinon = require('sinon')
@@ -121,7 +121,7 @@ describe('server', function () {
         const buf = Buffer.alloc(25)
         send(generate({ payload: buf }))
         server.on('request', (req, res) => {
-            req.pipe(new bl((err, data) => {
+            req.pipe(new BufferListStream((err, data) => {
                 if (err != null) {
                     done(err)
                 } else {
