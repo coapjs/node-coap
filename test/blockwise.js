@@ -330,16 +330,19 @@ describe('blockwise2', function () {
 
             // Have block2 option?
             const block2Buff = getOption(res.options, 'Block2')
-            expect(block2Buff instanceof Buffer).to.eql(true)
 
-            const block2 = parseBlock2(block2Buff)
-            expect(block2).to.not.eql(null)
+            if (block2Buff instanceof Buffer) {
+                const block2 = parseBlock2(block2Buff)
+                expect(block2).to.not.eql(null)
 
-            const expectMore = (req1Block2Num + 1) * 16 <= payloadLength ? 1 : 0
+                const expectMore = (req1Block2Num + 1) * 16 <= payloadLength ? 1 : 0
 
-            // Have correct num / more fields?
-            expect(block2.num).to.eql(req1Block2Num)
-            expect(block2.more).to.eql(expectMore)
+                // Have correct num / more fields?
+                expect(block2.num).to.eql(req1Block2Num)
+                expect(block2.more).to.eql(expectMore)
+            } else {
+                done(new Error('getOption did not return a Buffer!'))
+            }
         }
 
         parallelBlock2Test(done, checkNothing, checkBlock2Option, checkNothing)
