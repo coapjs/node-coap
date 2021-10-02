@@ -3,8 +3,8 @@
       "declaration": true,
       "allowJs": true,
       "checkJs": true,
-      "downlevelIteration": true,
       "noEmitOnError": false,
+      "sourceMap": true,
       // "strictNullChecks": true,
       "esModuleInterop": true,
       "target": "es6",
@@ -15,5 +15,6 @@
           "dom"
       ]
   },
-  "files": ["index.ts", "ts/test.ts"]
+  "files": ["index.ts", "ts/test.ts"],
+  "include": ["lib", "test"]
 }
