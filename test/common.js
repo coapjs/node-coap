@@ -6,8 +6,6 @@
  * See the included LICENSE file for more details.
  */
 
-global.expect = require('chai').expect
-
 let portCounter = 9042
 module.exports.nextPort = () => {
     return ++portCounter

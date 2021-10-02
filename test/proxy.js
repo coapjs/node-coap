@@ -15,6 +15,7 @@ const dgram = require('dgram')
 const request = coap.request
 const tk = require('timekeeper')
 const sinon = require('sinon')
+const { expect } = require('chai')
 
 describe('proxy', function () {
     let server,

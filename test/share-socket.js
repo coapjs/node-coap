@@ -11,6 +11,7 @@ const { nextPort } = require('./common')
 const coap = require('../')
 const sinon = require('sinon')
 const originalSetImmediate = setImmediate
+const { expect } = require('chai')
 
 describe('share-socket', function () {
     let server,

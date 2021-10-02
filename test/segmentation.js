@@ -7,6 +7,7 @@
  */
 
 const segment = require('../lib/segmentation')
+const { expect } = require('chai')
 
 describe('Segmentation', () => {
     describe('Segmented Transmission', () => {

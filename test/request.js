@@ -17,6 +17,7 @@ const bl = require('bl')
 const sinon = require('sinon')
 const request = coap.request
 const originalSetImmediate = setImmediate
+const { expect } = require('chai')
 
 describe('request', function () {
     let server,

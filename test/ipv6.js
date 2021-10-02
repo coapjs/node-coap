@@ -12,6 +12,7 @@ const coap = require('../')
 const parse = require('coap-packet').parse
 const generate = require('coap-packet').generate
 const dgram = require('dgram')
+const { expect } = require('chai')
 
 describe('IPv6', function () {
     describe('server', function () {

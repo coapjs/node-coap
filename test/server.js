@@ -18,6 +18,7 @@ const tk = require('timekeeper')
 const sinon = require('sinon')
 const params = require('../lib/parameters').parameters
 const events = require('events')
+const { expect } = require('chai')
 const originalSetImmediate = setImmediate
 
 describe('server', function () {

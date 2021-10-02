@@ -13,6 +13,7 @@ const removeOption = require('../lib/helpers').removeOption
 const simplifyPacketForPrint = require('../lib/helpers').simplifyPacketForPrint
 const parseBlock2 = require('../lib/helpers').parseBlock2
 const createBlock2 = require('../lib/helpers').createBlock2
+const { expect } = require('chai')
 
 describe('Helpers', () => {
     describe('Has Options', () => {
