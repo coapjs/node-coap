@@ -96,7 +96,7 @@ describe('IPv6', function () {
         }
 
         it('should send the data to the server (URL param)', createTest(function () {
-            return 'coap://[::1]:' + port
+            return `coap://[::1]:${port}`
         }))
 
         it('should send the data to the server (hostname + port in object)', createTest(function () {
@@ -119,7 +119,7 @@ describe('IPv6', function () {
         })
 
         it('should receive a request at a path with some query', function (done) {
-            coap.request('coap://[::1]:' + port + '/abcd/ef/gh/?foo=bar&beep=bop').end()
+            coap.request(`coap://[::1]:${port}/abcd/ef/gh/?foo=bar&beep=bop`).end()
             server.on('request', (req) => {
                 expect(req.url).to.eql('/abcd/ef/gh?foo=bar&beep=bop')
                 done()
