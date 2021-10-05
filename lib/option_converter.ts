@@ -1,5 +1,3 @@
-'use strict'
-
 /*
  * Copyright (c) 2013-2021 node-coap contributors.
  *

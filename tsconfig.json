@@ -7,6 +7,7 @@
       "sourceMap": true,
       "strictNullChecks": true,
       "esModuleInterop": true,
+      "alwaysStrict": true,
       "target": "es6",
       "module": "commonjs",
       "outDir": "dist",
