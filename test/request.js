@@ -61,7 +61,7 @@ describe('request', function () {
     }
 
     it('should return a pipeable stream', function (done) {
-        const req = request('coap://localhost:' + port)
+        const req = request(`coap://localhost:${port}`)
         const stream = bl()
 
         stream.append('hello world')
@@ -72,7 +72,7 @@ describe('request', function () {
     })
 
     it('should send the data to the server', function (done) {
-        const req = request('coap://localhost:' + port)
+        const req = request(`coap://localhost:${port}`)
         req.end(Buffer.from('hello world'))
 
         server.on('message', (msg, rsinfo) => {
@@ -83,7 +83,7 @@ describe('request', function () {
     })
 
     it('should send a confirmable message by default', function (done) {
-        const req = request('coap://localhost:' + port)
+        const req = request(`coap://localhost:${port}`)
         req.end(Buffer.from('hello world'))
 
         server.on('message', (msg, rsinfo) => {
@@ -106,7 +106,7 @@ describe('request', function () {
     })
 
     it('should error if the message is too big', function (done) {
-        const req = request('coap://localhost:' + port)
+        const req = request(`coap://localhost:${port}`)
 
         req.on('error', () => {
             done()
@@ -129,7 +129,7 @@ describe('request', function () {
     })
 
     it('should send the path to the server', function (done) {
-        const req = request('coap://localhost:' + port + '/hello')
+        const req = request(`coap://localhost:${port}/hello`)
         req.end(Buffer.from('hello world'))
 
         server.on('message', (msg, rsinfo) => {
@@ -144,7 +144,7 @@ describe('request', function () {
     })
 
     it('should send a longer path to the server', function (done) {
-        const req = request('coap://localhost:' + port + '/hello/world')
+        const req = request(`coap://localhost:${port}/hello/world`)
         req.end(Buffer.from('hello world'))
 
         server.on('message', (msg, rsinfo) => {
@@ -181,7 +181,7 @@ describe('request', function () {
     })
 
     it('should send a query string to the server', function (done) {
-        const req = request('coap://localhost:' + port + '?a=b&c=d')
+        const req = request(`coap://localhost:${port}?a=b&c=d`)
         req.end(Buffer.from('hello world'))
 
         server.on('message', (msg, rsinfo) => {
