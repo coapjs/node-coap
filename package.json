@@ -10,8 +10,8 @@
     "prepublishOnly": "npm run build",
     "test": "nyc mocha ./dist/test --exit",
     "coverage": "nyc report --reporter=lcov --reporter=text-summary",
-    "lint": "standardx --verbose | snazzy",
-    "lint:fix": "standardx --fix"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "repository": {
     "type": "git",
@@ -41,20 +41,15 @@
     "@typescript-eslint/eslint-plugin": "^4.32.0",
     "chai": "^4.3.4",
     "eslint": "^7.32.0",
-    "eslint-config-standard": "^16.0.3",
-    "eslint-config-standard-jsx": "^10.0.0",
+    "eslint-config-standard-with-typescript": "^21.0.1",
     "eslint-plugin-import": "^2.24.2",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.0",
-    "eslint-plugin-react": "^7.25.1",
-    "eslint-plugin-standard": "^5.0.0",
     "mocha": "^9.1.1",
     "nyc": "^15.1.0",
     "pre-commit": "1.2.2",
     "sinon": "^11.1.2",
-    "snazzy": "^9.0.0",
     "source-map-support": "^0.5.20",
-    "standardx": "^7.0.0",
     "timekeeper": "^2.2.0",
     "ts-node": "^10.2.1",
     "typescript": "^4.4.3"
@@ -75,23 +70,5 @@
   },
   "engines": {
     "node": ">=10"
-  },
-  "standardx": {
-    "env": [
-      "jest"
-    ]
-  },
-  "eslintConfig": {
-    "env": {
-      "commonjs": true,
-      "es6": true,
-      "node": true
-    },
-    "rules": {
-      "indent": [
-        "error",
-        4
-      ]
-    }
   }
 }

@@ -1,0 +1,14 @@
+{
+    "extends": "standard-with-typescript",
+    "parserOptions": {
+        "project": "./tsconfig.json"
+    },
+    "rules": {
+        "indent": "off",
+        "@typescript-eslint/indent": ["error", 4]
+    },
+    "env": {
+        "mocha": true
+    },
+    "ignorePatterns": ["dist", "coverage", ".nyc_output"]
+}
