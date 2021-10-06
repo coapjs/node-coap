@@ -118,6 +118,13 @@ describe('Helpers', () => {
             expect(res).to.eql(null)
             setImmediate(done)
         })
+
+        it('Should parse a zero length buffer', (done) => {
+            const buff = Buffer.alloc(0)
+            const res = parseBlock2(buff)
+            expect(res).to.eql({ more: 0, num: 0, size: 0 })
+            setImmediate(done)
+        })
     })
 
     describe('Create Block2', () => {
