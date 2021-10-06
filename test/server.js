@@ -169,13 +169,30 @@ describe('server', function () {
         })
     })
 
-    ;['GET', 'POST', 'PUT', 'DELETE'].forEach(function (method) {
+    ;['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'iPATCH'].forEach(function (method) {
         it('should include the \'' + method + '\' method', function (done) {
             send(generate({ code: method }))
             server.on('request', (req, res) => {
                 expect(req).to.have.property('method', method)
                 done()
             })
+        })
+    })
+
+    it('should include the FETCH method when a Content-Format is present', function (done) {
+        send(generate({ code: 'FETCH', options: [{ name: 'Content-Format', value: Buffer.of(0x06, 0x06) }] }))
+        server.on('request', function (req, res) {
+            expect(req).to.have.property('method', 'FETCH')
+            done()
+        })
+    })
+
+    it('should respond with an error to a FETCH request when no Content-Format is present', function (done) {
+        send(generate({ code: 'FETCH' }))
+
+        client.on('message', function (msg, rsinfo) {
+            expect(parse(msg).code).to.eql('4.15')
+            done()
         })
     })
 
@@ -803,7 +820,7 @@ describe('server', function () {
             }))
         }
 
-        ['PUT', 'POST', 'DELETE'].forEach(function (method) {
+        ['PUT', 'POST', 'DELETE', 'PATCH', 'iPATCH'].forEach(function (method) {
             it('should return an error when try to observe in a ' + method, function (done) {
                 doObserve(method)
                 server.on('request', () => {
