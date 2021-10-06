@@ -334,11 +334,11 @@ describe('blockwise2', function () {
             const block2 = parseBlock2(block2Buff)
             expect(block2).to.not.eql(null)
 
-            const expectMore = (req1Block2Num + 1) * 16 <= payloadLength
+            const expectMore = (req1Block2Num + 1) * 16 <= payloadLength ? 1 : 0
 
-            // Have correct num / moreBlock2 fields?
+            // Have correct num / more fields?
             expect(block2.num).to.eql(req1Block2Num)
-            expect(block2.moreBlock2).to.eql(expectMore)
+            expect(block2.more).to.eql(expectMore)
         }
 
         parallelBlock2Test(done, checkNothing, checkBlock2Option, checkNothing)
@@ -403,9 +403,9 @@ describe('blockwise1', () => {
         it('it should return object', (done) => {
             const payload = Buffer.of(0x01)
             const response = {
-                sequenceNumber: 0,
-                moreBlocks: 0,
-                blockSize: 1
+                num: 0,
+                more: 0,
+                size: 1
             }
             const value = block.parseBlockOption(payload)
             expect(value).to.eql(response)
@@ -415,9 +415,9 @@ describe('blockwise1', () => {
         it('it should return object when length is equal to 2', (done) => {
             const payload = Buffer.of(0x01, 0x02)
             const response = {
-                sequenceNumber: 16,
-                moreBlocks: 0,
-                blockSize: 2
+                num: 16,
+                more: 0,
+                size: 2
             }
             const value = block.parseBlockOption(payload)
             expect(value).to.eql(response)
@@ -427,9 +427,9 @@ describe('blockwise1', () => {
         it('it should return object when length is equal to 3', (done) => {
             const payload = Buffer.of(0x01, 0x02, 0x03)
             const response = {
-                sequenceNumber: 4128,
-                moreBlocks: 0,
-                blockSize: 3
+                num: 4128,
+                more: 0,
+                size: 3
             }
             const value = block.parseBlockOption(payload)
             expect(value).to.eql(response)

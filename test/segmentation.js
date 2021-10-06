@@ -25,7 +25,7 @@ describe('Segmentation', () => {
         it('should set bytesize to value', (done) => {
             const v = new segment.SegmentedTransmission(1, 1, { payload: [1] })
             v.setBlockSizeExp(6)
-            expect(v.blockState.blockSize).to.eql(6)
+            expect(v.blockState.size).to.eql(6)
             expect(v.byteSize).to.eql(1024)
             setImmediate(done)
         })
@@ -36,13 +36,13 @@ describe('Segmentation', () => {
     describe('Is Correct Acknowledgement', () => {
         it('Should return true', (done) => {
             const v = new segment.SegmentedTransmission(1, 1, { payload: [1] })
-            const value = v.isCorrectACK(1, { sequenceNumber: 0 })
+            const value = v.isCorrectACK(1, { num: 0 })
             expect(value).to.eql(true)
             setImmediate(done)
         })
         it('Should return false', (done) => {
             const v = new segment.SegmentedTransmission(1, 1, { payload: [1] })
-            const value = v.isCorrectACK(1, { sequenceNumber: 1 })
+            const value = v.isCorrectACK(1, { num: 1 })
             expect(value).to.eql(false)
             setImmediate(done)
         })
@@ -82,7 +82,7 @@ describe('Segmentation', () => {
 
             }
             const v = new segment.SegmentedTransmission(1, req, { payload: [1] })
-            v.receiveACK(1, { blockSize: 1 })
+            v.receiveACK(1, { size: 1 })
             v.totalLength = 0
             v.currentByte = 0
             expect(v.resendCount).to.eql(0)

@@ -123,14 +123,14 @@ describe('Helpers', () => {
     describe('Create Block2', () => {
         it('Should return a buffer carrying a block 2 value', (done) => {
             const buff = Buffer.from([0xff, 0xff, 0xe9])
-            const block = { moreBlock2: true, num: 1048574, size: 32 }
+            const block = { more: 1, num: 1048574, size: 32 }
             const res = createBlock2(block)
             expect(res).to.eql(buff)
             setImmediate(done)
         })
 
         it('Should return null', (done) => {
-            const block = { moreBlock2: true, num: 1048576, size: 32 }
+            const block = { more: 1, num: 1048576, size: 32 }
             const res = createBlock2(block)
             expect(res).to.eql(null)
             setImmediate(done)
