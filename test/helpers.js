@@ -118,19 +118,26 @@ describe('Helpers', () => {
             expect(res).to.eql(null)
             setImmediate(done)
         })
+
+        it('Should parse a zero length buffer', (done) => {
+            const buff = Buffer.alloc(0)
+            const res = parseBlock2(buff)
+            expect(res).to.eql({ more: 0, num: 0, size: 0 })
+            setImmediate(done)
+        })
     })
 
     describe('Create Block2', () => {
         it('Should return a buffer carrying a block 2 value', (done) => {
             const buff = Buffer.from([0xff, 0xff, 0xe9])
-            const block = { moreBlock2: true, num: 1048574, size: 32 }
+            const block = { more: 1, num: 1048574, size: 32 }
             const res = createBlock2(block)
             expect(res).to.eql(buff)
             setImmediate(done)
         })
 
         it('Should return null', (done) => {
-            const block = { moreBlock2: true, num: 1048576, size: 32 }
+            const block = { more: 1, num: 1048576, size: 32 }
             const res = createBlock2(block)
             expect(res).to.eql(null)
             setImmediate(done)
