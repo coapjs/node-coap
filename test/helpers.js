@@ -10,7 +10,6 @@ const toCode = require('../lib/helpers').toCode
 const getOption = require('../lib/helpers').getOption
 const hasOption = require('../lib/helpers').hasOption
 const removeOption = require('../lib/helpers').removeOption
-const simplifyPacketForPrint = require('../lib/helpers').simplifyPacketForPrint
 const parseBlock2 = require('../lib/helpers').parseBlock2
 const createBlock2 = require('../lib/helpers').createBlock2
 const { expect } = require('chai')
@@ -69,38 +68,6 @@ describe('Helpers', () => {
                 { name: 'test2', value: 'world' }
             ]
             expect(removeOption(options, 'test')).to.eql(false)
-            setImmediate(done)
-        })
-    })
-
-    describe('Simplify Packet for Print', () => {
-        it('Should return pretty packet', (done) => {
-            const packet = {
-                token: Buffer.from([0x01]),
-                options: [],
-                payload: Buffer.from('01 02 03')
-            }
-            const response = {
-                options: {},
-                payload: 'Buff: 8',
-                token: '01'
-            }
-            expect(simplifyPacketForPrint(packet)).to.eql(response)
-            setImmediate(done)
-        })
-
-        it('Should return packet with options as parsed hex values', (done) => {
-            const packet = {
-                token: Buffer.of(0x01),
-                options: [{ name: 'test', value: Buffer.from([0x01, 0x02]) }],
-                payload: Buffer.from('01 02 03')
-            }
-            const response = {
-                options: { test: '0102' },
-                payload: 'Buff: 8',
-                token: '01'
-            }
-            expect(simplifyPacketForPrint(packet)).to.eql(response)
             setImmediate(done)
         })
     })
