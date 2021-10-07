@@ -131,8 +131,6 @@ describe('Helpers', () => {
 
     // genAck
 
-    // addSetOptions
-
     // packetToMessage
 
     // removeOption
