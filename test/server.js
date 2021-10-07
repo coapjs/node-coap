@@ -534,7 +534,7 @@ describe('server', function () {
         })
 
         it('should calculate the response twice after the interval', function (done) {
-            clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
+            clock = sinon.useFakeTimers()
             let first = true
             const delay = (params.exchangeLifetime * 1000) + 1
 
@@ -595,7 +595,7 @@ describe('server', function () {
         })
 
         it('should not retry sending the response', function (done) {
-            clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
+            clock = sinon.useFakeTimers()
 
             let messages = 0
 
@@ -655,7 +655,7 @@ describe('server', function () {
         })
 
         it('should reply with a confirmable after an ack', function (done) {
-            clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
+            clock = sinon.useFakeTimers()
 
             send(generate(packet))
             server.on('request', (req, res) => {
@@ -681,7 +681,7 @@ describe('server', function () {
         })
 
         it('should retry sending the response if it does not receive an ack four times before 45s', function (done) {
-            clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
+            clock = sinon.useFakeTimers()
 
             let messages = 0
 
@@ -712,7 +712,7 @@ describe('server', function () {
         })
 
         it('should stop resending after it receives an ack', function (done) {
-            clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
+            clock = sinon.useFakeTimers()
 
             let messages = 0
 
@@ -744,7 +744,7 @@ describe('server', function () {
         })
 
         it('should not resend with a piggyback response', function (done) {
-            clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
+            clock = sinon.useFakeTimers()
 
             let messages = 0
 
@@ -766,7 +766,7 @@ describe('server', function () {
         })
 
         it('should error if it does not receive an ack four times before ~247s', function (done) {
-            clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
+            clock = sinon.useFakeTimers()
 
             send(generate(packet))
             server.on('request', (req, res) => {
@@ -889,7 +889,7 @@ describe('server', function () {
         })
 
         it('should emit a \'finish\' if the client do not ack for ~247s', function (done) {
-            clock = sinon.useFakeTimers(0, 'Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval')
+            clock = sinon.useFakeTimers()
 
             doObserve()
 
