@@ -49,7 +49,7 @@ describe('Agent', function () {
     })
 
     function doReq (confirmable) {
-        if (!confirmable) {
+        if (confirmable == null) {
             confirmable = false
         }
 
@@ -67,7 +67,7 @@ describe('Agent', function () {
         doReq()
 
         server.on('message', (msg, rsinfo) => {
-            if (firstRsinfo) {
+            if (firstRsinfo != null) {
                 expect(rsinfo.port).to.eql(firstRsinfo.port)
                 done()
             } else {
@@ -104,7 +104,7 @@ describe('Agent', function () {
 
         server.on('message', (msg, rsinfo) => {
             const packet = parse(msg)
-            if (firstToken) {
+            if (firstToken != null) {
                 expect(packet.token).not.to.eql(firstToken)
                 done()
             } else {
@@ -121,7 +121,7 @@ describe('Agent', function () {
 
         server.on('message', (msg, rsinfo) => {
             const packet = parse(msg)
-            if (firstMessageId) {
+            if (firstMessageId != null) {
                 expect(packet.messageId).not.to.eql(firstMessageId)
                 done()
             } else {
@@ -293,7 +293,7 @@ describe('Agent', function () {
 
             server.send(toSend, 0, toSend.length, rsinfo.port, rsinfo.address)
 
-            if (firstRsinfo) {
+            if (firstRsinfo != null) {
                 expect(rsinfo.port).not.to.eql(firstRsinfo.port)
                 done()
             } else {
@@ -434,7 +434,7 @@ describe('Agent', function () {
             })
 
             server.on('message', (msg, rsinfo) => {
-                if (firstRsinfo) {
+                if (firstRsinfo != null) {
                     expect(rsinfo.port).not.to.eql(firstRsinfo.port)
                     done()
                 } else {

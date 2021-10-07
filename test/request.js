@@ -294,7 +294,7 @@ describe('request', function () {
 
         req.on('response', (res) => {
             res.pipe(bl((err, data) => {
-                if (err) {
+                if (err != null) {
                     done(err)
                 } else {
                     expect(data).to.eql(Buffer.from('42'))
@@ -334,7 +334,7 @@ describe('request', function () {
 
         req.on('response', (res) => {
             res.pipe(bl((err, data) => {
-                if (err) {
+                if (err != null) {
                     done(err)
                 } else {
                     expect(data).to.eql(Buffer.from('42'))
@@ -422,7 +422,7 @@ describe('request', function () {
 
         req.on('response', (res) => {
             res.pipe(bl((err, data) => {
-                if (err) {
+                if (err != null) {
                     done(err)
                 }
                 expect(data).to.eql(Buffer.from('42'))
@@ -650,7 +650,7 @@ describe('request', function () {
 
         req.on('response', (res) => {
             res.pipe(bl((err, data) => {
-                if (err) {
+                if (err != null) {
                     done(err)
                 } else {
                     expect(data).to.eql(Buffer.from('42'))
@@ -984,7 +984,7 @@ describe('request', function () {
             server.on('message', (msg) => {
                 const packet = parse(msg)
 
-                if (!messageId) {
+                if (messageId == null) {
                     messageId = packet.messageId
                 }
 

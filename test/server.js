@@ -121,7 +121,7 @@ describe('server', function () {
         send(generate({ payload: buf }))
         server.on('request', (req, res) => {
             req.pipe(bl((err, data) => {
-                if (err) {
+                if (err != null) {
                     done(err)
                 } else {
                     expect(data).to.eql(buf)
@@ -805,7 +805,7 @@ describe('server', function () {
         const token = Buffer.alloc(3)
 
         function doObserve (method) {
-            if (!method) {
+            if (method == null) {
                 method = 'GET'
             }
 
