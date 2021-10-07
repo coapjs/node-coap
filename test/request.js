@@ -6,17 +6,18 @@
  * See the included LICENSE file for more details.
  */
 
-/* global nextPort */
+const { nextPort } = require('./common')
 
 const coap = require('../')
 const toBinary = require('../lib/option_converter').toBinary
 const parse = require('coap-packet').parse
 const generate = require('coap-packet').generate
 const dgram = require('dgram')
-const bl = require('bl')
+const BufferListStream = require('bl')
 const sinon = require('sinon')
 const request = coap.request
 const originalSetImmediate = setImmediate
+const { expect } = require('chai')
 
 describe('request', function () {
     let server,
@@ -62,7 +63,7 @@ describe('request', function () {
 
     it('should return a pipeable stream', function (done) {
         const req = request(`coap://localhost:${port}`)
-        const stream = bl()
+        const stream = new BufferListStream()
 
         stream.append('hello world')
 
@@ -293,7 +294,7 @@ describe('request', function () {
         })
 
         req.on('response', (res) => {
-            res.pipe(bl((err, data) => {
+            res.pipe(new BufferListStream((err, data) => {
                 if (err != null) {
                     done(err)
                 } else {
@@ -333,7 +334,7 @@ describe('request', function () {
         })
 
         req.on('response', (res) => {
-            res.pipe(bl((err, data) => {
+            res.pipe(new BufferListStream((err, data) => {
                 if (err != null) {
                     done(err)
                 } else {
@@ -421,7 +422,7 @@ describe('request', function () {
         })
 
         req.on('response', (res) => {
-            res.pipe(bl((err, data) => {
+            res.pipe(new BufferListStream((err, data) => {
                 if (err != null) {
                     done(err)
                 }
@@ -505,7 +506,7 @@ describe('request', function () {
                 messageId: packet.messageId,
                 code: '0.00',
                 ack: true,
-                payload: 'this payload invalidates empty message'
+                payload: Buffer.from('this payload invalidates empty message')
             })
             expect(packet.code).to.be.eq('0.01')
             messages++
@@ -649,7 +650,7 @@ describe('request', function () {
         })
 
         req.on('response', (res) => {
-            res.pipe(bl((err, data) => {
+            res.pipe(new BufferListStream((err, data) => {
                 if (err != null) {
                     done(err)
                 } else {

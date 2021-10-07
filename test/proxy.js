@@ -6,7 +6,7 @@
  * See the included LICENSE file for more details.
  */
 
-/* global nextPort */
+const { nextPort } = require('./common')
 
 const coap = require('../')
 const parse = require('coap-packet').parse
@@ -15,6 +15,7 @@ const dgram = require('dgram')
 const request = coap.request
 const tk = require('timekeeper')
 const sinon = require('sinon')
+const { expect } = require('chai')
 
 describe('proxy', function () {
     let server,

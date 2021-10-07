@@ -13,13 +13,14 @@ const removeOption = require('../lib/helpers').removeOption
 const simplifyPacketForPrint = require('../lib/helpers').simplifyPacketForPrint
 const parseBlock2 = require('../lib/helpers').parseBlock2
 const createBlock2 = require('../lib/helpers').createBlock2
+const { expect } = require('chai')
 
 describe('Helpers', () => {
     describe('Has Options', () => {
         it('Should return true', (done) => {
             const options = [
-                { name: 'test' },
-                { name: 'test2' }
+                { name: 'test', value: 'hello' },
+                { name: 'test2', value: 'world' }
             ]
             expect(hasOption(options, 'test')).to.eql(true)
             setImmediate(done)
@@ -27,7 +28,7 @@ describe('Helpers', () => {
 
         it('Should return null', (done) => {
             const options = [
-                { name: 'test2' }
+                { name: 'test2', value: 'world' }
             ]
             expect(hasOption(options, 'test')).to.eql(null)
             setImmediate(done)
@@ -75,14 +76,14 @@ describe('Helpers', () => {
     describe('Simplify Packet for Print', () => {
         it('Should return pretty packet', (done) => {
             const packet = {
-                token: '0x01',
+                token: Buffer.from([0x01]),
                 options: [],
-                payload: '01 02 03'
+                payload: Buffer.from('01 02 03')
             }
             const response = {
                 options: {},
                 payload: 'Buff: 8',
-                token: '0x01'
+                token: '01'
             }
             expect(simplifyPacketForPrint(packet)).to.eql(response)
             setImmediate(done)
@@ -90,14 +91,14 @@ describe('Helpers', () => {
 
         it('Should return packet with options as parsed hex values', (done) => {
             const packet = {
-                token: '0x01',
-                options: [{ name: 'test', value: [0x01, 0x02] }],
-                payload: '01 02 03'
+                token: Buffer.of(0x01),
+                options: [{ name: 'test', value: Buffer.from([0x01, 0x02]) }],
+                payload: Buffer.from('01 02 03')
             }
             const response = {
-                options: { test: '1,2' },
+                options: { test: '0102' },
                 payload: 'Buff: 8',
-                token: '0x01'
+                token: '01'
             }
             expect(simplifyPacketForPrint(packet)).to.eql(response)
             setImmediate(done)

@@ -9,6 +9,7 @@
 const coap = require('../')
 const parameters = coap.parameters
 const RetrySend = require('../lib/retry_send')
+const { expect } = require('chai')
 
 describe('RetrySend', function () {
     it('should use the default retry count', function () {

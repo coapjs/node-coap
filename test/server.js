@@ -6,18 +6,19 @@
  * See the included LICENSE file for more details.
  */
 
-/* global nextPort */
+const { nextPort } = require('./common')
 
 const coap = require('../')
 const parse = require('coap-packet').parse
 const generate = require('coap-packet').generate
 const dgram = require('dgram')
-const bl = require('bl')
+const BufferListStream = require('bl')
 const request = coap.request
 const tk = require('timekeeper')
 const sinon = require('sinon')
 const params = require('../lib/parameters').parameters
 const events = require('events')
+const { expect } = require('chai')
 const originalSetImmediate = setImmediate
 
 describe('server', function () {
@@ -60,7 +61,7 @@ describe('server', function () {
     }
 
     it('should receive a CoAP message', function (done) {
-        send(generate())
+        send(generate({}))
         server.on('request', (req, res) => {
             done()
         })
@@ -74,7 +75,7 @@ describe('server', function () {
             done()
         })
         server.listen()
-        send(generate())
+        send(generate({}))
     })
 
     it('should use a custom socket passed to listen()', function (done) {
@@ -90,7 +91,7 @@ describe('server', function () {
 
         server.listen(sock, () => {
             expect(server._sock).to.eql(sock)
-            sock.emit('message', generate(), { address: '127.0.0.1', port: nextPort() })
+            sock.emit('message', generate({}), { address: '127.0.0.1', port: nextPort() })
         })
     })
 
@@ -101,7 +102,7 @@ describe('server', function () {
             done()
         })
         server.listen()
-        send(generate())
+        send(generate({}))
     })
 
     it('should listen by default to 5683', function (done) {
@@ -109,7 +110,7 @@ describe('server', function () {
         server = coap.createServer()
         port = 5683
         server.listen(() => {
-            send(generate())
+            send(generate({}))
         })
         server.on('request', (req, res) => {
             done()
@@ -120,7 +121,7 @@ describe('server', function () {
         const buf = Buffer.alloc(25)
         send(generate({ payload: buf }))
         server.on('request', (req, res) => {
-            req.pipe(bl((err, data) => {
+            req.pipe(new BufferListStream((err, data) => {
                 if (err != null) {
                     done(err)
                 } else {
@@ -159,7 +160,7 @@ describe('server', function () {
     })
 
     it('should include a rsinfo', function (done) {
-        send(generate())
+        send(generate({}))
         server.on('request', (req, res) => {
             expect(req).to.have.property('rsinfo')
             expect(req.rsinfo).to.have.property('address')
@@ -556,7 +557,7 @@ describe('server', function () {
         })
 
         it('should include \'ETag\' in the response options', function (done) {
-            send(generate())
+            send(generate({}))
 
             server.on('request', (req, res) => {
                 res.setOption('ETag', 'abcdefgh')
@@ -571,7 +572,7 @@ describe('server', function () {
         })
 
         it('should include \'Content-Format\' in the response options', function (done) {
-            send(generate())
+            send(generate({}))
 
             server.on('request', (req, res) => {
                 res.setOption('Content-Format', 'text/plain')
@@ -1198,14 +1199,14 @@ describe('server LRU', function () {
         server.on('request', (req, res) => {
             res.end()
 
-            expect(server._lru.itemCount, 1)
+            expect(server._lru.itemCount).to.be.equal(1)
 
             clock.tick(params.exchangeLifetime * 500)
 
-            expect(server._lru.itemCount, 1)
+            expect(server._lru.itemCount).to.be.equal(1)
 
             clock.tick(params.exchangeLifetime * 1000)
-            expect(server._lru.itemCount, 0)
+            expect(server._lru.itemCount).to.be.equal(0)
             done()
         })
     })
@@ -1291,7 +1292,7 @@ describe('Client Identifier', function () {
 
         server = coap.createServer({
             clientIdentifier: (request) => {
-                const authenticationHeader = request.options.find(o => o.name === '2109')
+                const authenticationHeader = request._packet.options.find(o => o.name === '2109')
 
                 if (typeof authenticationHeader !== 'undefined') {
                     return `auth:${authenticationHeader.value.toString()}`

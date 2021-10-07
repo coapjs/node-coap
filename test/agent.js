@@ -6,13 +6,14 @@
  * See the included LICENSE file for more details.
  */
 
-/* global nextPort */
+const { nextPort } = require('./common')
 
 const coap = require('../')
 const parse = require('coap-packet').parse
 const generate = require('coap-packet').generate
 const dgram = require('dgram')
 const request = coap.request
+const { expect } = require('chai')
 
 describe('Agent config', function () {
     it('should get agent instance through custom config', function (done) {

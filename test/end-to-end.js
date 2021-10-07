@@ -6,9 +6,10 @@
  * See the included LICENSE file for more details.
  */
 
-/* global nextPort */
+const { nextPort } = require('./common')
 
 const coap = require('../')
+const { expect } = require('chai')
 
 describe('end-to-end', function () {
     let server,

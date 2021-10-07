@@ -6,7 +6,7 @@
  * See the included LICENSE file for more details.
  */
 
-/* global nextPort */
+const { nextPort } = require('./common')
 
 const coap = require('../')
 const parse = require('coap-packet').parse
@@ -15,6 +15,7 @@ const getOption = require('../lib/helpers').getOption
 const parseBlock2 = require('../lib/helpers').parseBlock2
 const block = require('../lib/block')
 const dgram = require('dgram')
+const expect = require('chai').expect
 
 describe('blockwise2', function () {
     let server

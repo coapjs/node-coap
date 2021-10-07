@@ -8,6 +8,7 @@
 
 const coap = require('../')
 const parameters = coap.parameters
+const { expect } = require('chai')
 
 describe('Parameters', function () {
     afterEach(function () {
