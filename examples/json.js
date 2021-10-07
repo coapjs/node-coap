@@ -25,7 +25,7 @@ coap.createServer((req, res) => {
             }
 
             res.pipe(bl((err, data) => {
-                if (err) {
+                if (err != null) {
                     process.exit(1)
                 } else {
                     const json = JSON.parse(data)

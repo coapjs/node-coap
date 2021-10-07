@@ -358,7 +358,7 @@ describe('share-socket', function () {
 
         server.on('request', (req, res) => {
             res.end('hello')
-            if (!first) {
+            if (first == null) {
                 first = req.rsinfo
             } else {
                 expect(req.rsinfo).to.eql(first)
@@ -379,7 +379,7 @@ describe('share-socket', function () {
 
         server.on('request', (req, res) => {
             res.end('hello')
-            if (!first) {
+            if (first == null) {
                 first = req.rsinfo
             } else {
                 expect(req.rsinfo).not.to.eql(first)
