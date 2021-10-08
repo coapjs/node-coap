@@ -29,11 +29,11 @@ describe('share-socket', function () {
     })
 
     afterEach(function (done) {
-        this.timeout(200)
+        this.timeout(500)
         setTimeout(() => {
             server.close(done)
             server.on('error', () => {})
-        }, 100)
+        }, 250)
     })
 
     process.on('uncaughtException', (err) => {
