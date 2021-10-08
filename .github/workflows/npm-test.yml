@@ -18,7 +18,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    
+
     # Caches NPM and the node_modules folder for faster builds
     - name: Cache node modules
       uses: actions/cache@v1
