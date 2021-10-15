@@ -1,6 +1,6 @@
 {
   "name": "coap",
-  "version": "0.25.0",
+  "version": "0.26.0",
   "description": "A CoAP library for node modelled after 'http'",
   "main": "index.js",
   "types": "./index.d.ts",
@@ -65,7 +65,9 @@
     "node": ">=10"
   },
   "standardx": {
-    "env": ["jest"]
+    "env": [
+      "jest"
+    ]
   },
   "eslintConfig": {
     "env": {
@@ -74,7 +76,10 @@
       "node": true
     },
     "rules": {
-      "indent": ["error", 4]
+      "indent": [
+        "error",
+        4
+      ]
     }
   }
 }
