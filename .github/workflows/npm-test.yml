@@ -14,11 +14,11 @@ jobs:
     strategy:
       matrix:
         node-version: [12.x, 14.x, 16.x]
-        os: [ubuntu-latest, windows-latest] # FIXME: Tests on macos-latest fail at the moment
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
     - uses: actions/checkout@v2
-    
+
     # Caches NPM and the node_modules folder for faster builds
     - name: Cache node modules
       uses: actions/cache@v1
