@@ -6,18 +6,17 @@
  * See the included LICENSE file for more details.
  */
 
-const coap = require('../')
-const parameters = coap.parameters
+const { parameters, defaultTiming, updateTiming } = require('../index')
 const { expect } = require('chai')
 
 describe('Parameters', function () {
     afterEach(function () {
-        parameters.defaultTiming()
+        defaultTiming()
     })
 
     it('should ignore empty parameter', function () {
     // WHEN
-        coap.updateTiming()
+        updateTiming()
 
         // THEN
         expect(parameters.maxRTT).to.eql(202)
@@ -37,7 +36,7 @@ describe('Parameters', function () {
         }
 
         // WHEN
-        coap.updateTiming(coapTiming)
+        updateTiming(coapTiming)
 
         // THEN
         expect(parameters.maxRTT).to.eql(11)

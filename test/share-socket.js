@@ -7,11 +7,13 @@
  */
 
 const { nextPort } = require('./common')
-
-const coap = require('../')
-const sinon = require('sinon')
-const originalSetImmediate = setImmediate
 const { expect } = require('chai')
+const { createServer, request, Agent } = require('../index')
+const coap = require('../index')
+const sinon = require('sinon')
+const { Socket } = require('dgram')
+
+const originalSetImmediate = setImmediate
 
 describe('share-socket', function () {
     let server,
@@ -19,9 +21,12 @@ describe('share-socket', function () {
 
     beforeEach(function (done) {
         port = nextPort()
-        server = coap.createServer()
+        server = createServer()
         server.listen(port, () => {
-            coap.globalAgent = new coap.Agent({
+            if (!(server._sock instanceof Socket)) {
+                return
+            }
+            coap.globalAgent = new Agent({
                 socket: server._sock
             })
             done()
@@ -41,7 +46,7 @@ describe('share-socket', function () {
     })
 
     it('should receive a request at a path with some query', function (done) {
-        coap.request(`coap://localhost:${port}/abcd/ef/gh/?foo=bar&beep=bop`).end()
+        request(`coap://localhost:${port}/abcd/ef/gh/?foo=bar&beep=bop`).end()
         server.on('request', (req) => {
             expect(req.url).to.eql('/abcd/ef/gh?foo=bar&beep=bop')
             setImmediate(done)
@@ -49,7 +54,7 @@ describe('share-socket', function () {
     })
 
     it('should return code 2.05 by default', function (done) {
-        const req = coap.request(`coap://localhost:${port}/abcd/ef/gh/?foo=bar&beep=bop`).end()
+        const req = request(`coap://localhost:${port}/abcd/ef/gh/?foo=bar&beep=bop`).end()
         req.on('response', (res) => {
             expect(res.code).to.eql('2.05')
             setImmediate(done)
@@ -61,8 +66,7 @@ describe('share-socket', function () {
     })
 
     it('should return code using res.code attribute', function (done) {
-        coap
-            .request(`coap://localhost:${port}`)
+        request(`coap://localhost:${port}`)
             .on('response', (res) => {
                 expect(res.code).to.eql('4.04')
                 setImmediate(done)
@@ -76,8 +80,7 @@ describe('share-socket', function () {
     })
 
     it('should return code using res.statusCode attribute', function (done) {
-        coap
-            .request(`coap://localhost:${port}`)
+        request(`coap://localhost:${port}`)
             .on('response', (res) => {
                 expect(res.code).to.eql('4.04')
                 setImmediate(done)
@@ -91,7 +94,7 @@ describe('share-socket', function () {
     })
 
     it('should support observing', function (done) {
-        const req = coap.request({
+        const req = request({
             port: port,
             observe: true
         }).end()
@@ -113,7 +116,7 @@ describe('share-socket', function () {
     })
 
     it('should support a 4.04 observe request', function (done) {
-        const req = coap.request({
+        const req = request({
             port: port,
             observe: true
         }).end()
@@ -130,7 +133,7 @@ describe('share-socket', function () {
     })
 
     it('should support a 4.04 observe request and emit an end event in the response', function (done) {
-        const req = coap.request({
+        const req = request({
             port: port,
             observe: true
         }).end()
@@ -156,7 +159,7 @@ describe('share-socket', function () {
     ;['Accept', 'Content-Format'].forEach(function (option) {
             formats.forEach(function (format) {
                 it('should pass the \'' + option + ': ' + format + '\' option to the server', function (done) {
-                    const req = coap.request(`coap://localhost:${port}`)
+                    const req = request(`coap://localhost:${port}`)
                     req.setOption(option, format)
                     req.end()
 
@@ -175,7 +178,7 @@ describe('share-socket', function () {
 
                     req.options[option] = format
 
-                    coap.request(req).end()
+                    request(req).end()
 
                     server.on('request', (req) => {
                         expect(req.options[0].name).to.eql(option)
@@ -192,7 +195,7 @@ describe('share-socket', function () {
 
                     req.headers[option] = format
 
-                    coap.request(req).end()
+                    request(req).end()
 
                     server.on('request', (req) => {
                         expect(req.headers[option]).to.eql(format)
@@ -201,7 +204,7 @@ describe('share-socket', function () {
                 })
 
                 it('should pass the \'' + option + ': ' + format + '\' header to the server', function (done) {
-                    const req = coap.request(`coap://localhost:${port}`)
+                    const req = request(`coap://localhost:${port}`)
                     req.setOption(option, format)
                     req.end()
 
@@ -215,7 +218,7 @@ describe('share-socket', function () {
 
         formats.forEach(function (format) {
             it('should pass the \'Content-Format: ' + format + '\' option to the client', function (done) {
-                const req = coap.request(`coap://localhost:${port}`)
+                const req = request(`coap://localhost:${port}`)
                 req.end()
 
                 server.on('request', (req, res) => {
@@ -232,7 +235,7 @@ describe('share-socket', function () {
     })
 
     it('should allow encoding with \'Content-Format\'', function (done) {
-        const req = coap.request(`coap://localhost:${port}`)
+        const req = request(`coap://localhost:${port}`)
 
         req.setOption('Content-Format', 'application/json; charset=utf8')
         req.end()
@@ -245,7 +248,7 @@ describe('share-socket', function () {
     })
 
     it('should allow option \'Max-Age\'', function (done) {
-        const req = coap.request(`coap://localhost:${port}`)
+        const req = request(`coap://localhost:${port}`)
 
         req.setOption('Max-Age', 26763)
         req.end()
@@ -258,7 +261,7 @@ describe('share-socket', function () {
     })
 
     it('should provide a writeHead() method', function (done) {
-        const req = coap.request(`coap://localhost:${port}`)
+        const req = request(`coap://localhost:${port}`)
         req.end()
         req.on('response', (res) => {
             expect(res.headers['Content-Format']).to.equal('application/json')
@@ -273,7 +276,7 @@ describe('share-socket', function () {
     })
 
     it('should set and parse \'Location-Path\'', function (done) {
-        const req = coap.request({
+        const req = request({
             port: port,
             method: 'PUT'
         }).end()
@@ -290,7 +293,7 @@ describe('share-socket', function () {
     })
 
     it('should set and parse \'Location-Query\'', function (done) {
-        const req = coap.request({
+        const req = request({
             port: port,
             method: 'PUT'
         }).end()
@@ -307,13 +310,13 @@ describe('share-socket', function () {
     })
 
     it('should support multiple observe to the same destination', function (done) {
-        const req1 = coap.request({
+        const req1 = request({
             port: port,
             method: 'GET',
             observe: true,
             pathname: '/a'
         }).end()
-        const req2 = coap.request({
+        const req2 = request({
             port: port,
             method: 'GET',
             observe: true,
@@ -345,12 +348,12 @@ describe('share-socket', function () {
     })
 
     it('should reuse the same socket for two concurrent requests', function (done) {
-        coap.request({
+        request({
             port: port,
             method: 'GET',
             pathname: '/a'
         }).end()
-        coap.request({
+        request({
             port: port,
             method: 'GET',
             pathname: '/b'
@@ -369,8 +372,8 @@ describe('share-socket', function () {
     })
 
     it('should create two sockets for two subsequent requests', function (done) {
-        const agent = new coap.Agent()
-        const req1 = coap.request({
+        const agent = new Agent()
+        const req1 = request({
             port: port,
             method: 'GET',
             pathname: '/a',
@@ -390,7 +393,7 @@ describe('share-socket', function () {
 
         req1.on('response', () => {
             setImmediate(() => {
-                coap.request({
+                request({
                     port: port,
                     method: 'GET',
                     pathname: '/b'
@@ -400,8 +403,8 @@ describe('share-socket', function () {
     })
 
     it('should use the port binded in the agent', function (done) {
-        const agent = new coap.Agent({ port: 3636 })
-        coap.request({
+        const agent = new Agent({ port: 3636 })
+        request({
             port: port,
             method: 'GET',
             pathname: 'a',
@@ -416,7 +419,7 @@ describe('share-socket', function () {
     })
 
     it('should ignore ignored options', function (done) {
-        const req = coap.request(`coap://localhost:${port}`)
+        const req = request(`coap://localhost:${port}`)
         req.setOption('Cache-Control', 'private')
         req.end()
 
@@ -428,7 +431,7 @@ describe('share-socket', function () {
 
     it('should error after ~247 seconds', function (done) {
         const clock = sinon.useFakeTimers()
-        const req = coap.request(`coap://localhost:${port + 1}`)
+        const req = request(`coap://localhost:${port + 1}`)
         req.end()
 
         function fastForward (increase, max) {
@@ -439,7 +442,7 @@ describe('share-socket', function () {
         }
 
         req.on('error', (err) => {
-            expect(err).to.have.property('message', 'No reply in 247s')
+            expect(err).to.have.property('message', 'No reply in 247 seconds.')
             clock.restore()
             done()
         })

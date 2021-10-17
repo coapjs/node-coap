@@ -12,7 +12,7 @@ const BlockCache = require('../lib/cache')
 describe('Cache', () => {
     describe('Block Cache', () => {
         it('Should set up empty cache object', (done) => {
-            const b = new BlockCache()
+            const b = new BlockCache(10000, () => { return {} })
             expect(b._cache.size).to.eql(0)
             setImmediate(done)
         })
@@ -32,7 +32,7 @@ describe('Cache', () => {
         it('Should add to cache', (done) => {
             const b = new BlockCache(10000, () => { return null })
             b.add('test', { payload: 'test' })
-            expect(b._cache.has('test')).to.equal(true)
+            expect(b.contains('test')).to.equal(true)
             setImmediate(done)
         })
     // reuse old cache entry
@@ -44,7 +44,7 @@ describe('Cache', () => {
             b.add('test', { payload: 'test' })
             b.add('test2', { payload: 'test2' })
             b.remove('test')
-            expect(b._cache.has('test')).to.equal(false)
+            expect(b.contains('test')).to.equal(false)
             setImmediate(done)
         })
     })
@@ -74,7 +74,7 @@ describe('Cache', () => {
         })
     })
 
-    describe('Get Witgh Default Insert', () => {
+    describe('Get with default insert', () => {
         it('Should return payload from cache if it exists', (done) => {
             const b = new BlockCache(10000, () => { return null })
             b.add('test', { payload: 'test' })
@@ -82,10 +82,10 @@ describe('Cache', () => {
             setImmediate(done)
         })
 
-        it('Should add to cache if it doesnt exist', (done) => {
+        it('Should add to cache if it does not exist', (done) => {
             const b = new BlockCache(10000, () => { return null })
             b.getWithDefaultInsert('test')
-            expect(b._cache.has('test')).to.equal(true)
+            expect(b.contains('test')).to.equal(true)
             setImmediate(done)
         })
     })

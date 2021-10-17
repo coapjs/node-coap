@@ -8,15 +8,13 @@
 
 const { nextPort } = require('./common')
 
-const coap = require('../')
-const parse = require('coap-packet').parse
-const generate = require('coap-packet').generate
-const dgram = require('dgram')
+const { createServer, request } = require('../index')
+const { parse, generate } = require('coap-packet')
+const { createSocket } = require('dgram')
 const BufferListStream = require('bl')
-const request = coap.request
 const tk = require('timekeeper')
 const sinon = require('sinon')
-const params = require('../lib/parameters').parameters
+const { parameters } = require('../lib/parameters')
 const events = require('events')
 const { expect } = require('chai')
 const originalSetImmediate = setImmediate
@@ -30,18 +28,18 @@ describe('server', function () {
 
     beforeEach(function (done) {
         port = nextPort()
-        server = coap.createServer()
+        server = createServer()
         server.listen(port, done)
     })
 
     beforeEach(function (done) {
         clientPort = nextPort()
-        client = dgram.createSocket('udp4')
+        client = createSocket('udp4')
         client.bind(clientPort, done)
     })
 
     afterEach(function () {
-        if (clock) {
+        if (clock != null) {
             clock.restore()
         }
         client.close()
@@ -70,7 +68,7 @@ describe('server', function () {
     it('should listen when listen() has no argument ', function (done) {
         port = 5683
         server.close() // refresh
-        server = coap.createServer()
+        server = createServer()
         server.on('request', (req, res) => {
             done()
         })
@@ -81,7 +79,7 @@ describe('server', function () {
     it('should use a custom socket passed to listen()', function (done) {
         port = 5683
         server.close() // refresh
-        server = coap.createServer()
+        server = createServer()
         server.on('request', (req, res) => {
             done()
         })
@@ -98,7 +96,7 @@ describe('server', function () {
     it('should use the listener passed as a parameter in the creation', function (done) {
         port = 5683
         server.close() // refresh
-        server = coap.createServer({}, (req, res) => {
+        server = createServer({}, (req, res) => {
             done()
         })
         server.listen()
@@ -107,7 +105,7 @@ describe('server', function () {
 
     it('should listen by default to 5683', function (done) {
         server.close() // we need to change port
-        server = coap.createServer()
+        server = createServer()
         port = 5683
         server.listen(() => {
             send(generate({}))
@@ -315,7 +313,7 @@ describe('server', function () {
 
     describe('with the \'Content-Format\' header in the request', function () {
         function buildTest (option, format, value) {
-            it('should parse \'' + option + ': ' + format + '\'', function (done) {
+            it(`should parse '${option}: ${format}'`, function (done) {
                 send(generate({
                     options: [{
                         name: option,
@@ -406,7 +404,7 @@ describe('server', function () {
         function sendAndRespond (status) {
             send(generate(packet))
             server.on('request', (req, res) => {
-                if (status) {
+                if (status != null) {
                     res.statusCode = status
                 }
 
@@ -536,7 +534,7 @@ describe('server', function () {
         it('should calculate the response twice after the interval', function (done) {
             clock = sinon.useFakeTimers()
             let first = true
-            const delay = (params.exchangeLifetime * 1000) + 1
+            const delay = (parameters.exchangeLifetime * 1000) + 1
 
             server.on('request', (req, res) => {
                 if (first) {
@@ -632,7 +630,7 @@ describe('server', function () {
 
             client.on('message', (msg) => {
                 const response = parse(msg)
-                expect(response.ack).to.be.true // eslint-disable-line no-unused-expressions
+                expect(response.ack).to.be.eql(true)
                 expect(response.messageId).to.eql(packet.messageId)
                 expect(response.payload).to.eql(Buffer.from('42'))
                 done()
@@ -644,7 +642,7 @@ describe('server', function () {
 
             client.once('message', (msg) => {
                 const response = parse(msg)
-                expect(response.ack).to.be.true // eslint-disable-line no-unused-expressions
+                expect(response.ack).to.be.eql(true)
                 expect(response.code).to.eql('0.00')
                 expect(response.messageId).to.eql(packet.messageId)
                 expect(response.payload).to.eql(Buffer.alloc(0))
@@ -666,12 +664,12 @@ describe('server', function () {
 
             client.once('message', (msg) => {
                 const response = parse(msg)
-                expect(response.ack).to.be.true // eslint-disable-line no-unused-expressions
+                expect(response.ack).to.be.eql(true)
 
                 client.once('message', (msg) => {
                     const response = parse(msg)
 
-                    expect(response.confirmable).to.be.true // eslint-disable-line no-unused-expressions
+                    expect(response.confirmable).to.be.eql(true)
                     expect(response.messageId).not.to.eql(packet.messageId)
                     done()
                 })
@@ -872,7 +870,7 @@ describe('server', function () {
                 expect(parse(msg).options[0].value).to.eql(Buffer.of(1))
                 expect(parse(msg).token).to.eql(token)
                 expect(parse(msg).code).to.eql('2.05')
-                expect(parse(msg).ack).to.be.true // eslint-disable-line no-unused-expressions
+                expect(parse(msg).ack).to.be.eql(true)
 
                 client.once('message', (msg) => {
                     expect(parse(msg).payload.toString()).to.eql('world')
@@ -880,8 +878,8 @@ describe('server', function () {
                     expect(parse(msg).options[0].value).to.eql(Buffer.of(2))
                     expect(parse(msg).token).to.eql(token)
                     expect(parse(msg).code).to.eql('2.05')
-                    expect(parse(msg).ack).to.be.false // eslint-disable-line no-unused-expressions
-                    expect(parse(msg).confirmable).to.be.true // eslint-disable-line no-unused-expressions
+                    expect(parse(msg).ack).to.be.eql(false)
+                    expect(parse(msg).confirmable).to.be.eql(true)
 
                     done()
                 })
@@ -1001,7 +999,7 @@ describe('server', function () {
         const port = nextPort()
 
         it('receive CoAp message', function (done) {
-            const server = coap.createServer({
+            const server = createServer({
                 multicastAddress: '224.0.1.2'
             })
 
@@ -1029,7 +1027,7 @@ describe('validate custom server options', function () {
     beforeEach(function (done) {
         port = nextPort()
         clientPort = nextPort()
-        client = dgram.createSocket('udp4')
+        client = createSocket('udp4')
         client.bind(clientPort, done)
     })
 
@@ -1045,7 +1043,7 @@ describe('validate custom server options', function () {
     it('use custom piggyBackTimeout time', function (done) {
         const piggyBackTimeout = 10
         let messages = 0
-        server = coap.createServer({ piggybackReplyMs: piggyBackTimeout })
+        server = createServer({ piggybackReplyMs: piggyBackTimeout })
         server.listen(port)
         server.on('request', (req, res) => {
             res.end('42')
@@ -1062,37 +1060,39 @@ describe('validate custom server options', function () {
     })
 
     it('use default piggyBackTimeout time (50ms)', function (done) {
-        server = coap.createServer()
+        server = createServer()
         expect(server._options.piggybackReplyMs).to.eql(50)
         done()
     })
 
     it('ignore invalid piggyBackTimeout time and use default (50ms)', function (done) {
-        server = coap.createServer({ piggybackReplyMs: 'foo' })
+        const input = 'foo'
+        server = createServer({ piggybackReplyMs: input })
         expect(server._options.piggybackReplyMs).to.eql(50)
         done()
     })
 
     it('use default sendAcksForNonConfirmablePackets', function (done) {
-        server = coap.createServer()
+        server = createServer()
         expect(server._options.sendAcksForNonConfirmablePackets).to.eql(true)
         done()
     })
 
     it('define sendAcksForNonConfirmablePackets: true', function (done) {
-        server = coap.createServer({ sendAcksForNonConfirmablePackets: true })
+        server = createServer({ sendAcksForNonConfirmablePackets: true })
         expect(server._options.sendAcksForNonConfirmablePackets).to.eql(true)
         done()
     })
 
     it('define sendAcksForNonConfirmablePackets: false', function (done) {
-        server = coap.createServer({ sendAcksForNonConfirmablePackets: false })
+        server = createServer({ sendAcksForNonConfirmablePackets: false })
         expect(server._options.sendAcksForNonConfirmablePackets).to.eql(false)
         done()
     })
 
     it('define invalid sendAcksForNonConfirmablePackets setting', function (done) {
-        server = coap.createServer({ sendAcksForNonConfirmablePackets: 'moo' })
+        const input = 'moo'
+        server = createServer({ sendAcksForNonConfirmablePackets: input })
         expect(server._options.sendAcksForNonConfirmablePackets).to.eql(true)
         done()
     })
@@ -1116,7 +1116,7 @@ describe('validate custom server options', function () {
     }
 
     it('should send ACK for non-confirmable message, sendAcksForNonConfirmablePackets=true', function (done) {
-        server = coap.createServer({ sendAcksForNonConfirmablePackets: true })
+        server = createServer({ sendAcksForNonConfirmablePackets: true })
         server.listen(port)
         server.on('request', (req, res) => {
             res.end('42')
@@ -1129,7 +1129,7 @@ describe('validate custom server options', function () {
 
     it('should not send ACK for non-confirmable message, sendAcksForNonConfirmablePackets=false', function (done) {
         let messages = 0
-        server = coap.createServer({ sendAcksForNonConfirmablePackets: false })
+        server = createServer({ sendAcksForNonConfirmablePackets: false })
         server.listen(port)
         server.on('request', (req, res) => {
             res.end('42')
@@ -1145,7 +1145,7 @@ describe('validate custom server options', function () {
     })
 
     it('should send ACK for confirmable message, sendAcksForNonConfirmablePackets=true', function (done) {
-        server = coap.createServer({ sendAcksForNonConfirmablePackets: true })
+        server = createServer({ sendAcksForNonConfirmablePackets: true })
         server.listen(port)
         server.on('request', (req, res) => {
             res.end('42')
@@ -1173,13 +1173,13 @@ describe('server LRU', function () {
     beforeEach(function (done) {
         clock = sinon.useFakeTimers()
         port = nextPort()
-        server = coap.createServer()
+        server = createServer()
         server.listen(port, done)
     })
 
     beforeEach(function (done) {
         clientPort = nextPort()
-        client = dgram.createSocket('udp4')
+        client = createSocket('udp4')
         client.bind(clientPort, done)
     })
 
@@ -1201,11 +1201,11 @@ describe('server LRU', function () {
 
             expect(server._lru.itemCount).to.be.equal(1)
 
-            clock.tick(params.exchangeLifetime * 500)
+            clock.tick(parameters.exchangeLifetime * 500)
 
             expect(server._lru.itemCount).to.be.equal(1)
 
-            clock.tick(params.exchangeLifetime * 1000)
+            clock.tick(parameters.exchangeLifetime * 1000)
             expect(server._lru.itemCount).to.be.equal(0)
             done()
         })
@@ -1228,13 +1228,13 @@ describe('server block cache', function () {
     beforeEach(function (done) {
         clock = sinon.useFakeTimers()
         port = nextPort()
-        server = coap.createServer()
+        server = createServer()
         server.listen(port, done)
     })
 
     beforeEach(function (done) {
         clientPort = nextPort()
-        client = dgram.createSocket('udp4')
+        client = createSocket('udp4')
         client.bind(clientPort, done)
     })
 
@@ -1290,9 +1290,12 @@ describe('Client Identifier', function () {
         clock = sinon.useFakeTimers()
         port = nextPort()
 
-        server = coap.createServer({
+        server = createServer({
             clientIdentifier: (request) => {
-                const authenticationHeader = request._packet.options.find(o => o.name === '2109')
+                let authenticationHeader
+                if (request._packet.options != null) {
+                    authenticationHeader = request._packet.options.find(o => o.name === 2109)
+                }
 
                 if (typeof authenticationHeader !== 'undefined') {
                     return `auth:${authenticationHeader.value.toString()}`
@@ -1305,7 +1308,7 @@ describe('Client Identifier', function () {
 
     beforeEach(function (done) {
         clientPort = nextPort()
-        client = dgram.createSocket('udp4')
+        client = createSocket('udp4')
         client.bind(clientPort, done)
     })
 

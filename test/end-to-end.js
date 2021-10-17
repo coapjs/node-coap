@@ -8,30 +8,25 @@
 
 const { nextPort } = require('./common')
 
-const coap = require('../')
+const { Agent, createServer, request } = require('../index')
 const { expect } = require('chai')
 
 describe('end-to-end', function () {
-    let server,
-        port
+    let server
+    let port
 
     beforeEach(function (done) {
         port = nextPort()
-        server = coap.createServer()
+        server = createServer()
         server.listen(port, done)
     })
 
-    /*  afterEach(function(done) {
-    server.close(done)
-    server.on('error', function() {})
-  }) */
-
     process.on('uncaughtException', (err) => {
-        console.log('Caught exception: ' + err)
+        console.log('Caught exception: ' + err.message)
     })
 
     it('should receive a request at a path with some query', function (done) {
-        coap.request(`coap://localhost:${port}/abcd/ef/gh/?foo=bar&beep=bop`).end()
+        request(`coap://localhost:${port}/abcd/ef/gh/?foo=bar&beep=bop`).end()
         server.on('request', (req) => {
             expect(req.url).to.eql('/abcd/ef/gh?foo=bar&beep=bop')
             setImmediate(done)
@@ -39,7 +34,7 @@ describe('end-to-end', function () {
     })
 
     it('should return code 2.05 by default', function (done) {
-        const req = coap.request(`coap://localhost:${port}/abcd/ef/gh/?foo=bar&beep=bop`).end()
+        const req = request(`coap://localhost:${port}/abcd/ef/gh/?foo=bar&beep=bop`).end()
         req.on('response', (res) => {
             expect(res.code).to.eql('2.05')
             setImmediate(done)
@@ -51,8 +46,7 @@ describe('end-to-end', function () {
     })
 
     it('should return code using res.code attribute', function (done) {
-        coap
-            .request(`coap://localhost:${port}`)
+        request(`coap://localhost:${port}`)
             .on('response', (res) => {
                 expect(res.code).to.eql('4.04')
                 setImmediate(done)
@@ -66,8 +60,7 @@ describe('end-to-end', function () {
     })
 
     it('should return code using res.statusCode attribute', function (done) {
-        coap
-            .request(`coap://localhost:${port}`)
+        request(`coap://localhost:${port}`)
             .on('response', (res) => {
                 expect(res.code).to.eql('4.04')
                 setImmediate(done)
@@ -81,7 +74,7 @@ describe('end-to-end', function () {
     })
 
     it('should support observing', function (done) {
-        const req = coap.request({
+        const req = request({
             port: port,
             observe: true
         }).end()
@@ -103,7 +96,7 @@ describe('end-to-end', function () {
     })
 
     it('should support a 4.04 observe request', function (done) {
-        const req = coap.request({
+        const req = request({
             port: port,
             observe: true
         }).end()
@@ -120,7 +113,7 @@ describe('end-to-end', function () {
     })
 
     it('should support a 4.04 observe request and emit an end event in the response', function (done) {
-        const req = coap.request({
+        const req = request({
             port: port,
             observe: true
         }).end()
@@ -138,7 +131,7 @@ describe('end-to-end', function () {
     })
 
     it('should normalize strings using NFC', function (done) {
-        coap.request({
+        request({
             port: port,
             // U+210E (plank constant) becomes to U+0068 (h) in “compatible” normalizations (should not happen)
             // U+0065 (e) U+0301 (combining acute accent) becomes U+00e9 (é) in “composed” normalizations (should happen)
@@ -158,10 +151,10 @@ describe('end-to-end', function () {
             'application/exi', 'application/json', 'application/cbor',
             'application/pkcs7-mime; smime-type=server-generated-key']
 
-    ;['Accept', 'Content-Format'].forEach(function (option) {
+            ;['Accept', 'Content-Format'].forEach(function (option) {
             formats.forEach(function (format) {
                 it('should pass the \'' + option + ': ' + format + '\' option to the server', function (done) {
-                    const req = coap.request(`coap://localhost:${port}`)
+                    const req = request(`coap://localhost:${port}`)
                     req.setOption(option, format)
                     req.end()
 
@@ -180,7 +173,7 @@ describe('end-to-end', function () {
 
                     req.options[option] = format
 
-                    coap.request(req).end()
+                    request(req).end()
 
                     server.once('request', (req) => {
                         expect(req.options[0].name).to.eql(option)
@@ -197,7 +190,7 @@ describe('end-to-end', function () {
 
                     req.headers[option] = format
 
-                    coap.request(req).end()
+                    request(req).end()
 
                     server.once('request', (req) => {
                         expect(req.headers[option]).to.eql(format)
@@ -206,7 +199,7 @@ describe('end-to-end', function () {
                 })
 
                 it('should pass the \'' + option + ': ' + format + '\' header to the server', function (done) {
-                    const req = coap.request(`coap://localhost:${port}`)
+                    const req = request(`coap://localhost:${port}`)
                     req.setOption(option, format)
                     req.end()
 
@@ -220,7 +213,7 @@ describe('end-to-end', function () {
 
         formats.forEach(function (format) {
             it('should pass the \'Content-Format: ' + format + '\' option to the client', function (done) {
-                const req = coap.request(`coap://localhost:${port}`)
+                const req = request(`coap://localhost:${port}`)
                 req.end()
 
                 server.once('request', (req, res) => {
@@ -237,7 +230,7 @@ describe('end-to-end', function () {
     })
 
     it('should allow encoding with \'Content-Format\'', function (done) {
-        const req = coap.request(`coap://localhost:${port}`)
+        const req = request(`coap://localhost:${port}`)
 
         req.setOption('Content-Format', 'application/json; charset=utf8')
         req.end()
@@ -250,7 +243,7 @@ describe('end-to-end', function () {
     })
 
     it('should allow option \'Max-Age\'', function (done) {
-        const req = coap.request(`coap://localhost:${port}`)
+        const req = request(`coap://localhost:${port}`)
 
         req.setOption('Max-Age', 26763)
         req.end()
@@ -263,7 +256,7 @@ describe('end-to-end', function () {
     })
 
     it('should provide a writeHead() method', function (done) {
-        const req = coap.request(`coap://localhost:${port}`)
+        const req = request(`coap://localhost:${port}`)
         req.end()
         req.on('response', (res) => {
             expect(res.headers['Content-Format']).to.equal('application/json')
@@ -278,7 +271,7 @@ describe('end-to-end', function () {
     })
 
     it('should set and parse \'Location-Path\'', function (done) {
-        const req = coap.request({
+        const req = request({
             port: port,
             method: 'PUT'
         }).end()
@@ -295,7 +288,7 @@ describe('end-to-end', function () {
     })
 
     it('should set and parse \'Location-Query\'', function (done) {
-        const req = coap.request({
+        const req = request({
             port: port,
             method: 'PUT'
         }).end()
@@ -312,13 +305,13 @@ describe('end-to-end', function () {
     })
 
     it('should support multiple observe to the same destination', function (done) {
-        const req1 = coap.request({
+        const req1 = request({
             port: port,
             method: 'GET',
             observe: true,
             pathname: '/a'
         }).end()
-        const req2 = coap.request({
+        const req2 = request({
             port: port,
             method: 'GET',
             observe: true,
@@ -350,12 +343,12 @@ describe('end-to-end', function () {
     })
 
     it('should reuse the same socket for two concurrent requests', function (done) {
-        coap.request({
+        request({
             port: port,
             method: 'GET',
             pathname: '/a'
         }).end()
-        coap.request({
+        request({
             port: port,
             method: 'GET',
             pathname: '/b'
@@ -374,8 +367,8 @@ describe('end-to-end', function () {
     })
 
     it('should create two sockets for two subsequent requests', function (done) {
-        const agent = new coap.Agent()
-        const req1 = coap.request({
+        const agent = new Agent()
+        const req1 = request({
             port: port,
             method: 'GET',
             pathname: '/a',
@@ -395,7 +388,7 @@ describe('end-to-end', function () {
 
         req1.on('response', () => {
             setImmediate(() => {
-                coap.request({
+                request({
                     port: port,
                     method: 'GET',
                     pathname: '/b'
@@ -405,8 +398,8 @@ describe('end-to-end', function () {
     })
 
     it('should use the port binded in the agent', function (done) {
-        const agent = new coap.Agent({ port: 3636 })
-        coap.request({
+        const agent = new Agent({ port: 3636 })
+        request({
             port: port,
             method: 'GET',
             pathname: 'a',
@@ -421,7 +414,7 @@ describe('end-to-end', function () {
     })
 
     it('should ignore ignored options', function (done) {
-        const req = coap.request(`coap://localhost:${port}`)
+        const req = request(`coap://localhost:${port}`)
         req.setOption('Cache-Control', 'private')
         req.end()
 
