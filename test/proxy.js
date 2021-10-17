@@ -7,36 +7,33 @@
  */
 
 const { nextPort } = require('./common')
-
-const coap = require('../')
-const parse = require('coap-packet').parse
-const generate = require('coap-packet').generate
+const { expect } = require('chai')
+const { parse, generate } = require('coap-packet')
+const { request, createServer } = require('../index')
 const dgram = require('dgram')
-const request = coap.request
 const tk = require('timekeeper')
 const sinon = require('sinon')
-const { expect } = require('chai')
 
 describe('proxy', function () {
     let server,
-        port,
-        clientPort,
         client,
         target,
-        targetPort,
         clock
+    let port
+    let clientPort
+    let targetPort
 
     beforeEach(function (done) {
         clock = sinon.useFakeTimers()
         port = nextPort()
-        server = coap.createServer({
+        server = createServer({
             proxy: true
         })
         server.listen(port, () => {
             clientPort = nextPort()
             client = dgram.createSocket('udp4')
             targetPort = nextPort()
-            target = coap.createServer()
+            target = createServer()
 
             client.bind(clientPort, () => {
                 target.listen(targetPort, done)
@@ -74,7 +71,7 @@ describe('proxy', function () {
         send(generate({
             options: [{
                 name: 'Proxy-Uri',
-                value: Buffer.from('coap://localhost:' + targetPort + '/the/path')
+                value: Buffer.from(`coap://localhost:${targetPort}/the/path`)
             }]
         }))
 
@@ -88,7 +85,7 @@ describe('proxy', function () {
 
         clock.restore()
 
-        function sendObservation (message) {
+        function sendObservation () {
             target.on('request', (req, res) => {
                 res.setOption('Observe', 1)
                 res.write('Pruebas')
@@ -102,7 +99,7 @@ describe('proxy', function () {
             return request({
                 port: port,
                 observe: true,
-                proxyUri: 'coap://localhost:' + targetPort + '/the/path'
+                proxyUri: `coap://localhost:${targetPort}/the/path`
             }).end()
         }
 
@@ -132,7 +129,7 @@ describe('proxy', function () {
         send(generate({
             options: [{
                 name: 'Proxy-Uri',
-                value: Buffer.from('coap://localhost:' + targetPort + '/the/path')
+                value: Buffer.from(`coap://localhost:${targetPort}/the/path`)
             }]
         }))
     })
@@ -141,7 +138,7 @@ describe('proxy', function () {
         send(generate({
             options: [{
                 name: 'Proxy-Uri',
-                value: Buffer.from('coap://localhost:' + targetPort + '/the/path')
+                value: Buffer.from(`coap://localhost:${targetPort}/the/path`)
             }]
         }))
 
@@ -158,10 +155,10 @@ describe('proxy', function () {
 
     describe('with a proxied request initiated by an agent', function () {
         it('should forward the request to the URI specified in proxyUri ', function (done) {
-            const request = coap.request({
+            const req = request({
                 host: 'localhost',
                 port: port,
-                proxyUri: 'coap://localhost:' + targetPort,
+                proxyUri: `coap://localhost:${targetPort}`,
                 query: 'a=b'
             })
 
@@ -169,13 +166,13 @@ describe('proxy', function () {
                 done()
             })
 
-            request.end()
+            req.end()
         })
         it('should forward the response to the request back to the agent', function (done) {
-            const request = coap.request({
+            const req = request({
                 host: 'localhost',
                 port: port,
-                proxyUri: 'coap://localhost:' + targetPort,
+                proxyUri: `coap://localhost:${targetPort}`,
                 query: 'a=b'
             })
 
@@ -183,19 +180,19 @@ describe('proxy', function () {
                 res.end('This is the response')
             })
 
-            request.on('response', (res) => {
+            req.on('response', (res) => {
                 expect(res.payload.toString()).to.eql('This is the response')
                 done()
             })
 
-            request.end()
+            req.end()
         })
     })
 
     describe('with a proxied request with a wrong destination', function () {
         it('should return an error to the caller', function (done) {
             this.timeout(20000)
-            const request = coap.request({
+            const req = request({
                 host: 'localhost',
                 port: port,
                 proxyUri: 'coap://unexistentCOAPUri:7968',
@@ -208,7 +205,7 @@ describe('proxy', function () {
 
             server.on('error', (req, res) => {})
 
-            request
+            req
                 .on('response', (res) => {
                     try {
                         expect(res.code).to.eql('5.00')
@@ -224,7 +221,7 @@ describe('proxy', function () {
 
     describe('with a non-proxied request', function () {
         it('should call the handler as usual', function (done) {
-            const request = coap.request({
+            const req = request({
                 host: 'localhost',
                 port: port,
                 query: 'a=b'
@@ -238,7 +235,7 @@ describe('proxy', function () {
                 res.end('Standard response')
             })
 
-            request
+            req
                 .on('response', (res) => {
                     expect(res.payload.toString()).to.contain('Standard response')
                     done()
@@ -249,7 +246,7 @@ describe('proxy', function () {
 
     describe('with an observe request to a proxied server', function () {
         it('should call the handler as usual', function (done) {
-            const request = coap.request({
+            const req = request({
                 host: 'localhost',
                 port: port,
                 observe: true,
@@ -264,7 +261,7 @@ describe('proxy', function () {
                 res.end('Standard response')
             })
 
-            request
+            req
                 .on('response', (res) => {
                     expect(res.payload.toString()).to.contain('Standard response')
                     done()
@@ -272,7 +269,7 @@ describe('proxy', function () {
                 .end()
         })
         it('should allow all the responses', function (done) {
-            const request = coap.request({
+            const req = request({
                 host: 'localhost',
                 port: port,
                 observe: true,
@@ -294,7 +291,7 @@ describe('proxy', function () {
                 }, 200)
             })
 
-            request
+            req
                 .on('response', (res) => {
                     res.on('data', (chunk) => {
                         count++

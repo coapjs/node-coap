@@ -6,17 +6,21 @@
  * See the included LICENSE file for more details.
  */
 
-const segment = require('../lib/segmentation')
 const { expect } = require('chai')
+const { SegmentedTransmission } = require('../lib/segmentation')
+const OutgoingMessage = require('../lib/outgoing_message')
+const RetrySend = require('../lib/retry_send')
+const { createSocket } = require('dgram')
 
 describe('Segmentation', () => {
     describe('Segmented Transmission', () => {
         it('Should throw invalid block size error', (done) => {
+            const req = new OutgoingMessage({}, (req, packet) => {})
             expect(() => {
-                new segment.SegmentedTransmission(-1, 0, 0) // eslint-disable-line no-new
+                new SegmentedTransmission(-1, req, {}) // eslint-disable-line no-new
             }).to.throw('invalid block size -1')
             expect(() => {
-                new segment.SegmentedTransmission(7, 0, 0) // eslint-disable-line no-new
+                new SegmentedTransmission(7, req, {}) // eslint-disable-line no-new
             }).to.throw('invalid block size 7')
             setImmediate(done)
         })
@@ -24,7 +28,8 @@ describe('Segmentation', () => {
 
     describe('Set Block Size Exponent', () => {
         it('should set bytesize to value', (done) => {
-            const v = new segment.SegmentedTransmission(1, 1, { payload: [1] })
+            const req = new OutgoingMessage({}, (req, packet) => {})
+            const v = new SegmentedTransmission(1, req, { payload: Buffer.from([0x1]) })
             v.setBlockSizeExp(6)
             expect(v.blockState.size).to.eql(6)
             expect(v.byteSize).to.eql(1024)
@@ -36,14 +41,16 @@ describe('Segmentation', () => {
 
     describe('Is Correct Acknowledgement', () => {
         it('Should return true', (done) => {
-            const v = new segment.SegmentedTransmission(1, 1, { payload: [1] })
-            const value = v.isCorrectACK(1, { num: 0 })
+            const req = new OutgoingMessage({}, (req, packet) => {})
+            const v = new SegmentedTransmission(1, req, { payload: Buffer.from([0x1]) })
+            const value = v.isCorrectACK({ num: 0, more: 0, size: 8 })
             expect(value).to.eql(true)
             setImmediate(done)
         })
         it('Should return false', (done) => {
-            const v = new segment.SegmentedTransmission(1, 1, { payload: [1] })
-            const value = v.isCorrectACK(1, { num: 1 })
+            const req = new OutgoingMessage({}, (req, packet) => {})
+            const v = new SegmentedTransmission(1, req, { payload: Buffer.from([0x1]) })
+            const value = v.isCorrectACK({ num: 1, more: 0, size: 8 })
             expect(value).to.eql(false)
             setImmediate(done)
         })
@@ -51,7 +58,8 @@ describe('Segmentation', () => {
 
     describe('Resend Previous Packet', () => {
         it('Should increment resend count', (done) => {
-            const v = new segment.SegmentedTransmission(1, 1, { payload: [1] })
+            const req = new OutgoingMessage({}, (req, packet) => {})
+            const v = new SegmentedTransmission(1, req, { payload: Buffer.from([0x1]) })
             v.resendCount = 2
             v.totalLength = 0
             v.currentByte = 1
@@ -61,7 +69,8 @@ describe('Segmentation', () => {
         })
         // should send next packet
         it('Should throw error', (done) => {
-            const v = new segment.SegmentedTransmission(1, 1, { payload: [1] })
+            const req = new OutgoingMessage({}, (req, packet) => {})
+            const v = new SegmentedTransmission(1, req, { payload: Buffer.from([0x1]) })
             v.resendCount = 6
             expect(() => {
                 v.resendPreviousPacket()
@@ -74,16 +83,10 @@ describe('Segmentation', () => {
     // Should re-set block size exp
     // should send next packet
         it('Should set resend count to 0', (done) => {
-            const req = {
-                setOption: () => {},
-                sender: {
-                    reset: () => {}
-                },
-                emit: () => {}
-
-            }
-            const v = new segment.SegmentedTransmission(1, req, { payload: [1] })
-            v.receiveACK({}, { size: 1, more: 0, num: 0 })
+            const req = new OutgoingMessage({}, (req, packet) => {})
+            req.sender = new RetrySend(createSocket('udp4'), 5683, 'localhost')
+            const v = new SegmentedTransmission(1, req, { payload: Buffer.from([0x1]) })
+            v.receiveACK({ size: 1, more: 0, num: 0 })
             v.totalLength = 0
             v.currentByte = 0
             expect(v.resendCount).to.eql(0)
@@ -93,7 +96,8 @@ describe('Segmentation', () => {
 
     describe('Remaining', () => {
         it('Should return a value', (done) => {
-            const v = new segment.SegmentedTransmission(1, 1, { payload: [1] })
+            const req = new OutgoingMessage({}, (req, packet) => {})
+            const v = new SegmentedTransmission(1, req, { payload: Buffer.from([0x1]) })
             v.totalLength = 0
             v.currentByte = 0
             expect(v.remaining()).to.eql(0)

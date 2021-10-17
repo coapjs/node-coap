@@ -6,13 +6,8 @@
  * See the included LICENSE file for more details.
  */
 
-const toCode = require('../lib/helpers').toCode
-const getOption = require('../lib/helpers').getOption
-const hasOption = require('../lib/helpers').hasOption
-const removeOption = require('../lib/helpers').removeOption
-const parseBlock2 = require('../lib/helpers').parseBlock2
-const createBlock2 = require('../lib/helpers').createBlock2
 const { expect } = require('chai')
+const { toCode, getOption, hasOption, removeOption, parseBlock2, createBlock2 } = require('../lib/helpers')
 
 describe('Helpers', () => {
     describe('Has Options', () => {
@@ -76,8 +71,10 @@ describe('Helpers', () => {
         it('Should have case 3 equal 4128', (done) => {
             const buff = Buffer.from([0x01, 0x02, 0x03])
             const res = parseBlock2(buff)
-            expect(res.num).to.eql(4128)
-            setImmediate(done)
+            if (res != null) {
+                expect(res.num).to.eql(4128)
+                setImmediate(done)
+            }
         })
 
         it('Should return null', (done) => {

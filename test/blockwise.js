@@ -7,15 +7,12 @@
  */
 
 const { nextPort } = require('./common')
-
-const coap = require('../')
-const parse = require('coap-packet').parse
-const generate = require('coap-packet').generate
-const getOption = require('../lib/helpers').getOption
-const parseBlock2 = require('../lib/helpers').parseBlock2
-const block = require('../lib/block')
+const { createServer, request } = require('../index')
+const { generate, parse } = require('coap-packet')
+const { getOption, parseBlock2 } = require('../lib/helpers')
+const { generateBlockOption, parseBlockOption, exponentToByteSize, byteSizeToExponent } = require('../lib/block')
 const dgram = require('dgram')
-const expect = require('chai').expect
+const { expect } = require('chai')
 
 describe('blockwise2', function () {
     let server
@@ -28,7 +25,7 @@ describe('blockwise2', function () {
     beforeEach(function (done) {
         bufferVal = 0
         port = nextPort()
-        server = coap.createServer()
+        server = createServer()
         server.listen(port, done)
     })
 
@@ -64,7 +61,7 @@ describe('blockwise2', function () {
     it('should server not use blockwise in response when payload fit in one packet', function (done) {
         const payload = Buffer.alloc(100) // default max packet is 1280
 
-        coap.request({
+        request({
             port: port
         })
             .on('response', (res) => {
@@ -86,7 +83,7 @@ describe('blockwise2', function () {
     })
 
     it('should use blockwise in response when payload bigger than max packet', function (done) {
-        coap.request({
+        request({
             port: port
         })
             .on('response', (res) => {
@@ -108,7 +105,7 @@ describe('blockwise2', function () {
     })
 
     it('should blockwise response have etag', function (done) {
-        coap.request({
+        request({
             port: port
         })
             .on('response', (res) => {
@@ -123,7 +120,7 @@ describe('blockwise2', function () {
     })
 
     it('should accept early negotation', function (done) {
-        coap.request({
+        request({
             port: port
         })
             .setOption('Block2', Buffer.of(0x02))
@@ -147,7 +144,7 @@ describe('blockwise2', function () {
     })
 
     it('should receive error when early negotation request block size higher than 1024', function (done) {
-        coap.request({
+        request({
             port: port
         })
             .setOption('Block2', Buffer.of(0x07)) // request for block 0, with overload size of 2**(7+4)
@@ -166,7 +163,7 @@ describe('blockwise2', function () {
     // with a block size of 512 and a total payload of 1536 there will be 3 blocks
     // blocks are requested with a zero based index, i.e. indices 0, 1 and 2
     // block index 3 or higher is "out of range" and should cause an error response
-        coap.request({
+        request({
             port: port
         })
             .setOption('Block2', Buffer.of(0x3D)) // request for block index 3
@@ -182,7 +179,7 @@ describe('blockwise2', function () {
     })
 
     it('should be able to receive part of message', function (done) {
-        coap.request({
+        request({
             port: port
         })
             .setOption('Block2', Buffer.of(0x10)) // request from block 1, with size = 16
@@ -199,7 +196,7 @@ describe('blockwise2', function () {
 
     it('should receive full response payload', function (done) {
         const payload = Buffer.alloc(16 * 0xff + 1)
-        coap.request({
+        request({
             port: port
         })
             .setOption('Block2', Buffer.of(0x0)) // early negotation with block size = 16, almost 10000/16 = 63 blocks
@@ -234,7 +231,7 @@ describe('blockwise2', function () {
         let req1Done = false
         let req2Done = false
         let req1Block2Num = 0
-        const reqClient2 = coap.request({
+        const reqClient2 = request({
             port: port
         })
 
@@ -302,7 +299,7 @@ describe('blockwise2', function () {
 
     it('should two parallel block2 requests should result only two requests to upper level', function (done) {
         const checkNreq = (nreq) => {
-            expect(nreq).to.within(1, 2)
+            expect(nreq).to.be.within(1, 2)
         }
 
         parallelBlock2Test(done, checkNreq, checkNothing, checkNothing)
@@ -330,16 +327,22 @@ describe('blockwise2', function () {
 
             // Have block2 option?
             const block2Buff = getOption(res.options, 'Block2')
-            expect(block2Buff instanceof Buffer).to.eql(true)
+            if (block2Buff instanceof Buffer) {
+                const block2 = parseBlock2(block2Buff)
+                expect(block2).to.not.eql(null)
 
-            const block2 = parseBlock2(block2Buff)
-            expect(block2).to.not.eql(null)
+                const expectMore = (req1Block2Num + 1) * 16 <= payloadLength ? 1 : 0
 
-            const expectMore = (req1Block2Num + 1) * 16 <= payloadLength ? 1 : 0
-
-            // Have correct num / more fields?
-            expect(block2.num).to.eql(req1Block2Num)
-            expect(block2.more).to.eql(expectMore)
+                // Have correct num / moreBlocks fields?
+                if (block2 != null) {
+                    expect(block2.num).to.eql(req1Block2Num)
+                    expect(block2.more).to.eql(expectMore)
+                } else {
+                    done(new Error('parseBlock2 returned an invalid Block option!'))
+                }
+            } else {
+                done(new Error('getOption did not return a Buffer!'))
+            }
         }
 
         parallelBlock2Test(done, checkNothing, checkBlock2Option, checkNothing)
@@ -366,35 +369,35 @@ describe('blockwise1', () => {
     describe('Generate Block Options', () => {
         it('it should return buffer', (done) => {
             const payload = Buffer.of(0x01)
-            const value = block.generateBlockOption(0, 0, 1)
+            const value = generateBlockOption(0, 0, 1)
             expect(payload).to.eql(value)
             setImmediate(done)
         })
 
         it('it should return buffer equal to 1,0,1', (done) => {
             const payload = Buffer.of(0x01, 0x00, 0x01)
-            const value = block.generateBlockOption(4096, 0, 1)
+            const value = generateBlockOption(4096, 0, 1)
             expect(payload).to.eql(value)
             setImmediate(done)
         })
 
         it('it should return buffer equal to 1,1', (done) => {
             const payload = Buffer.of(0x01, 0x01)
-            const value = block.generateBlockOption(16, 0, 1)
+            const value = generateBlockOption(16, 0, 1)
             expect(payload).to.eql(value)
             setImmediate(done)
         })
 
         it('it should throw Invalid Parameters error', (done) => {
             expect(() => {
-                block.generateBlockOption(0, null, undefined)
+                generateBlockOption(0, 0, undefined)
             }).to.throw('Invalid parameters')
             setImmediate(done)
         })
 
         it('it should throw Sequence error', (done) => {
             expect(() => {
-                block.generateBlockOption(1048576, 0, 0)
+                generateBlockOption(1048576, 0, 0)
             }).to.throw('Sequence number out of range')
             setImmediate(done)
         })
@@ -408,7 +411,7 @@ describe('blockwise1', () => {
                 more: 0,
                 size: 1
             }
-            const value = block.parseBlockOption(payload)
+            const value = parseBlockOption(payload)
             expect(value).to.eql(response)
             setImmediate(done)
         })
@@ -420,7 +423,7 @@ describe('blockwise1', () => {
                 more: 0,
                 size: 2
             }
-            const value = block.parseBlockOption(payload)
+            const value = parseBlockOption(payload)
             expect(value).to.eql(response)
             setImmediate(done)
         })
@@ -432,7 +435,7 @@ describe('blockwise1', () => {
                 more: 0,
                 size: 3
             }
-            const value = block.parseBlockOption(payload)
+            const value = parseBlockOption(payload)
             expect(value).to.eql(response)
             setImmediate(done)
         })
@@ -440,7 +443,7 @@ describe('blockwise1', () => {
         it('it should throw Invalid Block Option error', (done) => {
             const payload = Buffer.from([0x04, 0x01, 0x03, 0x04])
             expect(() => {
-                block.parseBlockOption(payload)
+                parseBlockOption(payload)
             }).to.throw('Invalid block option buffer length. Must be 1, 2 or 3. It is 4')
             setImmediate(done)
         })
@@ -450,7 +453,7 @@ describe('blockwise1', () => {
         it('it should return value', (done) => {
             const response = 1024
             const payload = 6
-            const value = block.exponentToByteSize(payload)
+            const value = exponentToByteSize(payload)
             expect(value).to.eql(response)
             setImmediate(done)
         })
@@ -460,7 +463,7 @@ describe('blockwise1', () => {
         it('it should return value', (done) => {
             const response = 1024
             const payload = 6
-            const value = block.byteSizeToExponent(response)
+            const value = byteSizeToExponent(response)
             expect(value).to.eql(payload)
             setImmediate(done)
         })

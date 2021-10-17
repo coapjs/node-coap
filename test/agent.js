@@ -8,24 +8,22 @@
 
 const { nextPort } = require('./common')
 
-const coap = require('../')
-const parse = require('coap-packet').parse
-const generate = require('coap-packet').generate
-const dgram = require('dgram')
-const request = coap.request
+const { Agent, request } = require('../index')
+const { parse, generate } = require('coap-packet')
+const { createSocket } = require('dgram')
 const { expect } = require('chai')
 
 describe('Agent config', function () {
     it('should get agent instance through custom config', function (done) {
-        const agent = new coap.Agent({ type: 'udp4', port: 62754 })
+        const agent = new Agent({ type: 'udp4', port: 62754 })
         expect(agent._sock.type).to.eql('udp4')
         expect(agent._sock._bindState).to.eql(1)
         done()
     })
 
     it('should get agent instance through custom socket', function (done) {
-        const socket = dgram.createSocket('udp6')
-        const agent = new coap.Agent({ socket, type: 'udp4', port: 62754 })
+        const socket = createSocket('udp6')
+        const agent = new Agent({ socket, type: 'udp4', port: 62754 })
         expect(agent._opts.type).to.eql('udp6')
         expect(agent._sock.type).to.eql('udp6')
         expect(agent._sock._bindState).to.eql(0)
@@ -40,8 +38,8 @@ describe('Agent', function () {
 
     beforeEach(function (done) {
         port = nextPort()
-        agent = new coap.Agent()
-        server = dgram.createSocket('udp4')
+        agent = new Agent()
+        server = createSocket('udp4')
         server.bind(port, done)
     })
 
@@ -50,10 +48,6 @@ describe('Agent', function () {
     })
 
     function doReq (confirmable) {
-        if (confirmable == null) {
-            confirmable = false
-        }
-
         return request({
             port: port,
             agent: agent,
@@ -336,7 +330,7 @@ describe('Agent', function () {
                 break
             }
             case 2:
-                expect(packet.reset).to.be.true // eslint-disable-line no-unused-expressions
+                expect(packet.reset).to.be.eql(true)
                 done()
                 break
 
