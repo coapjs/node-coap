@@ -23,6 +23,7 @@ const parameters: ParametersUpdate = {
     ackTimeout: 0,
     ackRandomFactor: 0,
     maxRetransmit: 0,
+    maxLatency: 42,
     nstart: 9001,
     defaultLeisure: 20,
     probingRate: 3,
