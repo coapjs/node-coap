@@ -18,8 +18,8 @@ import { Socket } from 'dgram'
 export type OptionValue = string | number | Buffer | Array<Buffer>
 
 export interface Option {
-    name: number | OptionName;
-    value: OptionValue;
+    name: number | OptionName | string
+    value: OptionValue
 }
 
 export function setOption (name: OptionName, value: OptionValue): void
@@ -78,6 +78,7 @@ export interface CoapRequestParams {
     multicast?: boolean
     multicastTimeout?: number
     retrySend?: number
+    token?: Buffer
 }
 
 export interface CoapServerOptions {
@@ -94,6 +95,7 @@ export interface CoapServerOptions {
 export interface AgentOptions {
     type?: 'udp4' | 'udp6'
     socket?: Socket
+    port?: number
 }
 
 export const parameters: Parameters
