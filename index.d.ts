@@ -29,9 +29,9 @@ export interface ParametersUpdate {
     ackTimeout?: number
     ackRandomFactor?: number
     maxRetransmit?: number
-    nstart?: number,
-    defaultLeisure?: number,
-    probingRate?: number,
+    nstart?: number
+    defaultLeisure?: number
+    probingRate?: number
     piggybackReplyMs?: number
     maxPacketSize?: number
     sendAcksForNonConfirmablePackets?: boolean
@@ -39,60 +39,60 @@ export interface ParametersUpdate {
 }
 
 export interface Parameters {
-    ackTimeout: number,
-    ackRandomFactor: number,
-    maxRetransmit: number,
-    nstart: number,
-    defaultLeisure: number,
-    probingRate: number,
-    maxLatency: number,
-    piggybackReplyMs: number,
-    nonLifetime: number,
-    coapPort: number,
-    maxPacketSize: number,
-    sendAcksForNonConfirmablePackets: boolean,
-    pruneTimerPeriod: number,
-    maxTransmitSpan: number,
-    maxTransmitWait: number,
-    processingDelay: number,
-    exchangeLifetime: number,
-    maxRTT: number,
-    defaultTiming(): void,
-    refreshTiming(parameters?: Parameters): void,
+    ackTimeout: number
+    ackRandomFactor: number
+    maxRetransmit: number
+    nstart: number
+    defaultLeisure: number
+    probingRate: number
+    maxLatency: number
+    piggybackReplyMs: number
+    nonLifetime: number
+    coapPort: number
+    maxPacketSize: number
+    sendAcksForNonConfirmablePackets: boolean
+    pruneTimerPeriod: number
+    maxTransmitSpan: number
+    maxTransmitWait: number
+    processingDelay: number
+    exchangeLifetime: number
+    maxRTT: number
+    defaultTiming: () => void
+    refreshTiming: (parameters?: Parameters) => void
 }
 
 export interface CoapRequestParams {
-    host?: string,
-    hostname?: string,
-    port?: number,
-    method?: CoapMethod,
-    confirmable?: boolean,
-    observe?: 0 | 1 | boolean,
-    pathname?: string,
-    query?: string,
-    options?: Partial<Record<OptionName, OptionValue>>,
-    headers?: Partial<Record<OptionName, OptionValue>>,
-    agent?: Agent | false,
-    proxyUri?: string,
-    multicast?: boolean,
-    multicastTimeout?: number,
-    retrySend?: number,
+    host?: string
+    hostname?: string
+    port?: number
+    method?: CoapMethod
+    confirmable?: boolean
+    observe?: 0 | 1 | boolean
+    pathname?: string
+    query?: string
+    options?: Partial<Record<OptionName, OptionValue>>
+    headers?: Partial<Record<OptionName, OptionValue>>
+    agent?: Agent | false
+    proxyUri?: string
+    multicast?: boolean
+    multicastTimeout?: number
+    retrySend?: number
 }
 
 export interface CoapServerOptions {
-    type?: 'udp4' | 'udp6',
-    proxy?: boolean,
-    multicastAddress?: string,
-    multicastInterface?: string,
-    piggybackReplyMs?: number,
-    sendAcksForNonConfirmablePackets?: boolean,
-    clientIdentifier?: (request: IncomingMessage) => string,
+    type?: 'udp4' | 'udp6'
+    proxy?: boolean
+    multicastAddress?: string
+    multicastInterface?: string
+    piggybackReplyMs?: number
+    sendAcksForNonConfirmablePackets?: boolean
+    clientIdentifier?: (request: IncomingMessage) => string
     reuseAddr?: boolean
 }
 
 export interface AgentOptions {
-    type?: 'udp4' | 'udp6',
-    socket?: Socket,
+    type?: 'udp4' | 'udp6'
+    socket?: Socket
 }
 
 export const parameters: Parameters
