@@ -12,20 +12,21 @@ import {
     IncomingMessage,
     OutgoingMessage,
     globalAgent,
-    Parameters,
     updateTiming,
     defaultTiming,
     CoapRequestParams,
     CoapServerOptions,
+    ParametersUpdate,
 } from '../index'
 
-const parameters: Parameters = {
+const parameters: ParametersUpdate = {
     ackTimeout: 0,
     ackRandomFactor: 0,
     maxRetransmit: 0,
-    maxLatency: 42,
+    nstart: 9001,
+    defaultLeisure: 20,
+    probingRate: 3,
     piggybackReplyMs: 2,
-    coapPort: 3000,
     maxPacketSize: 25,
     sendAcksForNonConfirmablePackets: true,
 }
