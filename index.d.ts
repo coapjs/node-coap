@@ -32,6 +32,7 @@ export interface ParametersUpdate {
     nstart?: number
     defaultLeisure?: number
     probingRate?: number
+    maxLatency?: number
     piggybackReplyMs?: number
     maxPacketSize?: number
     sendAcksForNonConfirmablePackets?: boolean
@@ -57,8 +58,8 @@ export interface Parameters {
     processingDelay: number
     exchangeLifetime: number
     maxRTT: number
-    defaultTiming: () => void
-    refreshTiming: (parameters?: Parameters) => void
+    defaultTiming?: () => void
+    refreshTiming?: (parameters?: Parameters) => void
 }
 
 export interface CoapRequestParams {
