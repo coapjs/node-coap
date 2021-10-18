@@ -25,23 +25,40 @@ export interface Option {
 export function setOption (name: OptionName, value: OptionValue): void
 export function getOption (options: Array<Option>, name: OptionName): OptionValue
 
+export interface ParametersUpdate {
+    ackTimeout?: number
+    ackRandomFactor?: number
+    maxRetransmit?: number
+    nstart?: number,
+    defaultLeisure?: number,
+    probingRate?: number,
+    piggybackReplyMs?: number
+    maxPacketSize?: number
+    sendAcksForNonConfirmablePackets?: boolean
+    pruneTimerPeriod?: number
+}
+
 export interface Parameters {
-    ackTimeout?: number,
-    ackRandomFactor?: number,
-    maxRetransmit?: number,
-    maxLatency?: number,
-    piggybackReplyMs?: number,
-    coapPort?: number,
-    maxPacketSize?: number,
-    sendAcksForNonConfirmablePackets?: boolean,
-    pruneTimerPeriod?: number,
-    maxTransmitSpan?: number,
-    maxTransmitWait?: number,
-    processingDelay?: number,
-    exchangeLifetime?: number,
-    maxRTT?: number,
-    defaultTiming?(): void,
-    refreshTiming?(parameters?: Parameters): void,
+    ackTimeout: number,
+    ackRandomFactor: number,
+    maxRetransmit: number,
+    nstart: number,
+    defaultLeisure: number,
+    probingRate: number,
+    maxLatency: number,
+    piggybackReplyMs: number,
+    nonLifetime: number,
+    coapPort: number,
+    maxPacketSize: number,
+    sendAcksForNonConfirmablePackets: boolean,
+    pruneTimerPeriod: number,
+    maxTransmitSpan: number,
+    maxTransmitWait: number,
+    processingDelay: number,
+    exchangeLifetime: number,
+    maxRTT: number,
+    defaultTiming(): void,
+    refreshTiming(parameters?: Parameters): void,
 }
 
 export interface CoapRequestParams {
@@ -85,7 +102,7 @@ export const globalAgentIPv6: Agent
 export { IncomingMessage, OutgoingMessage, ObserveReadStream, ObserveWriteStream, Agent, Server }
 
 export function requestListener(req: IncomingMessage, res: OutgoingMessage): void
-export function updateTiming(values: Parameters): void
+export function updateTiming(values: ParametersUpdate): void
 export function defaultTiming(): void
 export function registerOption(name: string, toBinary: (value: string | number) => Buffer, fromBinary: (value: Buffer) => string | number): void
 export function registerFormat(name: string, value: number): void
