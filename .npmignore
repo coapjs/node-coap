@@ -9,3 +9,5 @@ coverage
 .github
 .mocharc.json
 .nycrc.json
+dist/test
+test
