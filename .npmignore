@@ -6,3 +6,6 @@
 .nyc_output
 coverage
 *.tgz
+.github
+.mocharc.json
+.nycrc.json
