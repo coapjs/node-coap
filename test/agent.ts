@@ -48,11 +48,15 @@ describe('Agent', function () {
         server.close()
     })
 
-    function doReq (confirmable?: boolean): OutgoingMessage {
+    function doReq (confirmable?: boolean, customPort?: number): OutgoingMessage {
+        let requestPort = port
+        if (customPort != null) {
+            requestPort = customPort
+        }
         return request({
-            port: port,
-            agent: agent,
-            confirmable: confirmable
+            port: requestPort,
+            agent,
+            confirmable
         }).end()
     }
 
