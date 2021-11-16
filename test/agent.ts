@@ -60,6 +60,31 @@ describe('Agent', function () {
         }).end()
     }
 
+    it('should allow to close the agent', function (done) {
+        let closeEmitted = false
+        const port = nextPort()
+        // Initiate a number of requests
+        doReq(undefined, port)
+        doReq(undefined, port)
+        doReq(undefined, port)
+        doReq(undefined, port)
+
+        agent.on('close', () => {
+            closeEmitted = true
+            expect(agent._requests).to.equal(0)
+            expect(agent._sock).to.equal(null)
+        })
+
+        agent.close()
+
+        // Ensure that new requests can still be sent
+        doReq()
+        server.on('message', (msg, rsinfo) => {
+            expect(closeEmitted).to.equal(true)
+            agent.close(done)
+        })
+    })
+
     it('should reuse the same socket for multiple requests', function (done) {
         let firstRsinfo
 
