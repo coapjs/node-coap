@@ -505,6 +505,7 @@ class Agent extends EventEmitter {
     abort (req: OutgoingMessage): void {
         req.sender.removeAllListeners()
         req.sender.reset()
+        this._msgInFlight--
         this._cleanUp()
         if (req._packet.messageId != null) {
             this._msgIdToReq.delete(req._packet.messageId)
