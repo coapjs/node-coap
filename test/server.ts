@@ -1000,14 +1000,14 @@ describe('server', function () {
     describe('multicast', function () {
         const port = nextPort()
 
-        it('receive CoAp message', function (done) {
+        it('receive CoAP message', function (done) {
             const server = createServer({
                 multicastAddress: '224.0.1.2'
             })
 
             server.listen(port)
 
-            server.on('request', (msg) => {
+            server.once('request', (req, res) => {
                 done()
             })
 

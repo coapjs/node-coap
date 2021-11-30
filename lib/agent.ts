@@ -103,6 +103,16 @@ class Agent extends EventEmitter {
         this._requests = 0
     }
 
+    close (done?: (err?: Error) => void): this {
+        for (const req of this._msgIdToReq.values()) {
+            this.abort(req)
+        }
+        if (done != null) {
+            setImmediate(done)
+        }
+        return this
+    }
+
     _cleanUp (): void {
         if (--this._requests !== 0) {
             return
@@ -132,6 +142,7 @@ class Agent extends EventEmitter {
             this._sock.close()
         }
         this._sock = null
+        this.emit('close')
     }
 
     _handle (packet: ParsedPacket, rsinfo: AddressInfo, outSocket: AddressInfo): void {
@@ -505,6 +516,7 @@ class Agent extends EventEmitter {
     abort (req: OutgoingMessage): void {
         req.sender.removeAllListeners()
         req.sender.reset()
+        this._msgInFlight--
         this._cleanUp()
         if (req._packet.messageId != null) {
             this._msgIdToReq.delete(req._packet.messageId)

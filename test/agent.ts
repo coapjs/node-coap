@@ -48,13 +48,42 @@ describe('Agent', function () {
         server.close()
     })
 
-    function doReq (confirmable?: boolean): OutgoingMessage {
+    function doReq (confirmable?: boolean, customPort?: number): OutgoingMessage {
+        let requestPort = port
+        if (customPort != null) {
+            requestPort = customPort
+        }
         return request({
-            port: port,
-            agent: agent,
-            confirmable: confirmable
+            port: requestPort,
+            agent,
+            confirmable
         }).end()
     }
+
+    it('should allow to close the agent', function (done) {
+        let closeEmitted = false
+        const port = nextPort()
+        // Initiate a number of requests
+        doReq(undefined, port)
+        doReq(undefined, port)
+        doReq(undefined, port)
+        doReq(undefined, port)
+
+        agent.on('close', () => {
+            closeEmitted = true
+            expect(agent._requests).to.equal(0)
+            expect(agent._sock).to.equal(null)
+        })
+
+        agent.close()
+
+        // Ensure that new requests can still be sent
+        doReq()
+        server.on('message', (msg, rsinfo) => {
+            expect(closeEmitted).to.equal(true)
+            agent.close(done)
+        })
+    })
 
     it('should reuse the same socket for multiple requests', function (done) {
         let firstRsinfo
