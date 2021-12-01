@@ -10,8 +10,8 @@ import Agent from './lib/agent'
 import Server from './lib/server'
 import IncomingMessage from './lib/incoming_message'
 import OutgoingMessage from './lib/outgoing_message'
-import ObserveReadStream = require('./lib/observe_read_stream')
-import ObserveWriteStream = require('./lib/observe_write_stream')
+import ObserveReadStream from './lib/observe_read_stream'
+import ObserveWriteStream from './lib/observe_write_stream'
 import { parameters, refreshTiming, defaultTiming } from './lib/parameters'
 import { isIPv6 } from 'net'
 import { registerOption, registerFormat, ignoreOption } from './lib/option_converter'
