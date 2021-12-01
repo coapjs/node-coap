@@ -15,7 +15,7 @@ import ObserveWriteStream = require('./lib/observe_write_stream')
 import { parameters, refreshTiming, defaultTiming } from './lib/parameters'
 import { isIPv6 } from 'net'
 import { registerOption, registerFormat, ignoreOption } from './lib/option_converter'
-import { CoapServerOptions, requestListener, CoapRequestParams, ParametersUpdate } from './models/models'
+import { CoapServerOptions, requestListener, CoapRequestParams, ParametersUpdate, AgentOptions } from './models/models'
 
 export let globalAgent = new Agent({ type: 'udp4' })
 export let globalAgentIPv6 = new Agent({ type: 'udp6' })
@@ -98,5 +98,7 @@ export {
     ObserveWriteStream,
     Agent,
     Server,
-    ParametersUpdate
+    ParametersUpdate,
+    CoapRequestParams,
+    AgentOptions
 }
