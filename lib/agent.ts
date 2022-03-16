@@ -104,11 +104,16 @@ class Agent extends EventEmitter {
     }
 
     close (done?: (err?: Error) => void): this {
+        if (this._msgIdToReq.size === 0 && this._msgInFlight === 0) {
+            // No requests in flight, close immediately
+            this._doClose(done)
+            return this
+        }
+
+        done = done ?? (() => {})
+        this.once('close', done)
         for (const req of this._msgIdToReq.values()) {
             this.abort(req)
-        }
-        if (done != null) {
-            setImmediate(done)
         }
         return this
     }
@@ -122,14 +127,14 @@ class Agent extends EventEmitter {
             this._closing = true
         }
 
-        if (this._msgInFlight !== 0) {
+        if (this._msgInFlight > 0) {
             return
         }
 
         this._doClose()
     }
 
-    _doClose (): void {
+    _doClose (done?: (err?: Error) => void): void {
         for (const req of this._msgIdToReq.values()) {
             req.sender.reset()
         }
@@ -138,11 +143,18 @@ class Agent extends EventEmitter {
             return
         }
 
-        if (this._sock != null) {
-            this._sock.close()
+        if (this._sock == null) {
+            this.emit('close')
+            return
         }
-        this._sock = null
-        this.emit('close')
+
+        this._sock.close(() => {
+            this._sock = null
+            if (done != null) {
+                done()
+            }
+            this.emit('close')
+        })
     }
 
     _handle (packet: ParsedPacket, rsinfo: AddressInfo, outSocket: AddressInfo): void {

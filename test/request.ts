@@ -142,6 +142,8 @@ describe('request', function () {
             ackBack(msg, rsinfo)
             done()
         })
+
+        server2.on('error', done)
     })
 
     it('should send the path to the server', function (done) {

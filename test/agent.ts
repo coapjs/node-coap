@@ -59,6 +59,15 @@ describe('Agent', function () {
             confirmable
         }).end()
     }
+    it('should exit with no requests in flight', function (done) {
+        agent.on('close', () => {
+            expect(agent._requests).to.equal(0)
+            expect(agent._sock).to.equal(null)
+            done()
+        })
+
+        agent.close()
+    }).timeout(500)
 
     it('should allow to close the agent', function (done) {
         let closeEmitted = false
@@ -75,13 +84,16 @@ describe('Agent', function () {
             expect(agent._sock).to.equal(null)
         })
 
-        agent.close()
+        agent.close(() => {
+            expect(agent._requests).to.equal(0)
+            expect(agent._sock).to.equal(null)
 
-        // Ensure that new requests can still be sent
-        doReq()
-        server.on('message', (msg, rsinfo) => {
-            expect(closeEmitted).to.equal(true)
-            agent.close(done)
+            // Ensure that new requests can still be sent
+            doReq()
+            server.on('message', (msg, rsinfo) => {
+                expect(closeEmitted).to.equal(true)
+                agent.close(done)
+            })
         })
     })
 
