@@ -27,19 +27,24 @@ class ObserveReadStream extends incoming_message_1.default {
         if (!firstPacket) {
             (0, helpers_1.packetToMessage)(this, packet);
         }
+        /*
         if (typeof this.headers.Observe === 'string') {
             this.headers.Observe = parseInt(this.headers.Observe, 10);
         }
         if (typeof this.headers.Observe !== 'number') {
-            return;
+            return
         }
+        */
         // First notification
         if (this._lastId === undefined) {
+            // @ts-expect-error
             this._lastId = this.headers.Observe - 1;
         }
+        // @ts-expect-error
         const dseq = (this.headers.Observe - this._lastId) & 0xffffff;
         const dtime = Date.now() - this._lastTime;
         if (this._disableFiltering || (dseq > 0 && dseq < (1 << 23)) || dtime > 128 * 1000) {
+            // @ts-expect-error
             this._lastId = this.headers.Observe;
             this._lastTime = Date.now();
             this.push(packet.payload);
