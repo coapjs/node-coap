@@ -33,6 +33,9 @@ export default class ObserveReadStream extends IncomingMessage {
             packetToMessage(this, packet)
         }
 
+        if (typeof this.headers.Observe === 'string') {
+            this.headers.Observe = parseInt(this.headers.Observe, 10);
+        }
         if (typeof this.headers.Observe !== 'number') {
             return
         }
