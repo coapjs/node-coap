@@ -1,0 +1,16 @@
+import Agent from './lib/agent';
+import Server from './lib/server';
+import IncomingMessage from './lib/incoming_message';
+import OutgoingMessage from './lib/outgoing_message';
+import ObserveReadStream from './lib/observe_read_stream';
+import ObserveWriteStream from './lib/observe_write_stream';
+import { parameters, refreshTiming, defaultTiming } from './lib/parameters';
+import { registerOption, registerFormat, ignoreOption } from './lib/option_converter';
+import { CoapServerOptions, requestListener, CoapRequestParams, ParametersUpdate, AgentOptions, CoapPacket, Option, OptionValue } from './models/models';
+export declare let globalAgent: Agent;
+export declare let globalAgentIPv6: Agent;
+export declare function setGlobalAgent(agent: Agent): void;
+export declare function setGlobalAgentV6(agent: Agent): void;
+export declare function createServer(options?: CoapServerOptions | typeof requestListener, listener?: typeof requestListener): Server;
+export declare function request(requestParams: CoapRequestParams | string): OutgoingMessage;
+export { parameters, refreshTiming as updateTiming, defaultTiming, registerOption, registerFormat, ignoreOption, IncomingMessage, OutgoingMessage, ObserveReadStream, ObserveWriteStream, Agent, Server, ParametersUpdate, CoapRequestParams, AgentOptions, CoapPacket, Option, OptionValue, CoapServerOptions };

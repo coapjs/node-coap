@@ -46,4 +46,4 @@ lib-cov
 *.tgz
 
 # typescript output
-dist
+#dist
