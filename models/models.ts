@@ -87,7 +87,7 @@ export interface CoapRequestParams {
     port?: number
     method?: CoapMethod
     confirmable?: boolean
-    observe?: 0 | 1 | boolean
+    observe?: 0 | 1 | boolean | string
     pathname?: string
     query?: string
     options?: Partial<Record<OptionName, OptionValue>>
