@@ -13,6 +13,7 @@ import { expect } from 'chai'
 import { createSocket, Socket } from 'dgram'
 import OutgoingMessage from '../lib/outgoing_message'
 import { AddressInfo } from 'net'
+import ObserveReadStream from '../lib/observe_read_stream'
 
 describe('Agent config', function () {
     it('should get agent instance through custom config', function (done) {
@@ -483,6 +484,58 @@ describe('Agent', function () {
                 res.close()
 
                 setImmediate(doReq)
+            })
+        })
+
+        it('should allow observe with non-confirmable requests', function (done) {
+            const req = request({
+                port: port,
+                agent: agent,
+                observe: true,
+                confirmable: false
+            }).end()
+
+            let counter = 0
+
+            server.on('message', (msg, rsinfo) => {
+                const packet = parse(msg)
+
+                sendObserve({
+                    num: 1,
+                    messageId: packet.messageId,
+                    token: packet.token,
+                    confirmable: false,
+                    ack: false,
+                    rsinfo: rsinfo
+                })
+
+                // duplicate, as there was some retransmission
+                sendObserve({
+                    num: 1,
+                    messageId: packet.messageId,
+                    token: packet.token,
+                    confirmable: false,
+                    ack: false,
+                    rsinfo: rsinfo
+                })
+
+                // some more data
+                sendObserve({
+                    num: 2,
+                    token: packet.token,
+                    confirmable: false,
+                    ack: false,
+                    rsinfo: rsinfo
+                })
+            })
+
+            req.on('response', (res: ObserveReadStream) => {
+                res.on('data', (chunk) => {
+                    counter++
+                    if (counter >= 2) {
+                        done()
+                    }
+                })
             })
         })
     })
