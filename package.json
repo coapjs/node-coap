@@ -39,6 +39,7 @@
     "@types/chai": "^4.3.0",
     "@types/debug": "^4.1.7",
     "@types/mocha": "^9.1.0",
+    "@types/node": "^17.0.10",
     "@types/sinon": "^10.0.8",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "chai": "^4.3.4",
@@ -59,7 +60,6 @@
   "dependencies": {
     "@types/bl": "^5.0.2",
     "@types/lru-cache": "^5.1.1",
-    "@types/node": "^17.0.10",
     "bl": "^5.0.0",
     "capitalize": "^2.0.4",
     "coap-packet": "^1.1.0",
