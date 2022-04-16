@@ -320,6 +320,8 @@ class Agent extends EventEmitter {
             }
         }
 
+        const observe = req.url.observe != null && [true, 0, '0'].includes(req.url.observe)
+
         if (req.response != null) {
             const response: any = req.response
             if (response.append != null) {
@@ -332,12 +334,12 @@ class Agent extends EventEmitter {
             }
         } else if (block2 != null && packet.token != null) {
             this._tkToReq.delete(packet.token.toString('hex'))
-        } else if (req.url.observe !== true && !req.multicast) {
+        } else if (!observe && !req.multicast) {
             // it is not, so delete the token
             this._tkToReq.delete(packet.token.toString('hex'))
         }
 
-        if (req.url.observe === true && packet.code !== '4.04') {
+        if (observe && packet.code !== '4.04') {
             response = new ObserveStream(packet, rsinfo, outSocket)
             response.on('close', () => {
                 this._tkToReq.delete(packet.token.toString('hex'))
@@ -512,10 +514,12 @@ class Agent extends EventEmitter {
 
         if (typeof (url.observe) === 'number') {
             req.setOption('Observe', url.observe)
-        } else if (url.observe == null) {
-            req.on('response', this._cleanUp.bind(this))
-        } else if (url.observe) {
+        } else if (typeof (url.observe) === 'string') {
+            req.setOption('Observe', parseInt(url.observe))
+        } else if (url.observe === true || url.observe != null) {
             req.setOption('Observe', 0)
+        } else {
+            req.on('response', this._cleanUp.bind(this))
         }
 
         this._requests++
