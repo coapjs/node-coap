@@ -1,6 +1,6 @@
 {
   "name": "coap",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A CoAP library for node modelled after 'http'",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -35,12 +35,11 @@
   "license": "MIT",
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^1.0.2",
-    "@types/bl": "^5.0.2",
     "@types/capitalize": "^2.0.0",
     "@types/chai": "^4.3.0",
     "@types/debug": "^4.1.7",
-    "@types/lru-cache": "^5.1.1",
     "@types/mocha": "^9.1.0",
+    "@types/node": "^17.0.10",
     "@types/sinon": "^10.0.8",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "chai": "^4.3.4",
@@ -59,7 +58,8 @@
     "typescript": "~4.4.4"
   },
   "dependencies": {
-    "@types/node": "^17.0.10",
+    "@types/bl": "^5.0.2",
+    "@types/lru-cache": "^5.1.1",
     "bl": "^5.0.0",
     "capitalize": "^2.0.4",
     "coap-packet": "^1.1.0",
