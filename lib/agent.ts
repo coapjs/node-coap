@@ -516,7 +516,7 @@ class Agent extends EventEmitter {
             req.setOption('Observe', url.observe)
         } else if (typeof (url.observe) === 'string') {
             req.setOption('Observe', parseInt(url.observe))
-        } else if (url.observe === true || url.observe != null) {
+        } else if (url.observe === true) {
             req.setOption('Observe', 0)
         } else {
             req.on('response', this._cleanUp.bind(this))
