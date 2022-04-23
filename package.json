@@ -8,8 +8,8 @@
     "build": "tsc -b",
     "pretest": "npm run build",
     "prepublishOnly": "npm run build",
-    "test": "c8  mocha ./dist/test --exit",
-    "coverage": "c8  report --reporter=lcov --reporter=text-summary",
+    "test": "mocha ./dist/test --exit",
+    "coverage": "c8 -a --reporter=lcov --reporter=text --reporter=html npm run test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
