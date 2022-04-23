@@ -9,7 +9,7 @@
 import { parse, generate } from 'coap-packet'
 import { nextPort } from './common'
 import { expect } from 'chai'
-import { CoapPacket, Option } from '../models/models'
+import { CoapPacket, CoapServerOptions, Option } from '../models/models'
 import { request, createServer } from '../index'
 import { createSocket } from 'dgram'
 import BufferListStream = require('bl')
@@ -1000,22 +1000,37 @@ describe('server', function () {
     describe('multicast', function () {
         const port = nextPort()
 
-        it('receive CoAP message', function (done) {
-            const server = createServer({
-                multicastAddress: '224.0.1.2'
+        const testVector: Array<CoapServerOptions & {addressType: string}> = [
+            {
+                addressType: 'IPv4',
+                multicastAddress: '224.0.1.2',
+                type: 'udp4'
+            },
+            {
+                addressType: 'IPv6',
+                multicastAddress: 'ff02::fd',
+                type: 'udp6'
+            }]
+
+        testVector.forEach(({ addressType, multicastAddress, type }) => {
+            it(`receive ${addressType} CoAP message`, function (done) {
+                const server = createServer({
+                    multicastAddress,
+                    type
+                })
+
+                server.listen(port)
+
+                server.once('request', (req, res) => {
+                    done()
+                })
+
+                request({
+                    host: multicastAddress,
+                    port: port,
+                    multicast: true
+                }).end()
             })
-
-            server.listen(port)
-
-            server.once('request', (req, res) => {
-                done()
-            })
-
-            request({
-                host: '224.0.1.2',
-                port: port,
-                multicast: true
-            }).end()
         })
     })
 })
