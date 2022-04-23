@@ -259,7 +259,7 @@ class CoAPServer extends EventEmitter {
                             multicastAddress,
                             this._multicastInterface
                         )
-                    } else {
+                    } else if (this._options.type === 'udp4') {
                         allAddresses(this._options.type).forEach((
                             _interface
                         ) => {
@@ -268,6 +268,10 @@ class CoAPServer extends EventEmitter {
                                 _interface
                             )
                         })
+                    } else {
+                        // FIXME: Iterating over all network interfaces does not
+                        //        work for IPv6 at the moment
+                        sock.addMembership(multicastAddress)
                     }
                 }
             } catch (err) {
