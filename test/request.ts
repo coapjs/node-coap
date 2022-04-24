@@ -1262,6 +1262,14 @@ describe('request', function () {
                         token: packet.token,
                         payload: Buffer.from('42'),
                         ack: true,
+                        code: '2.05'
+                    })
+
+                    ssend(rsinfo, {
+                        messageId: packet.messageId,
+                        token: packet.token,
+                        payload: Buffer.from('42'),
+                        ack: true,
                         options: [{
                             name: 'Observe',
                             value: Buffer.of(1)
@@ -1382,7 +1390,7 @@ describe('request', function () {
                         return
                     }
 
-                    server.on('message', (msg, rsinfo) => {
+                    server.once('message', (msg, rsinfo) => {
                         const packet = parse(msg)
                         if (packet.ack && (packet.code === '0.00')) {
                             return
