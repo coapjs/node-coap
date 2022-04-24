@@ -33,20 +33,24 @@ export default class ObserveReadStream extends IncomingMessage {
             packetToMessage(this, packet)
         }
 
+        let observe: number
+
         if (typeof this.headers.Observe !== 'number') {
-            return
+            observe = 0
+        } else {
+            observe = this.headers.Observe
         }
 
         // First notification
         if (this._lastId === undefined) {
-            this._lastId = this.headers.Observe - 1
+            this._lastId = observe - 1
         }
 
-        const dseq = (this.headers.Observe - this._lastId) & 0xffffff
+        const dseq = (observe - this._lastId) & 0xffffff
         const dtime = Date.now() - this._lastTime
 
         if (this._disableFiltering || (dseq > 0 && dseq < (1 << 23)) || dtime > 128 * 1000) {
-            this._lastId = this.headers.Observe
+            this._lastId = observe
             this._lastTime = Date.now()
             this.push(packet.payload)
         }
