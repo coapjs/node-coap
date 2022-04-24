@@ -1390,7 +1390,7 @@ describe('request', function () {
                         return
                     }
 
-                    server.on('message', (msg, rsinfo) => {
+                    server.once('message', (msg, rsinfo) => {
                         const packet = parse(msg)
                         if (packet.ack && (packet.code === '0.00')) {
                             return
