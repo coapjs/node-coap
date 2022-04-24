@@ -69,5 +69,13 @@
   },
   "engines": {
     "node": ">=10"
-  }
+  },
+  "files": [
+    "dist/index.d.ts",
+    "dist/index.js",
+    "dist/index.js.map",
+    "dist/models",
+    "dist/lib",
+    "examples/"
+  ]
 }
