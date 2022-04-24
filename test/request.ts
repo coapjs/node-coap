@@ -1262,6 +1262,14 @@ describe('request', function () {
                         token: packet.token,
                         payload: Buffer.from('42'),
                         ack: true,
+                        code: '2.05'
+                    })
+
+                    ssend(rsinfo, {
+                        messageId: packet.messageId,
+                        token: packet.token,
+                        payload: Buffer.from('42'),
+                        ack: true,
                         options: [{
                             name: 'Observe',
                             value: Buffer.of(1)
