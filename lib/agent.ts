@@ -332,7 +332,7 @@ class Agent extends EventEmitter {
                 // TODO There is a previous response but is not an ObserveStream !
                 return
             }
-        } else if (block2 != null && packet.token != null) {
+        } else if (block2 != null && packet.token != null && !observe) {
             this._tkToReq.delete(packet.token.toString('hex'))
         } else if (!observe && !req.multicast) {
             // it is not, so delete the token
