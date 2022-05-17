@@ -1422,7 +1422,7 @@ describe('request', function () {
             server.on('message', (msg, rsinfo) => {
                 const packet = parse(msg)
                 expect(packet.options[0].name).to.eql('Observe')
-                expect(packet.options[0].value).to.eql(Buffer.of(0))
+                expect(packet.options[0].value).to.eql(Buffer.alloc(0))
                 done()
             })
         })
