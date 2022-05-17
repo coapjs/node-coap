@@ -1320,7 +1320,7 @@ describe('Client Identifier', function () {
                     authenticationHeader = request._packet.options.find(o => o.name === 2109)
                 }
 
-                if (typeof authenticationHeader !== 'undefined') {
+                if (authenticationHeader?.value != null) {
                     return `auth:${authenticationHeader.value.toString()}`
                 }
                 return `unauth:${request.rsinfo.address}:${request.rsinfo.port}`
