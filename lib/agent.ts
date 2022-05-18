@@ -512,21 +512,41 @@ class Agent extends EventEmitter {
             }, multicastTimeout)
         }
 
-        if (typeof (url.observe) === 'number') {
-            req.setOption('Observe', url.observe)
-        } else if (typeof (url.observe) === 'string') {
-            req.setOption('Observe', parseInt(url.observe))
-        } else if (url.observe === true) {
-            req.setOption('Observe', 0)
-        } else {
-            req.on('response', this._cleanUp.bind(this))
-        }
+        this._setObserveOption(req, req.url)
 
         this._requests++
 
         req._totalPayload = Buffer.alloc(0)
 
         return req
+    }
+
+    _setObserveOption (req: OutgoingMessage, requestParameters: CoapRequestParams): void {
+        const observeParameter = requestParameters.observe
+
+        if (observeParameter == null) {
+            req.on('response', this._cleanUp.bind(this))
+            return
+        }
+
+        // `null` indicates an option value of zero here, encoded with zero length.
+        // Using `null` avoids issues with some devices that cannot process an
+        // option value of 0 that is encoded as a byte containing eight zeros.
+        let observeValue: null | number
+
+        if (typeof observeParameter === 'number') {
+            observeValue = observeParameter === 0 ? null : observeParameter
+        } else if (typeof observeParameter === 'string') {
+            observeValue = parseInt(observeParameter)
+        } else if (observeParameter) {
+            observeValue = null
+        } else {
+            return
+        }
+
+        if (observeValue == null || !isNaN(observeValue)) {
+            req.setOption('Observe', observeValue)
+        }
     }
 
     abort (req: OutgoingMessage): void {

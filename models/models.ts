@@ -16,7 +16,7 @@ import CoAPServer from '../lib/server'
 
 export declare function requestListener (req: IncomingMessage, res: OutgoingMessage): void
 
-export type OptionValue = string | number | Buffer | Buffer[]
+export type OptionValue = null | string | number | Buffer | Buffer[]
 export type BlockCacheMap<T> = Map<string, {payload: T, timeoutId: NodeJS.Timeout}>
 export type CoapOptions = Partial<Record<OptionName, OptionValue>>
 
