@@ -524,7 +524,7 @@ class Agent extends EventEmitter {
     _setObserveOption (req: OutgoingMessage, requestParameters: CoapRequestParams): void {
         const observeParameter = requestParameters.observe
 
-        if (observeParameter == null) {
+        if (observeParameter == null || observeParameter === false) {
             req.on('response', this._cleanUp.bind(this))
             return
         }
