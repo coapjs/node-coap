@@ -90,6 +90,8 @@ const toUint = (value: Buffer): number => {
 }
 
 registerOption('Max-Age', fromUint, toUint)
+registerOption('Size2', fromUint, toUint)
+registerOption('Size1', fromUint, toUint)
 
 // Content-Format and Accept options registration
 const formatsString = {}

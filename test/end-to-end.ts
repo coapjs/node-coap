@@ -256,6 +256,34 @@ describe('end-to-end', function () {
         })
     })
 
+    it('should allow option \'Size2\'', function (done) {
+        const req = request(`coap://localhost:${port}`)
+        const value = 520
+
+        req.setOption('Size2', value)
+        req.end()
+
+        server.once('request', (req) => {
+            expect(req.options[0].name).to.equal('Size2')
+            expect(req.options[0].value).to.equal(value)
+            done()
+        })
+    })
+
+    it('should allow option \'Size1\'', function (done) {
+        const req = request(`coap://localhost:${port}`)
+        const value = 9001
+
+        req.setOption('Size1', value)
+        req.end()
+
+        server.once('request', (req) => {
+            expect(req.options[0].name).to.equal('Size1')
+            expect(req.options[0].value).to.equal(value)
+            done()
+        })
+    })
+
     it('should provide a writeHead() method', function (done) {
         const req = request(`coap://localhost:${port}`)
         req.end()
