@@ -188,7 +188,7 @@ describe('request', function () {
     it('should accept an object instead of a string', function (done) {
         const req = request({
             hostname: 'localhost',
-            port: port,
+            port,
             pathname: '/hello/world'
         })
 
@@ -232,7 +232,7 @@ describe('request', function () {
 
     it('should accept a method parameter', function (done) {
         request({
-            port: port,
+            port,
             method: 'POST'
         }).end()
 
@@ -251,7 +251,7 @@ describe('request', function () {
 
     it('should accept a token parameter', function (done) {
         request({
-            port: port,
+            port,
             token: Buffer.from([1, 2, 3, 4, 5, 6, 7, 8])
         }).end()
 
@@ -274,7 +274,7 @@ describe('request', function () {
 
     it('should ignore empty token parameter', function (done) {
         request({
-            port: port,
+            port,
             token: Buffer.from([])
         }).end()
 
@@ -297,7 +297,7 @@ describe('request', function () {
 
     it('should reject too long token', function (done) {
         const req = request({
-            port: port,
+            port,
             token: Buffer.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
         })
 
@@ -330,7 +330,7 @@ describe('request', function () {
 
     it('should emit a response with a piggyback CON message', function (done) {
         const req = request({
-            port: port,
+            port,
             confirmable: true
         })
 
@@ -369,7 +369,7 @@ describe('request', function () {
 
     it('should emit a response with a delayed CON message', function (done) {
         const req = request({
-            port: port,
+            port,
             confirmable: true
         })
 
@@ -418,7 +418,7 @@ describe('request', function () {
 
     it('should send an ACK back after receiving a CON response', function (done) {
         const req = request({
-            port: port,
+            port,
             confirmable: true
         })
 
@@ -463,7 +463,7 @@ describe('request', function () {
 
     it('should not emit a response with an ack', function (done) {
         const req = request({
-            port: port,
+            port,
             confirmable: true
         })
 
@@ -488,7 +488,7 @@ describe('request', function () {
 
     it('should emit a response with a NON message', function (done) {
         const req = request({
-            port: port,
+            port,
             confirmable: false
         })
 
@@ -525,7 +525,7 @@ describe('request', function () {
 
     it('should emit a response on reset', function (done) {
         const req = request({
-            port: port
+            port
         })
 
         if (server == null) {
@@ -558,7 +558,7 @@ describe('request', function () {
 
     it('should stop retrying on reset', function (done) {
         const req = request({
-            port: port
+            port
         })
         let messages = 0
 
@@ -600,7 +600,7 @@ describe('request', function () {
 
     it('should not send response to invalid packets', function (done) {
         const req = request({
-            port: port
+            port
         })
         let messages = 0
 
@@ -640,7 +640,7 @@ describe('request', function () {
 
     it('should allow to add an option', function (done) {
         const req = request({
-            port: port
+            port
         })
         const buf = Buffer.alloc(3)
 
@@ -660,7 +660,7 @@ describe('request', function () {
 
     it('should attempt to normalize option case', function (done) {
         const req = request({
-            port: port
+            port
         })
         const buf = Buffer.alloc(3)
 
@@ -680,7 +680,7 @@ describe('request', function () {
 
     it('should overwrite the option', function (done) {
         const req = request({
-            port: port
+            port
         })
         const buf = Buffer.alloc(3)
 
@@ -700,7 +700,7 @@ describe('request', function () {
 
     it('should alias setOption to setHeader', function (done) {
         const req = request({
-            port: port
+            port
         })
         const buf = Buffer.alloc(3)
 
@@ -719,7 +719,7 @@ describe('request', function () {
 
     it('should set multiple options', function (done) {
         const req = request({
-            port: port
+            port
         })
         const buf1 = Buffer.alloc(3)
         const buf2 = Buffer.alloc(3)
@@ -740,7 +740,7 @@ describe('request', function () {
 
     it('should alias the \'Content-Format\' option to \'Content-Type\'', function (done) {
         const req = request({
-            port: port
+            port
         })
 
         req.setOption('Content-Type', Buffer.of(0))
@@ -759,7 +759,7 @@ describe('request', function () {
 
     it('should not crash with two CON responses with the same messageId & token', function (done) {
         const req = request({
-            port: port,
+            port,
             confirmable: true
         })
 
@@ -821,7 +821,7 @@ describe('request', function () {
         function buildTest (format: string, value: Buffer): void {
             it('should parse ' + format, function (done) {
                 const req = request({
-                    port: port
+                    port
                 })
 
                 req.setOption('Content-Format', format)
@@ -847,7 +847,7 @@ describe('request', function () {
         function buildTest (format: string, value: Buffer): void {
             it('should parse ' + format, function (done) {
                 const req = request({
-                    port: port
+                    port
                 })
 
                 req.setHeader('Accept', format)
@@ -879,7 +879,7 @@ describe('request', function () {
                     token: packet.token,
                     options: [{
                         name: 'Content-Format',
-                        value: value
+                        value
                     }]
                 })
                 if (server instanceof Socket) {
@@ -891,7 +891,7 @@ describe('request', function () {
         function buildTest (format: string, value: Buffer): void {
             it('should parse ' + format, function (done) {
                 const req = request({
-                    port: port
+                    port
                 })
 
                 if (server != null) {
@@ -908,7 +908,7 @@ describe('request', function () {
 
             it('should include ' + format + ' in the headers', function (done) {
                 const req = request({
-                    port: port
+                    port
                 })
 
                 if (server != null) {
@@ -932,7 +932,7 @@ describe('request', function () {
 
     it('should include \'ETag\' in the response headers', function (done) {
         const req = request({
-            port: port
+            port
         })
 
         if (server == null) {
@@ -965,7 +965,7 @@ describe('request', function () {
 
     it('should include original and destination socket information in the response', function (done) {
         const req = request({
-            port: port
+            port
         })
 
         if (server == null) {
@@ -1010,7 +1010,7 @@ describe('request', function () {
 
         function doReq (): OutgoingMessage {
             return request({
-                port: port,
+                port,
                 confirmable: false
             }).end()
         }
@@ -1123,7 +1123,7 @@ describe('request', function () {
 
         function doReq (): OutgoingMessage {
             return request({
-                port: port,
+                port,
                 confirmable: true
             }).end()
         }
@@ -1291,7 +1291,7 @@ describe('request', function () {
             }
 
             return request({
-                port: port,
+                port,
                 observe: true
             }).end()
         }
@@ -1411,7 +1411,7 @@ describe('request', function () {
 
         it('should send an empty Observe option', function (done) {
             request({
-                port: port,
+                port,
                 observe: true
             }).end()
 
@@ -1429,7 +1429,7 @@ describe('request', function () {
 
         it('should allow user to send Observe=1', function (done) {
             request({
-                port: port,
+                port,
                 observe: 1
             }).end()
 
@@ -1462,7 +1462,7 @@ describe('request', function () {
             })
 
             const req = request({
-                port: port,
+                port,
                 observe: true,
                 confirmable: false
             }).end()
@@ -1499,7 +1499,7 @@ describe('request', function () {
             })
 
             const req = request({
-                port: port,
+                port,
                 observe: true,
                 confirmable: false
             }).end()
@@ -1538,7 +1538,7 @@ describe('request', function () {
             })
 
             const req = request({
-                port: port,
+                port,
                 observe: true,
                 confirmable: false
             }).end()
@@ -1577,7 +1577,7 @@ describe('request', function () {
             })
 
             const req = request({
-                port: port,
+                port,
                 observe: true,
                 confirmable: false
             }).end()
@@ -1622,7 +1622,7 @@ describe('request', function () {
 
         it('should timeout if the response token size doesn\'t match the request\'s', function (done) {
             const req = request({
-                port: port
+                port
             })
 
             if (server == null) {
@@ -1654,7 +1654,7 @@ describe('request', function () {
 
         it('should timeout if the response token content doesn\'t match the request\'s', function (done) {
             const req = request({
-                port: port
+                port
             })
 
             if (server == null) {
@@ -1693,7 +1693,7 @@ describe('request', function () {
         function doReq (): OutgoingMessage {
             return request({
                 host: MULTICAST_ADDR,
-                port: port,
+                port,
                 multicast: true
             }).end()
         }

@@ -99,7 +99,7 @@ describe('proxy', function () {
             })
 
             return request({
-                port: port,
+                port,
                 observe: true,
                 proxyUri: `coap://localhost:${targetPort}/the/path`
             }).end()
@@ -159,7 +159,7 @@ describe('proxy', function () {
         it('should forward the request to the URI specified in proxyUri ', function (done) {
             const req = request({
                 host: 'localhost',
-                port: port,
+                port,
                 proxyUri: `coap://localhost:${targetPort}`,
                 query: 'a=b'
             })
@@ -173,7 +173,7 @@ describe('proxy', function () {
         it('should forward the response to the request back to the agent', function (done) {
             const req = request({
                 host: 'localhost',
-                port: port,
+                port,
                 proxyUri: `coap://localhost:${targetPort}`,
                 query: 'a=b'
             })
@@ -196,7 +196,7 @@ describe('proxy', function () {
             this.timeout(20000)
             const req = request({
                 host: 'localhost',
-                port: port,
+                port,
                 proxyUri: 'coap://unexistentCOAPUri:7968',
                 query: 'a=b'
             })
@@ -225,7 +225,7 @@ describe('proxy', function () {
         it('should call the handler as usual', function (done) {
             const req = request({
                 host: 'localhost',
-                port: port,
+                port,
                 query: 'a=b'
             })
 
@@ -250,7 +250,7 @@ describe('proxy', function () {
         it('should call the handler as usual', function (done) {
             const req = request({
                 host: 'localhost',
-                port: port,
+                port,
                 observe: true,
                 query: 'a=b'
             })
@@ -273,7 +273,7 @@ describe('proxy', function () {
         it('should allow all the responses', function (done) {
             const req = request({
                 host: 'localhost',
-                port: port,
+                port,
                 observe: true,
                 query: 'a=b'
             })
