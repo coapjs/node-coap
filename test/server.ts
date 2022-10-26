@@ -261,7 +261,7 @@ describe('server', function () {
         }]
 
         send(generate({
-            options: options
+            options
         }))
 
         server.on('request', (req, res) => {
@@ -319,7 +319,7 @@ describe('server', function () {
                 send(generate({
                     options: [{
                         name: option,
-                        value: value
+                        value
                     }]
                 }))
 
@@ -333,7 +333,7 @@ describe('server', function () {
                 send(generate({
                     options: [{
                         name: option,
-                        value: value
+                        value
                     }]
                 }))
 
@@ -813,7 +813,7 @@ describe('server', function () {
             send(generate({
                 code: method,
                 confirmable: true,
-                token: token,
+                token,
                 options: [{
                     name: 'Observe',
                     value: Buffer.alloc(0)
@@ -1000,7 +1000,7 @@ describe('server', function () {
     describe('multicast', function () {
         const port = nextPort()
 
-        const testVector: Array<CoapServerOptions & {addressType: string}> = [
+        const testVector: Array<CoapServerOptions & { addressType: string }> = [
             {
                 addressType: 'IPv4',
                 multicastAddress: '224.0.1.2',
@@ -1033,7 +1033,7 @@ describe('server', function () {
 
                 request({
                     host: multicastAddress,
-                    port: port,
+                    port,
                     multicast: true
                 }).end()
             })

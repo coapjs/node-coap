@@ -194,7 +194,7 @@ class CoAPServer extends EventEmitter {
         return (msg: Buffer, rsinfo: AddressInfo) => {
             const request: MiddlewareParameters = {
                 raw: msg,
-                rsinfo: rsinfo,
+                rsinfo,
                 server: this
             }
             const activeMiddlewares: Function[] = []
@@ -210,7 +210,7 @@ class CoAPServer extends EventEmitter {
     _sendError (payload: Buffer, rsinfo: AddressInfo, packet?: CoapPacket, code = '5.00'): void {
         const message = generate({
             code,
-            payload: payload,
+            payload,
             messageId: packet != null ? packet.messageId : undefined,
             token: packet != null ? packet.token : undefined
         })

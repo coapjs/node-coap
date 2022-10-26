@@ -20,7 +20,7 @@ describe('Cache', () => {
 
     describe('Reset', () => {
         it('Should reset all caches', (done) => {
-            const b = new BlockCache<{payload: string} | null>(10000, () => { return null })
+            const b = new BlockCache<{ payload: string } | null>(10000, () => { return null })
             b.add('test', { payload: 'test' })
             b.reset()
             expect(b._cache.size).to.eql(0)
@@ -30,7 +30,7 @@ describe('Cache', () => {
 
     describe('Add', () => {
         it('Should add to cache', (done) => {
-            const b = new BlockCache<{payload: string} | null>(10000, () => { return null })
+            const b = new BlockCache<{ payload: string } | null>(10000, () => { return null })
             b.add('test', { payload: 'test' })
             expect(b.contains('test')).to.equal(true)
             setImmediate(done)
@@ -40,7 +40,7 @@ describe('Cache', () => {
 
     describe('Remove', () => {
         it('Should from cache', (done) => {
-            const b = new BlockCache<{payload: string} | null>(10000, () => { return null })
+            const b = new BlockCache<{ payload: string } | null>(10000, () => { return null })
             b.add('test', { payload: 'test' })
             b.add('test2', { payload: 'test2' })
             b.remove('test')
@@ -51,14 +51,14 @@ describe('Cache', () => {
 
     describe('Contains', () => {
         it('Should check if value exists & return true', (done) => {
-            const b = new BlockCache<{payload: string} | null>(10000, () => { return null })
+            const b = new BlockCache<{ payload: string } | null>(10000, () => { return null })
             b.add('test', { payload: 'test' })
             expect(b.contains('test')).to.eql(true)
             setImmediate(done)
         })
 
         it('Should check if value exists & return false', (done) => {
-            const b = new BlockCache<{payload: string} | null>(10000, () => { return null })
+            const b = new BlockCache<{ payload: string } | null>(10000, () => { return null })
             b.add('test', { payload: 'test' })
             expect(b.contains('test2')).to.eql(false)
             setImmediate(done)
@@ -67,7 +67,7 @@ describe('Cache', () => {
 
     describe('Get', () => {
         it('Should return payload from cache', (done) => {
-            const b = new BlockCache<{payload: string} | null>(10000, () => { return null })
+            const b = new BlockCache<{ payload: string } | null>(10000, () => { return null })
             b.add('test', { payload: 'test' })
             expect(b.get('test')).to.eql({ payload: 'test' })
             setImmediate(done)
@@ -76,14 +76,14 @@ describe('Cache', () => {
 
     describe('Get with default insert', () => {
         it('Should return payload from cache if it exists', (done) => {
-            const b = new BlockCache<{payload: string} | null>(10000, () => { return null })
+            const b = new BlockCache<{ payload: string } | null>(10000, () => { return null })
             b.add('test', { payload: 'test' })
             expect(b.getWithDefaultInsert('test')).to.eql({ payload: 'test' })
             setImmediate(done)
         })
 
         it('Should add to cache if it doesnt exist', (done) => {
-            const b = new BlockCache<{payload: string} | null>(10000, () => { return null })
+            const b = new BlockCache<{ payload: string } | null>(10000, () => { return null })
             b.getWithDefaultInsert('test')
             expect(b.contains('test')).to.equal(true)
             setImmediate(done)

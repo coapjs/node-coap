@@ -76,7 +76,7 @@ describe('end-to-end', function () {
 
     it('should support observing', function (done) {
         const req = request({
-            port: port,
+            port,
             observe: true
         }).end()
 
@@ -98,7 +98,7 @@ describe('end-to-end', function () {
 
     it('should support a 4.04 observe request', function (done) {
         const req = request({
-            port: port,
+            port,
             observe: true
         }).end()
 
@@ -115,7 +115,7 @@ describe('end-to-end', function () {
 
     it('should support a 4.04 observe request and emit an end event in the response', function (done) {
         const req = request({
-            port: port,
+            port,
             observe: true
         }).end()
 
@@ -133,7 +133,7 @@ describe('end-to-end', function () {
 
     it('should normalize strings using NFC', function (done) {
         request({
-            port: port,
+            port,
             // U+210E (plank constant) becomes to U+0068 (h) in “compatible” normalizations (should not happen)
             // U+0065 (e) U+0301 (combining acute accent) becomes U+00e9 (é) in “composed” normalizations (should happen)
             pathname: '/\u210e/\u0065\u0301'
@@ -168,7 +168,7 @@ describe('end-to-end', function () {
 
                 it('should pass the \'' + option + ': ' + format + '\' option to the server if passed alongside the url', function (done) {
                     const req = {
-                        port: port,
+                        port,
                         options: {}
                     }
 
@@ -185,7 +185,7 @@ describe('end-to-end', function () {
 
                 it('should pass the \'' + option + ': ' + format + '\' headers to the server if passed alongside the url', function (done) {
                     const req = {
-                        port: port,
+                        port,
                         headers: {}
                     }
 
@@ -301,7 +301,7 @@ describe('end-to-end', function () {
 
     it('should set and parse \'Location-Path\'', function (done) {
         const req = request({
-            port: port,
+            port,
             method: 'PUT'
         }).end()
 
@@ -318,7 +318,7 @@ describe('end-to-end', function () {
 
     it('should set and parse \'Location-Query\'', function (done) {
         const req = request({
-            port: port,
+            port,
             method: 'PUT'
         }).end()
 
@@ -335,13 +335,13 @@ describe('end-to-end', function () {
 
     it('should support multiple observe to the same destination', function (done) {
         const req1 = request({
-            port: port,
+            port,
             method: 'GET',
             observe: true,
             pathname: '/a'
         }).end()
         const req2 = request({
-            port: port,
+            port,
             method: 'GET',
             observe: true,
             pathname: '/b'
@@ -373,12 +373,12 @@ describe('end-to-end', function () {
 
     it('should reuse the same socket for two concurrent requests', function (done) {
         request({
-            port: port,
+            port,
             method: 'GET',
             pathname: '/a'
         }).end()
         request({
-            port: port,
+            port,
             method: 'GET',
             pathname: '/b'
         }).end()
@@ -398,10 +398,10 @@ describe('end-to-end', function () {
     it('should create two sockets for two subsequent requests', function (done) {
         const agent = new Agent()
         const req1 = request({
-            port: port,
+            port,
             method: 'GET',
             pathname: '/a',
-            agent: agent
+            agent
         }).end()
         let first: AddressInfo
 
@@ -418,7 +418,7 @@ describe('end-to-end', function () {
         req1.on('response', () => {
             setImmediate(() => {
                 request({
-                    port: port,
+                    port,
                     method: 'GET',
                     pathname: '/b'
                 }).end()
@@ -429,10 +429,10 @@ describe('end-to-end', function () {
     it('should use the port binded in the agent', function (done) {
         const agent = new Agent({ port: 3636 })
         request({
-            port: port,
+            port,
             method: 'GET',
             pathname: 'a',
-            agent: agent
+            agent
         }).end()
 
         server.on('request', (req, res) => {

@@ -97,11 +97,11 @@ describe('IPv6', function () {
         }))
 
         it('should send the data to the server (hostname + port in object)', createTest(function () {
-            return { hostname: '::1', port: port }
+            return { hostname: '::1', port }
         }))
 
         it('should send the data to the server (host + port in object)', createTest(function () {
-            return { host: '::1', port: port }
+            return { host: '::1', port }
         }))
     })
 

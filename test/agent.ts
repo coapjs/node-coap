@@ -404,8 +404,8 @@ describe('Agent', function () {
 
         it('should discard the request after receiving the payload for piggyback CON requests with observe request', function (done) {
             const req = request({
-                port: port,
-                agent: agent,
+                port,
+                agent,
                 observe: true,
                 confirmable: true
             }).end()
@@ -419,7 +419,7 @@ describe('Agent', function () {
                     token: packet.token,
                     confirmable: false,
                     ack: true,
-                    rsinfo: rsinfo
+                    rsinfo
                 })
 
                 // duplicate, as there was some retransmission
@@ -429,7 +429,7 @@ describe('Agent', function () {
                     token: packet.token,
                     confirmable: false,
                     ack: true,
-                    rsinfo: rsinfo
+                    rsinfo
                 })
 
                 // some more data
@@ -438,7 +438,7 @@ describe('Agent', function () {
                     token: packet.token,
                     confirmable: true,
                     ack: false,
-                    rsinfo: rsinfo
+                    rsinfo
                 })
             })
 
@@ -452,8 +452,8 @@ describe('Agent', function () {
             let firstRsinfo: AddressInfo
 
             const req = request({
-                port: port,
-                agent: agent,
+                port,
+                agent,
                 observe: true,
                 confirmable: true
             }).end()
@@ -467,7 +467,7 @@ describe('Agent', function () {
                     token: packet.token,
                     confirmable: false,
                     ack: true,
-                    rsinfo: rsinfo
+                    rsinfo
                 })
             })
 
@@ -489,8 +489,8 @@ describe('Agent', function () {
 
         it('should allow observe with non-confirmable requests', function (done) {
             const req = request({
-                port: port,
-                agent: agent,
+                port,
+                agent,
                 observe: true,
                 confirmable: false
             }).end()
@@ -506,7 +506,7 @@ describe('Agent', function () {
                     token: packet.token,
                     confirmable: false,
                     ack: false,
-                    rsinfo: rsinfo
+                    rsinfo
                 })
 
                 // duplicate, as there was some retransmission
@@ -516,7 +516,7 @@ describe('Agent', function () {
                     token: packet.token,
                     confirmable: false,
                     ack: false,
-                    rsinfo: rsinfo
+                    rsinfo
                 })
 
                 // some more data
@@ -525,7 +525,7 @@ describe('Agent', function () {
                     token: packet.token,
                     confirmable: false,
                     ack: false,
-                    rsinfo: rsinfo
+                    rsinfo
                 })
             })
 

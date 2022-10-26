@@ -62,7 +62,7 @@ describe('blockwise2', function () {
         const payload = Buffer.alloc(100) // default max packet is 1280
 
         request({
-            port: port
+            port
         })
             .on('response', (res) => {
                 let blockwiseResponse = false
@@ -84,7 +84,7 @@ describe('blockwise2', function () {
 
     it('should use blockwise in response when payload bigger than max packet', function (done) {
         request({
-            port: port
+            port
         })
             .on('response', (res) => {
                 let blockwiseResponse = false
@@ -106,7 +106,7 @@ describe('blockwise2', function () {
 
     it('should blockwise response have etag', function (done) {
         request({
-            port: port
+            port
         })
             .on('response', (res) => {
                 expect(typeof res.headers.ETag).to.eql('string')
@@ -121,7 +121,7 @@ describe('blockwise2', function () {
 
     it('should accept early negotation', function (done) {
         request({
-            port: port
+            port
         })
             .setOption('Block2', Buffer.of(0x02))
             .on('response', (res) => {
@@ -145,7 +145,7 @@ describe('blockwise2', function () {
 
     it('should receive error when early negotation request block size higher than 1024', function (done) {
         request({
-            port: port
+            port
         })
             .setOption('Block2', Buffer.of(0x07)) // request for block 0, with overload size of 2**(7+4)
             .on('response', (res) => {
@@ -164,7 +164,7 @@ describe('blockwise2', function () {
     // blocks are requested with a zero based index, i.e. indices 0, 1 and 2
     // block index 3 or higher is "out of range" and should cause an error response
         request({
-            port: port
+            port
         })
             .setOption('Block2', Buffer.of(0x3D)) // request for block index 3
             .on('response', (res) => {
@@ -180,7 +180,7 @@ describe('blockwise2', function () {
 
     it('should be able to receive part of message', function (done) {
         request({
-            port: port
+            port
         })
             .setOption('Block2', Buffer.of(0x10)) // request from block 1, with size = 16
             .on('response', (res) => {
@@ -197,7 +197,7 @@ describe('blockwise2', function () {
     it('should receive full response payload', function (done) {
         const payload = Buffer.alloc(16 * 0xff + 1)
         request({
-            port: port
+            port
         })
             .setOption('Block2', Buffer.of(0x0)) // early negotation with block size = 16, almost 10000/16 = 63 blocks
             .on('response', (res) => {
@@ -232,7 +232,7 @@ describe('blockwise2', function () {
         let req2Done = false
         let req1Block2Num = 0
         const reqClient2 = request({
-            port: port
+            port
         })
 
         fillPayloadBuffer(payloadReq1)
