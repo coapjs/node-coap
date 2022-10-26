@@ -7,7 +7,7 @@
  */
 
 import { nextPort } from './common'
-import { createServer, request } from '../index'
+import { createServer, IncomingMessage, request } from '../index'
 import { generate, Packet, parse } from 'coap-packet'
 import { getOption, parseBlock2 } from '../lib/helpers'
 import { generateBlockOption, parseBlockOption, exponentToByteSize, byteSizeToExponent } from '../lib/block'
@@ -362,6 +362,22 @@ describe('blockwise2', function () {
         }
 
         parallelBlock2Test(done, checkNothing, checkBlock2Payload, checkNormalRespPayload)
+    })
+
+    it.only('should support the Size2 option', function (done) {
+        request({
+            port
+        })
+            .setOption('Size2', 0)
+            .on('response', (res: IncomingMessage) => {
+                const size2 = res.headers.Size2
+                expect(size2).to.eql(payload.length)
+                setImmediate(done)
+            })
+            .end()
+        server.on('request', (req, res) => {
+            res.end(payload)
+        })
     })
 })
 

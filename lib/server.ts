@@ -720,6 +720,11 @@ class OutMessage extends OutgoingMessage {
         }
         this.setOption('Block2', block2)
         this.setOption('ETag', _toETag(payload))
+        const size2 = getOption(this._request.options, 'Size2')
+
+        if (size2 === 0) {
+            this.setOption('Size2', payload.length)
+        }
 
         // cache it
         if (this._request.token != null && this._request.token.length > 0) {
