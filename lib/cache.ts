@@ -70,12 +70,11 @@ class BlockCache<T> {
     }
 
     remove (key: string): boolean {
-        if (this._cache.delete(key)) {
+        if (this.contains(key)) {
             debug('remove cache entry, key:', key)
             this.clearTimeout(key)
-            return true
         }
-        return false
+        return this._cache.delete(key)
     }
 
     contains (key: string): boolean {
