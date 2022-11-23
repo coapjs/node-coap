@@ -150,19 +150,19 @@ class CoAPServer extends EventEmitter {
         // 32 MB / 1280 = 26214
         // The max lifetime is roughly 200s per packet.
         // Which gave us 131 packets/second guarantee
-        let max = 32768 * 1024
+        let maxSize = 32768 * 1024
 
         if (typeof this._options.cacheSize === 'number' && this._options.cacheSize >= 0) {
-            max = this._options.cacheSize
+            maxSize = this._options.cacheSize
         }
 
-        this._lru = new CoapLRUCache({
-            max,
-            length: (n, key) => {
-                return n.buffer.byteLength
+        this._lru = new CoapLRUCache<string, any>({
+            maxSize,
+            sizeCalculation: (value, key) => {
+                return value.buffer.byteLength
             },
-            maxAge: parameters.exchangeLifetime * 1000,
-            dispose: (key, value) => {
+            ttl: parameters.exchangeLifetime * 1000,
+            dispose: (value, key) => {
                 if (value.sender != null) {
                     value.sender.reset()
                 }
@@ -347,7 +347,7 @@ class CoAPServer extends EventEmitter {
         if (parameters.pruneTimerPeriod != null) {
             // Start LRU pruning timer
             this._lru.pruneTimer = setInterval(() => {
-                this._lru.prune()
+                this._lru.purgeStale()
             }, parameters.pruneTimerPeriod * 1000)
             if (this._lru.pruneTimer.unref != null) {
                 this._lru.pruneTimer.unref()
@@ -370,11 +370,11 @@ class CoAPServer extends EventEmitter {
             if (this._internal_socket && this._sock instanceof Socket) {
                 this._sock.close()
             }
-            this._lru.reset()
+            this._lru.clear()
             this._sock = null
             this.emit('close')
         } else {
-            this._lru.reset()
+            this._lru.clear()
         }
 
         this._block2Cache.reset()
@@ -411,7 +411,8 @@ class CoAPServer extends EventEmitter {
             if (cached.response != null && (packet.reset ?? false)) {
                 cached.response.end()
             }
-            return lru.del(this._toKey(request, packet, false))
+            lru.delete(this._toKey(request, packet, false))
+            return
         } else if (packet.ack ?? packet.reset ?? false) {
             return // nothing to do, ignoring silently
         }
