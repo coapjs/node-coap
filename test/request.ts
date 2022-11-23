@@ -12,7 +12,7 @@ import { request, createServer, Server, globalAgent } from '../index'
 import { toBinary } from '../lib/option_converter'
 import { parse, generate } from 'coap-packet'
 import { createSocket, Socket } from 'dgram'
-import { useFakeTimers } from 'sinon'
+import { SinonFakeTimers, useFakeTimers } from 'sinon'
 import BufferListStream from 'bl'
 import OutgoingMessage from '../lib/outgoing_message'
 import { AddressInfo } from 'net'
@@ -21,7 +21,7 @@ const originalSetImmediate = setImmediate
 describe('request', function () {
     let server: Socket | Server | null
     let server2: Socket | null
-    let clock: any
+    let clock: SinonFakeTimers
     let port: number
 
     beforeEach(function (done) {
@@ -45,7 +45,7 @@ describe('request', function () {
         clock.restore()
     })
 
-    function fastForward (increase, max): void {
+    function fastForward (increase: number, max: number): void {
         clock.tick(increase)
         if (increase < max) {
             originalSetImmediate(fastForward.bind(null, increase, max - increase))
@@ -1022,28 +1022,11 @@ describe('request', function () {
     })
 
     describe('non-confirmable retries', function () {
-        let clock
-
-        beforeEach(function () {
-            clock = useFakeTimers()
-        })
-
-        afterEach(function () {
-            clock.restore()
-        })
-
         function doReq (): OutgoingMessage {
             return request({
                 port,
                 confirmable: false
             }).end()
-        }
-
-        function fastForward (increase, max): void {
-            clock.tick(increase)
-            if (increase < max) {
-                originalSetImmediate(fastForward.bind(null, increase, max - increase))
-            }
         }
 
         it('should timeout after ~202 seconds', function (done) {
@@ -1135,28 +1118,11 @@ describe('request', function () {
     })
 
     describe('confirmable retries', function () {
-        let clock
-
-        beforeEach(function () {
-            clock = useFakeTimers()
-        })
-
-        afterEach(function () {
-            clock.restore()
-        })
-
         function doReq (): OutgoingMessage {
             return request({
                 port,
                 confirmable: true
             }).end()
-        }
-
-        function fastForward (increase, max): void {
-            clock.tick(increase)
-            if (increase < max) {
-                originalSetImmediate(fastForward.bind(null, increase, max - increase))
-            }
         }
 
         it('should error after ~247 seconds', function (done) {
@@ -1627,23 +1593,6 @@ describe('request', function () {
     })
 
     describe('token', function () {
-        let clock
-
-        beforeEach(function () {
-            clock = useFakeTimers()
-        })
-
-        afterEach(function () {
-            clock.restore()
-        })
-
-        function fastForward (increase, max): void {
-            clock.tick(increase)
-            if (increase < max) {
-                originalSetImmediate(fastForward.bind(null, increase, max - increase))
-            }
-        }
-
         it('should timeout if the response token size doesn\'t match the request\'s', function (done) {
             const req = request({
                 port
