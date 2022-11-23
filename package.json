@@ -41,6 +41,7 @@
     "@types/node": "^18.11.0",
     "@types/sinon": "^10.0.13",
     "@typescript-eslint/eslint-plugin": "^5.40.1",
+    "@typescript-eslint/parser": "^5.0.0",
     "chai": "^4.3.6",
     "eslint": "^8.25.0",
     "eslint-config-standard-with-typescript": "^23.0.0",
