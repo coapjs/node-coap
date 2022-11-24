@@ -364,7 +364,7 @@ describe('blockwise2', function () {
         parallelBlock2Test(done, checkNothing, checkBlock2Payload, checkNormalRespPayload)
     })
 
-    it.only('should support the Size2 option', function (done) {
+    it('should support the Size2 option', function (done) {
         request({
             port
         })
