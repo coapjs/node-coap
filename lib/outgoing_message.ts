@@ -6,7 +6,7 @@
  * See the included LICENSE file for more details.
  */
 
-import BufferList from 'bl'
+import BufferListStream from 'bl'
 import { CoapPacket, CoapRequestParams, OptionValue } from '../models/models'
 import { genAck, toCode, setOption } from './helpers'
 import RetrySend from './retry_send'
@@ -14,7 +14,7 @@ import { SegmentedTransmission } from './segmentation'
 import IncomingMessage from './incoming_message'
 import { OptionName, Packet } from 'coap-packet'
 
-export default class OutgoingMessage extends BufferList implements BufferList {
+export default class OutgoingMessage extends BufferListStream {
     _packet: Packet
     _ackTimer: NodeJS.Timeout | null
     _send: (req: OutgoingMessage, packet: Packet) => void
