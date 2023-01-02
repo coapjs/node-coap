@@ -41,9 +41,10 @@
     "@types/node": "^18.11.0",
     "@types/sinon": "^10.0.13",
     "@typescript-eslint/eslint-plugin": "^5.40.1",
+    "@typescript-eslint/parser": "^5.0.0",
     "chai": "^4.3.6",
     "eslint": "^8.25.0",
-    "eslint-config-standard-with-typescript": "^23.0.0",
+    "eslint-config-standard-with-typescript": "^24.0.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-n": "^15.3.0",
     "eslint-plugin-promise": "^6.1.0",
@@ -54,7 +55,7 @@
     "source-map-support": "^0.5.21",
     "timekeeper": "^2.2.0",
     "ts-node": "^10.9.1",
-    "typescript": "~4.8.4"
+    "typescript": "^4.9.3"
   },
   "dependencies": {
     "@types/lru-cache": "^5.1.1",
