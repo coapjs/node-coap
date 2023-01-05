@@ -104,14 +104,7 @@ const formatsBinaries = {}
  * @param value The numeric code of the Content-Format.
  */
 export function registerFormat (name: string, value: number): void {
-    let bytes: Buffer
-
-    if (value > 255) {
-        bytes = Buffer.alloc(2)
-        bytes.writeUInt16BE(value, 0)
-    } else {
-        bytes = Buffer.of(value)
-    }
+    const bytes = numberToBuffer(value)
 
     formatsString[name] = bytes
     formatsBinaries[value] = name
@@ -238,3 +231,16 @@ registerOption('Observe', (sequence: number) => {
 
     return result
 })
+
+function numberToBuffer (value: number): Buffer {
+    let buffer: Buffer
+
+    if (value > 255) {
+        buffer = Buffer.alloc(2)
+        buffer.writeUInt16BE(value, 0)
+    } else {
+        buffer = Buffer.of(value)
+    }
+
+    return buffer
+}
