@@ -166,7 +166,11 @@ for (const [name, value] of Object.entries(supportedContentFormats)) {
     registerFormat(name, value)
 }
 
-function contentFormatToBinary (value: string): Buffer {
+function contentFormatToBinary (value: string | number): Buffer {
+    if (typeof value === 'number') {
+        return numberToBuffer(value)
+    }
+
     if (formatsString[value] != null) {
         return formatsString[value]
     }
