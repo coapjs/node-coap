@@ -472,6 +472,14 @@ class Agent extends EventEmitter {
             req.setOption('Proxy-Uri', url.proxyUri)
         }
 
+        if (url.accept != null) {
+            req.setOption('Accept', url.accept)
+        }
+
+        if (url.contentFormat != null) {
+            req.setOption('Content-Format', url.contentFormat)
+        }
+
         req.sender.on('error', req.emit.bind(req, 'error'))
 
         req.sender.on('sending', () => {
