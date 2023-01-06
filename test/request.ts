@@ -678,6 +678,30 @@ describe('request', function () {
         })
     })
 
+    it('should be able to include accept and Content-Format parameters', function (done) {
+        const req = request({
+            port,
+            accept: 'application/cbor',
+            contentFormat: 432
+        })
+
+        if (server == null) {
+            return
+        }
+        server.on('message', (msg) => {
+            const packet = parse(msg)
+
+            expect(packet.options[0].name).to.eql('Content-Format')
+            expect(packet.options[0].value).to.eql(Buffer.of(0x01, 0xb0))
+            expect(packet.options[1].name).to.eql('Accept')
+            expect(packet.options[1].value).to.eql(Buffer.of(60))
+
+            done()
+        })
+
+        req.end()
+    })
+
     it('should overwrite the option', function (done) {
         const req = request({
             port
