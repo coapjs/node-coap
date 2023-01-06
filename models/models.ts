@@ -98,6 +98,8 @@ export interface CoapRequestParams {
     multicastTimeout?: number
     retrySend?: number
     token?: Buffer
+    contentFormat?: string | number
+    accept?: string | number
 }
 
 export interface CoapServerOptions {
