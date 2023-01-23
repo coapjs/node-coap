@@ -43,7 +43,7 @@ If you need a command line interface for CoAP, check out
 
 **node-coap** is an **OPEN Open Source Project**, see the <a href="#contributing">Contributing</a> section to find out what this means.
 
-The library *should* run on Node versions 10 and above but is only tested with LTS versions (currently 12, 14, and 16).
+The library is tested with LTS versions (currently 12, 14, 16 and 18).
 
 <a name="install"></a>
 ## Installation

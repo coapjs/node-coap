@@ -69,7 +69,7 @@
     "readable-stream": "^4.2.0"
   },
   "engines": {
-    "node": ">=10"
+    "node": ">=12"
   },
   "files": [
     "dist/index.d.ts",
