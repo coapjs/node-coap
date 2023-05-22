@@ -502,12 +502,9 @@ class CoAPServer extends EventEmitter {
         if (packet.token != null && packet.token.length > 0) {
             // return cached value only if this request is not the first block request
             const block2Buff = getOption(packet.options, 'Block2')
-            let requestedBlockOption
+            let requestedBlockOption: Block = { num: 0, more: 0, size: 0 }
             if (block2Buff instanceof Buffer) {
-                requestedBlockOption = parseBlock2(block2Buff)
-            }
-            if (requestedBlockOption == null) {
-                requestedBlockOption = { num: 0 }
+                requestedBlockOption = parseBlock2(block2Buff) ?? requestedBlockOption
             }
             if (cacheKey == null) {
                 return
