@@ -27,13 +27,11 @@ import Debug from 'debug'
 const debug = Debug('CoAP Server')
 
 function handleEnding (err: Error): void {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const request = this
     if (err != null) {
-        request.server._sendError(
+        this.server._sendError(
             Buffer.from(err.message),
-            request.rsinfo,
-            request.packet
+            this.rsinfo,
+            this.packet
         )
     }
 }
