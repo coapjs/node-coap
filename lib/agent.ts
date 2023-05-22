@@ -400,8 +400,6 @@ class Agent extends EventEmitter {
         const port = url.port ?? parameters.coapPort
 
         const req = new OutgoingMessage({}, (req, packet) => {
-            let buf
-
             if (url.confirmable !== false) {
                 packet.confirmable = true
             }
@@ -441,6 +439,7 @@ class Agent extends EventEmitter {
                 req.segmentedSender = new SegmentedTransmission(block1Buff[0], req, packet)
                 req.segmentedSender.sendNext()
             } else {
+                let buf: Buffer
                 try {
                     buf = generate(packet)
                 } catch (err) {
