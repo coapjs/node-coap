@@ -64,12 +64,14 @@ function allAddresses (type): string[] {
         family = 'IPv6'
     }
     const addresses: string[] = []
+    const macs: string[] = []
     const interfaces = os.networkInterfaces()
     for (const ifname in interfaces) {
         if (ifname in interfaces) {
             interfaces[ifname]?.forEach((a) => {
-                if (a.family === family) {
+                if (a.family === family && macs.includes(a.mac) == false) {
                     addresses.push(a.address)
+                    macs.push(a.address)
                 }
             })
         }
