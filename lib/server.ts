@@ -69,7 +69,7 @@ function allAddresses (type): string[] {
     for (const ifname in interfaces) {
         if (ifname in interfaces) {
             interfaces[ifname]?.forEach((a) => {
-                if (a.family === family && macs.includes(a.mac) == false) {
+                if (a.family === family && !macs.includes(a.mac)) {
                     addresses.push(a.address)
                     macs.push(a.address)
                 }
