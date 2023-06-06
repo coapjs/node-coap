@@ -71,7 +71,7 @@ function allAddresses (type): string[] {
             interfaces[ifname]?.forEach((a) => {
                 if (a.family === family && !macs.includes(a.mac)) {
                     addresses.push(a.address)
-                    macs.push(a.address)
+                    macs.push(a.mac)
                 }
             })
         }
