@@ -10,8 +10,8 @@
     "prepublishOnly": "npm run build",
     "test": "mocha ./dist/test --exit",
     "coverage": "c8 -a --reporter=lcov --reporter=text --reporter=html npm run test",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint": "eslint *.ts",
+    "lint:fix": "eslint *.ts --fix"
   },
   "repository": {
     "type": "git",
