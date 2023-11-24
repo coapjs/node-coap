@@ -10,5 +10,5 @@
     "env": {
         "mocha": true
     },
-    "ignorePatterns": ["dist", "coverage", ".nyc_output"]
+    "ignorePatterns": ["dist", "coverage", ".nyc_output", "examples"]
 }
