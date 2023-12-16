@@ -53,7 +53,7 @@ export interface ParametersUpdate {
     probingRate?: number
     maxLatency?: number
     piggybackReplyMs?: number
-    maxPacketSize?: number
+    maxPayloadSize?: number
     sendAcksForNonConfirmablePackets?: boolean
     pruneTimerPeriod?: number
 }
@@ -69,7 +69,7 @@ export interface Parameters {
     piggybackReplyMs: number
     nonLifetime: number
     coapPort: number
-    maxPacketSize: number
+    maxPayloadSize: number
     sendAcksForNonConfirmablePackets: boolean
     pruneTimerPeriod: number
     maxTransmitSpan: number

@@ -630,13 +630,17 @@ class CoAPServer extends EventEmitter {
     }
 }
 
-// maxBlock2 is in formular 2**(i+4), and must <= 2**(6+4)
-let maxBlock2 = Math.pow(
-    2,
-    Math.floor(Math.log(parameters.maxPacketSize) / Math.log(2))
-)
-if (maxBlock2 > Math.pow(2, 6 + 4)) {
-    maxBlock2 = Math.pow(2, 6 + 4)
+// Max block size defined in the protocol is 2^(6+4) = 1024
+let maxBlock2 = 1024
+
+// Some network stacks (e.g. 6LowPAN/Thread) might have a lower IP MTU.
+// In those cases the maxPayloadSize parameter can be adjusted
+if (parameters.maxPayloadSize < 1024) {
+    // CoAP Block2 header only has sizes of 2^(i+4) for i in 0 to 6 inclusive,
+    // so pick the next size down that is supported
+    let exponent = Math.log2(parameters.maxPayloadSize)
+    exponent = Math.floor(exponent)
+    maxBlock2 = Math.pow(2, exponent)
 }
 
 /*
@@ -675,7 +679,7 @@ class OutMessage extends OutgoingMessage {
         // if payload is suitable for ONE message, shoot it out
         if (
             payload == null ||
-            (requestedBlockOption == null && payload.length < parameters.maxPacketSize)
+            (requestedBlockOption == null && payload.length < maxBlock2)
         ) {
             return super.end(payload)
         }

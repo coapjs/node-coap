@@ -59,7 +59,7 @@ describe('blockwise2', function () {
     }
 
     it('should server not use blockwise in response when payload fit in one packet', function (done) {
-        const payload = Buffer.alloc(100) // default max packet is 1280
+        const payload = Buffer.alloc(100) // default max payload is 1024
 
         request({
             port
