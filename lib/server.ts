@@ -144,11 +144,13 @@ class CoAPServer extends EventEmitter {
 
         // We use an LRU cache for the responses to avoid
         // DDOS problems.
-        // max packet size is 1280
-        // 32 MB / 1280 = 26214
-        // The max lifetime is roughly 200s per packet.
-        // Which gave us 131 packets/second guarantee
-        let maxSize = 32768 * 1024
+        // total cache size is 32MiB
+        // max message size is 1152 bytes
+        // 32 MiB / 1152 = 29127 messages total
+
+        // The max lifetime is roughly 200s per message.
+        // Which gave us 145 messages/second guarantee
+        let maxSize = 32768 * 1024 // Maximum cache size is 32 MiB
 
         if (typeof this._options.cacheSize === 'number' && this._options.cacheSize >= 0) {
             maxSize = this._options.cacheSize
@@ -211,7 +213,7 @@ class CoAPServer extends EventEmitter {
             payload,
             messageId: packet != null ? packet.messageId : undefined,
             token: packet != null ? packet.token : undefined
-        })
+        }, parameters.maxMessageSize)
 
         if (this._sock instanceof Socket) {
             this._sock.send(message, 0, message.length, rsinfo.port)
@@ -222,7 +224,7 @@ class CoAPServer extends EventEmitter {
         const url = new URL(proxyUri)
         const host = url.hostname
         const port = parseInt(url.port)
-        const message = generate(removeProxyOptions(packet))
+        const message = generate(removeProxyOptions(packet), parameters.maxMessageSize)
 
         if (this._sock instanceof Socket) {
             this._sock.send(message, port, host, callback)
@@ -232,7 +234,7 @@ class CoAPServer extends EventEmitter {
     _sendReverseProxied (packet: ParsedPacket, rsinfo: AddressInfo, callback?: (error: Error | null, bytes: number) => void): void {
         const host = rsinfo.address
         const port = rsinfo.port
-        const message = generate(packet)
+        const message = generate(packet, parameters.maxMessageSize)
 
         if (this._sock instanceof Socket) {
             this._sock.send(message, port, host, callback)
@@ -450,7 +452,7 @@ class CoAPServer extends EventEmitter {
                 const sender = new RetrySend(sock, rsinfo.port, rsinfo.address)
 
                 try {
-                    buf = generate(packet)
+                    buf = generate(packet, parameters.maxMessageSize)
                 } catch (err) {
                     response.emit('error', err)
                     return

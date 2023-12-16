@@ -131,6 +131,12 @@ const NON_LIFETIME = 145
 const COAP_PORT = 5683
 
 /**
+ * Maximum total size of the CoAP application layer message, as
+ * recommended by the CoAP specification
+ */
+const MAX_MESSAGE_SIZE = 1152
+
+/**
  * Default max payload size recommended in the CoAP specification
  * For more info see RFC 7252 Section 4.6
  */
@@ -178,6 +184,7 @@ const p: Parameters = {
     nonLifetime: NON_LIFETIME,
     coapPort: COAP_PORT,
     maxPayloadSize: MAX_PAYLOAD_SIZE,
+    maxMessageSize: MAX_MESSAGE_SIZE,
     sendAcksForNonConfirmablePackets,
     piggybackReplyMs,
     pruneTimerPeriod

@@ -83,7 +83,7 @@ describe('blockwise2', function () {
         })
     })
 
-    it('should use blockwise in response when payload bigger than max packet', function (done) {
+    it('should use blockwise in response when payload bigger than max payload', function (done) {
         const payload = Buffer.alloc(1275) // 1275 produces a CoAP message (after headers) > 1280
         request({
             port
