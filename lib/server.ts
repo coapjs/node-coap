@@ -81,6 +81,11 @@ class CoapLRUCache<K extends {}, V extends {}> extends LRUCache<K, V> {
     pruneTimer: NodeJS.Timeout
 }
 
+interface Block2CacheEntry {
+    buffer: Buffer
+    options: Option[]
+}
+
 class CoAPServer extends EventEmitter {
     _options: CoapServerOptions = {}
     _proxiedRequests: Map<string, MiddlewareParameters> = new Map()
@@ -90,7 +95,7 @@ class CoAPServer extends EventEmitter {
     _lru: CoapLRUCache<string, any>
     _series: any
     _block1Cache: BlockCache<Buffer | {}>
-    _block2Cache: BlockCache<Buffer | null>
+    _block2Cache: BlockCache<Block2CacheEntry | null>
     _sock: Socket | EventEmitter | null
     _internal_socket: boolean
     _clientIdentifier: (request: IncomingMessage) => string
@@ -518,7 +523,9 @@ class CoAPServer extends EventEmitter {
                 if (this._block2Cache.contains(cacheKey)) {
                     debug('found cached payload, key:', cacheKey)
                     if (response != null) {
-                        response.end(this._block2Cache.get(cacheKey))
+                        const cacheEntry = this._block2Cache.get(cacheKey)
+                        cacheEntry?.options.forEach((option) => response._packet.options?.push(option))
+                        response.end(cacheEntry?.buffer)
                     }
                     return
                 }
@@ -590,6 +597,15 @@ class CoAPServer extends EventEmitter {
         }
 
         this.emit('request', request, response)
+
+        this.saveAdditionalBlock2Options(cacheKey, response)
+    }
+
+    private saveAdditionalBlock2Options (cacheKey: string | null, response?: OutgoingMessage | ObserveStream): void {
+        if (cacheKey != null) {
+            const cacheEntry = this._block2Cache.get(cacheKey)
+            response?._packet.options?.forEach((option) => cacheEntry?.options.push(option))
+        }
     }
 
     /**
@@ -724,7 +740,7 @@ class OutMessage extends OutgoingMessage {
 
         // cache it
         if (this._request.token != null && this._request.token.length > 0) {
-            this._addCacheEntry(this._cachekey, payload)
+            this._addCacheEntry(this._cachekey, { buffer: payload, options: [] })
         }
         super.end(
             payload.slice(
