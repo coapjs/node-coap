@@ -6,7 +6,7 @@
  * See the included LICENSE file for more details.
  */
 
-import BufferListStream from 'bl'
+import { BufferListStream } from 'bl'
 import { CoapPacket, CoapRequestParams, OptionValue } from '../models/models'
 import { genAck, toCode, setOption } from './helpers'
 import RetrySend from './retry_send'

@@ -61,7 +61,7 @@
     "coap-packet": "^1.1.1",
     "debug": "^4.3.4",
     "fastseries": "^2.0.0",
-    "lru-cache": "^10.0.3",
+    "lru-cache": "^10.2.0",
     "readable-stream": "^4.2.0"
   },
   "engines": {
