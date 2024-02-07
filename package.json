@@ -54,7 +54,6 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@types/lru-cache": "^7.10.10",
     "bl": "^6.0.0",
     "@types/readable-stream": "^2.3.15",
     "capitalize": "^2.0.4",
