@@ -131,9 +131,16 @@ const NON_LIFETIME = 145
 const COAP_PORT = 5683
 
 /**
- * Default max packet size based on IP MTU.
+ * Maximum total size of the CoAP application layer message, as
+ * recommended by the CoAP specification
  */
-const IP_MTU = 1280
+const MAX_MESSAGE_SIZE = 1152
+
+/**
+ * Default max payload size recommended in the CoAP specification
+ * For more info see RFC 7252 Section 4.6
+ */
+const MAX_PAYLOAD_SIZE = 1024
 
 /* Custom default parameters */
 
@@ -176,7 +183,8 @@ const p: Parameters = {
     maxLatency: MAX_LATENCY,
     nonLifetime: NON_LIFETIME,
     coapPort: COAP_PORT,
-    maxPacketSize: IP_MTU,
+    maxPayloadSize: MAX_PAYLOAD_SIZE,
+    maxMessageSize: MAX_MESSAGE_SIZE,
     sendAcksForNonConfirmablePackets,
     piggybackReplyMs,
     pruneTimerPeriod

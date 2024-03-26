@@ -59,12 +59,13 @@ describe('blockwise2', function () {
     }
 
     it('should server not use blockwise in response when payload fit in one packet', function (done) {
-        const payload = Buffer.alloc(100) // default max packet is 1280
+        const payload = Buffer.alloc(100) // default max payload is 1024
 
         request({
             port
         })
             .on('response', (res) => {
+                expect(res.code).to.eq('2.05')
                 let blockwiseResponse = false
                 for (const i in res.options) {
                     if (res.options[i].name === 'Block2') {
@@ -82,11 +83,13 @@ describe('blockwise2', function () {
         })
     })
 
-    it('should use blockwise in response when payload bigger than max packet', function (done) {
+    it('should use blockwise in response when payload bigger than max payload', function (done) {
+        const payload = Buffer.alloc(1275) // 1275 produces a CoAP message (after headers) > 1280
         request({
             port
         })
             .on('response', (res) => {
+                expect(res.code).to.eq('2.05')
                 let blockwiseResponse = false
                 for (const i in res.options) {
                     if (res.options[i].name === 'Block2') {
@@ -109,6 +112,7 @@ describe('blockwise2', function () {
             port
         })
             .on('response', (res) => {
+                expect(res.code).to.eq('2.05')
                 expect(typeof res.headers.ETag).to.eql('string')
                 // expect(cache.get(res._packet.token.toString())).to.not.be.undefined
                 setImmediate(done)
@@ -125,6 +129,7 @@ describe('blockwise2', function () {
         })
             .setOption('Block2', Buffer.of(0x02))
             .on('response', (res) => {
+                expect(res.code).to.eq('2.05')
                 let block2
                 for (const i in res.options) {
                     if (res.options[i].name === 'Block2') {
@@ -184,6 +189,7 @@ describe('blockwise2', function () {
         })
             .setOption('Block2', Buffer.of(0x10)) // request from block 1, with size = 16
             .on('response', (res) => {
+                expect(res.code).to.eq('2.05')
                 expect(res.payload).to.eql(payload.slice(1 * 16, payload.length + 1))
                 // expect(cache.get(res._packet.token.toString())).to.not.be.undefined
                 setImmediate(done)
@@ -201,6 +207,7 @@ describe('blockwise2', function () {
         })
             .setOption('Block2', Buffer.of(0x0)) // early negotation with block size = 16, almost 10000/16 = 63 blocks
             .on('response', (res) => {
+                expect(res.code).to.eq('2.05')
                 expect(res.payload).to.eql(payload)
                 // expect(cache.get(res._packet.token.toString())).to.not.be.undefined
                 setImmediate(done)
