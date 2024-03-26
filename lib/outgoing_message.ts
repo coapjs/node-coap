@@ -14,6 +14,7 @@ import { SegmentedTransmission } from './segmentation'
 import IncomingMessage from './incoming_message'
 import { OptionName, Packet } from 'coap-packet'
 
+
 export default class OutgoingMessage extends BufferListStream {
     _packet: Packet
     _ackTimer: NodeJS.Timeout | null
