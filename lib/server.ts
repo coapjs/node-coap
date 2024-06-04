@@ -69,6 +69,7 @@ function allAddresses (type): string[] {
     for (const ifname in interfaces) {
         if (ifname in interfaces) {
             interfaces[ifname]?.forEach((a) => {
+                // Checking for repeating MAC address to avoid trying to listen on same interface twice
                 if (a.family === family && !macs.includes(a.mac)) {
                     addresses.push(a.address)
                     macs.push(a.mac)
