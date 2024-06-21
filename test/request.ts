@@ -1024,28 +1024,11 @@ describe('request', function () {
     })
 
     describe('non-confirmable retries', function () {
-        let clock
-
-        beforeEach(function () {
-            clock = useFakeTimers()
-        })
-
-        afterEach(function () {
-            clock.restore()
-        })
-
         function doReq (): OutgoingMessage {
             return request({
                 port,
                 confirmable: false
             }).end()
-        }
-
-        function fastForward (increase, max): void {
-            clock.tick(increase)
-            if (increase < max) {
-                originalSetImmediate(fastForward.bind(null, increase, max - increase))
-            }
         }
 
         it('should timeout after ~202 seconds', function (done) {
@@ -1137,28 +1120,11 @@ describe('request', function () {
     })
 
     describe('confirmable retries', function () {
-        let clock
-
-        beforeEach(function () {
-            clock = useFakeTimers()
-        })
-
-        afterEach(function () {
-            clock.restore()
-        })
-
         function doReq (): OutgoingMessage {
             return request({
                 port,
                 confirmable: true
             }).end()
-        }
-
-        function fastForward (increase, max): void {
-            clock.tick(increase)
-            if (increase < max) {
-                originalSetImmediate(fastForward.bind(null, increase, max - increase))
-            }
         }
 
         it('should error after ~247 seconds', function (done) {
@@ -1631,23 +1597,6 @@ describe('request', function () {
     })
 
     describe('token', function () {
-        let clock
-
-        beforeEach(function () {
-            clock = useFakeTimers()
-        })
-
-        afterEach(function () {
-            clock.restore()
-        })
-
-        function fastForward (increase, max): void {
-            clock.tick(increase)
-            if (increase < max) {
-                originalSetImmediate(fastForward.bind(null, increase, max - increase))
-            }
-        }
-
         it('should timeout if the response token size doesn\'t match the request\'s', function (done) {
             const req = request({
                 port

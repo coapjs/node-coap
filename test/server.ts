@@ -41,9 +41,7 @@ describe('server', function () {
     })
 
     afterEach(function () {
-        if (clock != null) {
-            clock.restore()
-        }
+        clock?.restore()
         client.close()
         server.close()
         tk.reset()
@@ -1250,7 +1248,6 @@ describe('server block cache', function () {
     }
 
     beforeEach(function (done) {
-        clock = sinon.useFakeTimers()
         port = nextPort()
         server = createServer()
         server.listen(port, done)
@@ -1263,7 +1260,7 @@ describe('server block cache', function () {
     })
 
     afterEach(function () {
-        clock.restore()
+        clock?.restore()
         client.close()
         server.close()
         tk.reset()
