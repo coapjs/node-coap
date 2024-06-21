@@ -9,12 +9,13 @@
 import { nextPort } from './common'
 import { expect } from 'chai'
 import { parse, generate } from 'coap-packet'
-import { request, createServer, Server } from '../index'
+import { request, createServer } from '../index'
+import type { Server } from '../index'
 import dgram from 'dgram'
 import tk from 'timekeeper'
 import sinon from 'sinon'
-import OutgoingMessage from '../lib/outgoing_message'
-import IncomingMessage from '../lib/incoming_message'
+import type OutgoingMessage from '../lib/outgoing_message'
+import type IncomingMessage from '../lib/incoming_message'
 
 describe('proxy', function () {
     let server: Server,
@@ -213,7 +214,8 @@ describe('proxy', function () {
                         expect(res.code).to.eql('5.00')
                         expect(res.payload.toString()).to.match(/ENOTFOUND|EAI_AGAIN/)
                     } catch (err) {
-                        return done(err)
+                        done(err)
+                        return
                     }
                     done()
                 })

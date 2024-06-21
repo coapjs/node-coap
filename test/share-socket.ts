@@ -8,10 +8,11 @@
 
 import { nextPort } from './common'
 import { expect } from 'chai'
-import { Agent, Server, request, createServer, setGlobalAgent, globalAgent } from '../index'
-import IncomingMessage from '../lib/incoming_message'
-import OutgoingMessage from '../lib/outgoing_message'
-import { AddressInfo } from 'net'
+import { Agent, request, createServer, setGlobalAgent, globalAgent } from '../index'
+import type { Server } from '../index'
+import type IncomingMessage from '../lib/incoming_message'
+import type OutgoingMessage from '../lib/outgoing_message'
+import type { AddressInfo } from 'net'
 import sinon = require('sinon')
 import { Socket } from 'dgram'
 

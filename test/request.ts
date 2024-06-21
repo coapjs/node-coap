@@ -8,14 +8,16 @@
 
 import { nextPort } from './common'
 import { assert, expect } from 'chai'
-import { request, createServer, Server, globalAgent } from '../index'
+import { request, createServer, globalAgent } from '../index'
+import type { Server } from '../index'
 import { toBinary } from '../lib/option_converter'
 import { parse, generate } from 'coap-packet'
 import { createSocket, Socket } from 'dgram'
 import { useFakeTimers } from 'sinon'
 import BufferListStream from 'bl'
-import OutgoingMessage from '../lib/outgoing_message'
-import { AddressInfo } from 'net'
+import type OutgoingMessage from '../lib/outgoing_message'
+import type { AddressInfo } from 'net'
+
 const originalSetImmediate = setImmediate
 
 describe('request', function () {
@@ -1425,7 +1427,8 @@ describe('request', function () {
                             expect(packet.options[0].name).to.eql('Observe')
                             expect(packet.options[0].value).to.eql(Buffer.from([1]))
                         } catch (err) {
-                            return done(err)
+                            done(err)
+                            return
                         }
                         done()
                     })
@@ -1467,7 +1470,8 @@ describe('request', function () {
                     expect(packet.options[0].name).to.eql('Observe')
                     expect(packet.options[0].value).to.eql(Buffer.from([1]))
                 } catch (err) {
-                    return done(err)
+                    done(err)
+                    return
                 }
 
                 done()

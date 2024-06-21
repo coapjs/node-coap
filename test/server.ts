@@ -9,15 +9,15 @@
 import { parse, generate } from 'coap-packet'
 import { nextPort } from './common'
 import { expect } from 'chai'
-import { CoapPacket, CoapServerOptions, Option } from '../models/models'
+import type { CoapPacket, CoapServerOptions, Option } from '../models/models'
 import { request, createServer } from '../index'
-import { createSocket } from 'dgram'
+import { type Socket, createSocket } from 'dgram'
 import BufferListStream = require('bl')
 import tk from 'timekeeper'
 import sinon from 'sinon'
 import { EventEmitter } from 'events'
 import { parameters } from '../lib/parameters'
-import IncomingMessage from '../lib/incoming_message'
+import type IncomingMessage from '../lib/incoming_message'
 
 const originalSetImmediate = setImmediate
 
@@ -703,7 +703,8 @@ describe('server', function () {
                     // original one plus 4 retries
                     expect(messages).to.eql(5)
                 } catch (err) {
-                    return done(err)
+                    done(err)
+                    return
                 }
                 done()
             }, 45 * 1000)
