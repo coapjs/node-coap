@@ -6,10 +6,11 @@
  * See the included LICENSE file for more details.
  */
 
-import { CoapMethod, OptionName } from 'coap-packet'
-import { AddressInfo } from 'net'
-import { Readable, ReadableOptions } from 'readable-stream'
-import { CoapPacket, OptionValue } from '../models/models'
+import type { CoapMethod, OptionName } from 'coap-packet'
+import type { AddressInfo } from 'net'
+import { Readable } from 'readable-stream'
+import type { ReadableOptions } from 'readable-stream'
+import type { CoapPacket, OptionValue } from '../models/models'
 import { packetToMessage } from './helpers'
 
 class IncomingMessage extends Readable {

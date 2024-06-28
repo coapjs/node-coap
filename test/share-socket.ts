@@ -8,10 +8,11 @@
 
 import { nextPort } from './common'
 import { expect } from 'chai'
-import { Agent, Server, request, createServer, setGlobalAgent, globalAgent } from '../index'
-import IncomingMessage from '../lib/incoming_message'
-import OutgoingMessage from '../lib/outgoing_message'
-import { AddressInfo } from 'net'
+import { Agent, request, createServer, setGlobalAgent, globalAgent } from '../index'
+import type { Server } from '../index'
+import type IncomingMessage from '../lib/incoming_message'
+import type OutgoingMessage from '../lib/outgoing_message'
+import type { AddressInfo } from 'net'
 import sinon = require('sinon')
 import { Socket } from 'dgram'
 
@@ -21,8 +22,10 @@ describe('share-socket', function () {
     let server: Server
     let port: number
     let originalGlobalAgent: Agent
+    let clock: sinon.SinonFakeTimers
 
     beforeEach(function (done) {
+        clock = sinon.useFakeTimers()
         port = nextPort()
         server = createServer()
         originalGlobalAgent = globalAgent
@@ -40,6 +43,7 @@ describe('share-socket', function () {
     })
 
     afterEach(function (done) {
+        clock.restore()
         this.timeout(500)
         setTimeout(() => {
             server.close(done)
@@ -56,7 +60,7 @@ describe('share-socket', function () {
         request(`coap://localhost:${port}/abcd/ef/gh/?foo=bar&beep=bop`).end()
         server.on('request', (req) => {
             expect(req.url).to.eql('/abcd/ef/gh?foo=bar&beep=bop')
-            setImmediate(done)
+            done()
         })
     })
 
@@ -64,7 +68,7 @@ describe('share-socket', function () {
         const req = request(`coap://localhost:${port}/abcd/ef/gh/?foo=bar&beep=bop`).end()
         req.on('response', (res: IncomingMessage) => {
             expect(res.code).to.eql('2.05')
-            setImmediate(done)
+            done()
         })
 
         server.on('request', (req, res) => {
@@ -76,7 +80,7 @@ describe('share-socket', function () {
         request(`coap://localhost:${port}`)
             .on('response', (res: IncomingMessage) => {
                 expect(res.code).to.eql('4.04')
-                setImmediate(done)
+                done()
             })
             .end()
 
@@ -90,7 +94,7 @@ describe('share-socket', function () {
         request(`coap://localhost:${port}`)
             .on('response', (res: IncomingMessage) => {
                 expect(res.code).to.eql('4.04')
-                setImmediate(done)
+                done()
             })
             .end()
 
@@ -333,9 +337,9 @@ describe('share-socket', function () {
 
         server.on('request', (req, res) => {
             res.write('hello')
-            setTimeout(() => {
+            originalSetImmediate(() => {
                 res.end('world')
-            }, 10)
+            })
         })
 
         ;[req1, req2].forEach((req) => {
@@ -399,7 +403,7 @@ describe('share-socket', function () {
         })
 
         req1.on('response', () => {
-            setImmediate(() => {
+            originalSetImmediate(() => {
                 request({
                     port,
                     method: 'GET',
@@ -437,7 +441,6 @@ describe('share-socket', function () {
     })
 
     it('should error after ~247 seconds', function (done) {
-        const clock = sinon.useFakeTimers()
         const req = request(`coap://localhost:${port + 1}`)
         req.end()
 
@@ -450,7 +453,6 @@ describe('share-socket', function () {
 
         req.on('error', (err) => {
             expect(err).to.have.property('message', 'No reply in 247 seconds.')
-            clock.restore()
             done()
         })
 
