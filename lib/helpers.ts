@@ -67,19 +67,10 @@ export function toCode (code: string | number): string {
         return code
     }
 
-    const first = Math.floor(code / 100)
-    const second = code - first * 100
-    let result = ''
+    const codeClass = Math.floor(code / 100)
+    const codeDetail = String(code - codeClass * 100).padStart(2, "0")
 
-    result += String(first) + '.'
-
-    if (second < 10) {
-        result += '0'
-    }
-
-    result += String(second)
-
-    return result
+    return `${codeClass}.${codeDetail}`
 }
 
 export function packetToMessage (dest: any, packet: CoapPacket): void {
