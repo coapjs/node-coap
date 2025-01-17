@@ -60,7 +60,7 @@
     "coap-packet": "^1.1.1",
     "debug": "^4.3.5",
     "fastseries": "^2.0.0",
-    "lru-cache": "^10.2.2",
+    "lru-cache": "^11.0.2",
     "readable-stream": "^4.5.2"
   },
   "engines": {
