@@ -491,4 +491,214 @@ describe('blockwise1', () => {
             setImmediate(done)
         })
     })
+
+
+    describe('blockwise1 with piggybacked and non-piggybacked responses', () => {
+        let server: dgram.Socket
+        let port: number
+
+        beforeEach(function (done) {
+            port = nextPort()
+            server = dgram.createSocket('udp4')
+            server.bind(port, done)
+        })
+
+        afterEach(function () {
+            server.close()
+        })
+
+        it('should handle block1 with separate ack and response', function (done) {
+            // Create a large payload that will require block1 (2 blocks of 16 bytes each)
+            const largePayload = Buffer.alloc(32)
+            for (let i = 0; i < largePayload.length; i++) {
+                largePayload[i] = i % 256
+            }
+
+            let blockCount = 0
+            let finalResponseSent = false
+            let ackCount = 0
+            let continueCount = 0
+
+            server.on('message', (msg, rinfo) => {
+                const packet = parse(msg)
+                
+                if (packet.code === '0.03' && packet.options?.some(opt => opt.name === 'Block1')) {
+                    const block1Option = packet.options.find(opt => opt.name === 'Block1')
+                    if (block1Option) {
+                        const block1 = parseBlockOption(block1Option.value)
+                        
+                        if (block1) {
+                            // Send ACK first (non-piggybacked)
+                            const ack = generate({
+                                code: '0.00',
+                                messageId: packet.messageId,
+                                ack: true,
+                                token: Buffer.alloc(0)
+                            })
+                            server.send(ack, 0, ack.length, rinfo.port, rinfo.address)
+                            ackCount++
+                            
+                            // Then send the block1 response after a delay
+                            setTimeout(() => {
+                                if (block1.more === 1) {
+                                    // More blocks to come - send Continue (2.31)
+                                    const continueResponse = generate({
+                                        code: '2.31', // Continue
+                                        messageId: packet.messageId + 1, // New message ID
+                                        confirmable: true,
+                                        token: packet.token,
+                                        options: [{
+                                            name: 'Block1',
+                                            value: block1Option.value // Echo back the same block1 option
+                                        }]
+                                    })
+                                    server.send(continueResponse, 0, continueResponse.length, rinfo.port, rinfo.address)
+                                    continueCount++
+                                } else {
+                                    // Last block - send Changed (2.04)
+                                    const changedResponse = generate({
+                                        code: '2.04', // Changed
+                                        messageId: packet.messageId + 1, // New message ID
+                                        confirmable: true,
+                                        token: packet.token,
+                                        options: [{
+                                            name: 'Block1',
+                                            value: block1Option.value // Echo back the same block1 option
+                                        }]
+                                    })
+                                    server.send(changedResponse, 0, changedResponse.length, rinfo.port, rinfo.address)
+                                    finalResponseSent = true
+                                }
+                            }, 50)
+                            
+                            blockCount++
+                        }
+                    }
+                }
+            })
+
+            // Use the coap client to send the request
+            const req = request({
+                port,
+                method: 'PUT',
+                confirmable: true
+            })
+
+            // Send the full payload - the client will handle block1 segmentation automatically
+            req.setOption('Block1', Buffer.of(0x00)) // Block 0, size 16, more = 1
+            req.write(largePayload) // Send the full payload
+
+            let responseCount = 0
+            req.on('response', (res) => {
+                responseCount++
+                
+                // The client should only emit the final response
+                expect(responseCount).to.eql(1)
+                expect(res.code).to.eql('2.04') // Final response should be Changed
+                expect(finalResponseSent).to.be.true
+                expect(ackCount).to.eql(2) // Should have sent 2 ACKs (one for each block)
+                expect(continueCount).to.eql(1) // Should have sent 1 Continue (for first block)
+                
+                // Check that we received the block1 response
+                const block1Option = res.options?.find(opt => opt.name === 'Block1')
+                expect(block1Option).to.not.be.undefined
+                expect(block1Option?.value).to.eql(Buffer.of(0x10)) // Should be block 1
+                
+                setImmediate(done)
+            })
+
+            req.end()
+        })
+
+        it('should handle block1 with piggybacked ack and response', function (done) {
+            // Create a large payload that will require block1 (2 blocks of 16 bytes each)
+            const largePayload = Buffer.alloc(32)
+            for (let i = 0; i < largePayload.length; i++) {
+                largePayload[i] = i % 256
+            }
+
+            let blockCount = 0
+            let finalResponseSent = false
+            let piggybackCount = 0
+
+            server.on('message', (msg, rinfo) => {
+                const packet = parse(msg)
+                
+                if (packet.code === '0.03' && packet.options?.some(opt => opt.name === 'Block1')) {
+                    const block1Option = packet.options.find(opt => opt.name === 'Block1')
+                    if (block1Option) {
+                        const block1 = parseBlockOption(block1Option.value)
+                        
+                        if (block1) {
+                            // Send piggybacked response (ACK + Block1 response in one message)
+                            setTimeout(() => {
+                                if (block1.more === 1) {
+                                    // More blocks to come - send Continue (2.31) piggybacked on ACK
+                                    const piggybackResponse = generate({
+                                        code: '2.31', // Continue
+                                        messageId: packet.messageId,
+                                        ack: true, // Piggybacked on ACK
+                                        token: packet.token,
+                                        options: [{
+                                            name: 'Block1',
+                                            value: block1Option.value // Echo back the same block1 option
+                                        }]
+                                    })
+                                    server.send(piggybackResponse, 0, piggybackResponse.length, rinfo.port, rinfo.address)
+                                    piggybackCount++
+                                } else {
+                                    // Last block - send Changed (2.04) piggybacked on ACK
+                                    const piggybackResponse = generate({
+                                        code: '2.04', // Changed
+                                        messageId: packet.messageId,
+                                        ack: true, // Piggybacked on ACK
+                                        token: packet.token,
+                                        options: [{
+                                            name: 'Block1',
+                                            value: block1Option.value // Echo back the same block1 option
+                                        }]
+                                    })
+                                    server.send(piggybackResponse, 0, piggybackResponse.length, rinfo.port, rinfo.address)
+                                    finalResponseSent = true
+                                }
+                            }, 50)
+                            
+                            blockCount++
+                        }
+                    }
+                }
+            })
+
+            // Use the coap client to send the request
+            const req = request({
+                port,
+                method: 'PUT',
+                confirmable: true
+            })
+
+            // Send the full payload - the client will handle block1 segmentation automatically
+            req.setOption('Block1', Buffer.of(0x00)) // Block 0, size 16, more = 1
+            req.write(largePayload) // Send the full payload
+
+            let responseCount = 0
+            req.on('response', (res) => {
+                responseCount++
+                
+                // The client should only emit the final response
+                expect(responseCount).to.eql(1)
+                expect(res.code).to.eql('2.04') // Final response should be Changed
+                expect(finalResponseSent).to.be.true
+                expect(piggybackCount).to.eql(1) // Should have sent 1 piggybacked Continue (for first block)
+                
+                // Check that we received the block1 response
+                const block1Option = res.options?.find(opt => opt.name === 'Block1')
+                expect(block1Option).to.not.be.undefined
+                expect(block1Option?.value).to.eql(Buffer.of(0x10)) // Should be block 1
+                
+                setImmediate(done)
+            })
+
+            req.end()
+        })
+    })
 })

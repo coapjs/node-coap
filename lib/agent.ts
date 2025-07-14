@@ -228,9 +228,10 @@ class Agent extends EventEmitter {
 
         req.sender.reset()
 
-        if (block1 != null && packet.ack) {
+        if (block1 != null) {
         // If the client takes too long to respond then the retry sender will send
         // another packet with the previous messageId, which we've already removed.
+        // Handle both piggybacked (ACK with Block1) and non-piggybacked (CON with Block1) responses
             const segmentedSender = req.segmentedSender
             if (segmentedSender != null) {
                 // If there's more to send/receive, then carry on!
