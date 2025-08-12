@@ -13,12 +13,14 @@ import { CoapPacket } from '../models/models'
 
 export default class ObserveReadStream extends IncomingMessage {
     _lastId: number | undefined
+    _lastMessageId: number | undefined
     _lastTime: number
     _disableFiltering: boolean
     constructor (packet: CoapPacket, rsinfo: AddressInfo, outSocket: AddressInfo) {
         super(packet, rsinfo, outSocket, { objectMode: true })
 
         this._lastId = undefined
+        this._lastMessageId = undefined
         this._lastTime = 0
         this._disableFiltering = false
         this.append(packet, true)
@@ -51,6 +53,7 @@ export default class ObserveReadStream extends IncomingMessage {
 
         if (this._disableFiltering || (dseq > 0 && dseq < (1 << 23)) || dtime > 128 * 1000) {
             this._lastId = observe
+            this._lastMessageId = packet.messageId
             this._lastTime = Date.now()
             this.push(packet.payload)
         }
