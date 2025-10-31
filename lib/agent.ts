@@ -176,7 +176,7 @@ class Agent extends EventEmitter {
                 req = this._tkToReq.get(packet.token.toString('hex'))
             }
 
-            if ((packet.ack || packet.reset) && req == null) {
+            if ((packet.ack || packet.reset) && req == null && packet.code == '0.00') {
                 // Nothing to do on unknown or duplicate ACK/RST packet
                 return
             }
