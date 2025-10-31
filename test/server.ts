@@ -352,14 +352,29 @@ describe('server', function () {
 
     describe('with the \'Content-Format\' header and an unknown value in the request', function () {
         it('should use the numeric format if the option value is in range', function (done) {
+            client.once('message', (msg) => {
+                const response = parse(msg)
+
+                expect(response.code).to.equal('2.05')
+
+                done()
+            })
+
+            server.once('request', (req, res) => {
+                expect(req.headers['Content-Format']).to.equal(1542)
+                res.end()
+            })
+
             send(generate({
                 options: [{
                     name: 'Content-Format',
                     value: Buffer.of(0x06, 0x06)
                 }]
             }))
+        })
 
-            client.on('message', (msg) => {
+        it('should ignore the option if the  option value is not in range', function (done) {
+            client.once('message', (msg) => {
                 const response = parse(msg)
 
                 expect(response.code).to.equal('2.05')
@@ -367,32 +382,17 @@ describe('server', function () {
                 done()
             })
 
-            server.on('request', (req, res) => {
-                expect(req.headers['Content-Format']).to.equal(1542)
+            server.once('request', (req, res) => {
+                expect(req.headers['Content-Format']).to.equal(undefined)
                 res.end()
             })
-        })
 
-        it('should ignore the option if the  option value is not in range', function (done) {
             send(generate({
                 options: [{
                     name: 'Content-Format',
                     value: Buffer.of(0xff, 0xff, 0x01)
                 }]
             }))
-
-            client.on('message', (msg) => {
-                const response = parse(msg)
-
-                expect(response.code).to.equal('2.05')
-
-                done()
-            })
-
-            server.on('request', (req, res) => {
-                expect(req.headers['Content-Format']).to.equal(undefined)
-                res.end()
-            })
         })
     })
 
@@ -1021,6 +1021,11 @@ describe('server', function () {
                     this.skip()
                 }
 
+                if (process.env.CI) {
+                    this.skip()
+                    return
+                }
+
                 const server = createServer({
                     multicastAddress,
                     type
@@ -1036,6 +1041,12 @@ describe('server', function () {
                     host: multicastAddress,
                     port,
                     multicast: true
+                }).on('error', (err: any) => {
+                    if (err.code === 'EHOSTUNREACH') {
+                        this.skip()
+                        return
+                    }
+                    done(err)
                 }).end()
             })
         })
