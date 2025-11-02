@@ -26,6 +26,10 @@ export default class ObserveReadStream extends IncomingMessage {
         this.append(packet, true)
     }
 
+    get lastMessageId(): number | undefined {
+        return this._lastMessageId;
+    }
+
     append (packet: CoapPacket, firstPacket: boolean): void {
         if (!this.readable) {
             return
