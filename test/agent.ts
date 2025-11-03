@@ -538,5 +538,55 @@ describe('Agent', function () {
                 })
             })
         })
+
+        it('should track _lastMessageId in ObserveReadStream', function (done) {
+            const req = request({
+                port,
+                agent,
+                observe: true,
+                confirmable: false
+            }).end()
+
+            server.on('message', (msg, rsinfo) => {
+                const packet = parse(msg)
+
+                // Send first observe notification
+                sendObserve({
+                    num: 1,
+                    messageId: 12345,
+                    token: packet.token,
+                    confirmable: false,
+                    ack: false,
+                    rsinfo
+                })
+
+                // Send second observe notification with different messageId
+                sendObserve({
+                    num: 2,
+                    messageId: 54321,
+                    token: packet.token,
+                    confirmable: false,
+                    ack: false,
+                    rsinfo
+                })
+            })
+
+            req.on('response', (res: ObserveReadStream) => {
+                let dataCount = 0
+                
+                res.on('data', (chunk) => {
+                    dataCount++
+                    
+                    if (dataCount === 1) {
+                        // After first notification, _lastMessageId should be 12345
+                        expect((res as any)._lastMessageId).to.equal(12345)
+                    } else if (dataCount === 2) {
+                        // After second notification, _lastMessageId should be 54321
+                        expect((res as any)._lastMessageId).to.equal(54321)
+                        done()
+                    }
+                })
+            })
+        })
     })
 })

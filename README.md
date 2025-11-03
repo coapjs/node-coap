@@ -1,7 +1,7 @@
 node-coap
 =====
 
-![Build Status](https://github.com/mcollina/node-coap/workflows/Build%20Status/badge.svg)
+[![Build Status](https://github.com/coapjs/node-coap/actions/workflows/npm-test.yml/badge.svg)](https://github.com/coapjs/node-coap/actions/workflows/npm-test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/mcollina/node-coap/badge.svg?branch=master)](https://coveralls.io/github/mcollina/node-coap?branch=master)
 [![gitter](https://badges.gitter.im/mcollina/node-coap.png)](https://gitter.im/mcollina/node-coap)
 
