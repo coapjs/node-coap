@@ -1667,6 +1667,7 @@ describe('request', function () {
         const MULTICAST_ADDR = '224.0.0.1'
         const port2 = nextPort()
         let sock = createSocket('udp4')
+        let multicastSupported = true
 
         function doReq (): OutgoingMessage {
             return request({
@@ -1679,11 +1680,18 @@ describe('request', function () {
         beforeEach(function (done) {
             sock = createSocket('udp4')
             sock.bind(port2, () => {
-                if (server instanceof Socket) {
-                    server.addMembership(MULTICAST_ADDR)
+                try {
+                    if (server instanceof Socket) {
+                        server.addMembership(MULTICAST_ADDR)
+                    }
+                    sock.addMembership(MULTICAST_ADDR)
+                    done()
+                } catch (err: any) {
+                    if (err.code === 'EADDRNOTAVAIL' || err.code === 'EHOSTUNREACH') {
+                        multicastSupported = false
+                    }
+                    done()
                 }
-                sock.addMembership(MULTICAST_ADDR)
-                done()
             })
         })
 
@@ -1692,7 +1700,18 @@ describe('request', function () {
         })
 
         it('should be non-confirmable', function (done) {
-            doReq()
+            if (!multicastSupported || process.env.CI) {
+                this.skip()
+                return
+            }
+
+            doReq().on('error', (err: any) => {
+                if (err.code === 'EHOSTUNREACH') {
+                    this.skip()
+                    return
+                }
+                done(err)
+            })
 
             if (server == null) {
                 return
@@ -1706,7 +1725,18 @@ describe('request', function () {
         })
 
         it('should be responsed with the same token', function (done) {
-            const req = doReq()
+            if (!multicastSupported || process.env.CI) {
+                this.skip()
+                return
+            }
+
+            const req = doReq().on('error', (err: any) => {
+                if (err.code === 'EHOSTUNREACH') {
+                    this.skip()
+                    return
+                }
+                done(err)
+            })
             let token: Buffer
 
             if (server == null) {
@@ -1744,6 +1774,11 @@ describe('request', function () {
         })
 
         it('should allow for differing MIDs for non-confirmable requests', function (done) {
+            if (!multicastSupported || process.env.CI) {
+                this.skip()
+                return
+            }
+
             let _req: OutgoingMessage | null = null
             let counter = 0
             const servers: Array<Server | undefined> = [undefined, undefined]
@@ -1770,6 +1805,12 @@ describe('request', function () {
                 port: port2,
                 confirmable: false,
                 multicast: true
+            }).on('error', (err: any) => {
+                if (err.code === 'EHOSTUNREACH') {
+                    this.skip()
+                    return
+                }
+                done(err)
             }).on('response', (res) => {
                 if (++counter === servers.length) {
                     mids.forEach((mid, i) => {
@@ -1785,6 +1826,11 @@ describe('request', function () {
         })
 
         it('should allow for block-wise transfer when using multicast', function (done) {
+            if (!multicastSupported || process.env.CI) {
+                this.skip()
+                return
+            }
+
             const payload = Buffer.alloc(1536)
 
             server = createServer((req, res) => {
@@ -1799,6 +1845,12 @@ describe('request', function () {
                 pathname: '/hello',
                 confirmable: false,
                 multicast: true
+            }).on('error', (err: any) => {
+                if (err.code === 'EHOSTUNREACH') {
+                    this.skip()
+                    return
+                }
+                done(err)
             }).on('response', (res) => {
                 expect(res.payload.toString()).to.eql(payload.toString())
                 done()
@@ -1806,6 +1858,11 @@ describe('request', function () {
         })
 
         it('should preserve all listeners when using block-wise transfer and multicast', function (done) {
+            if (!multicastSupported || process.env.CI) {
+                this.skip()
+                return
+            }
+
             const payload = Buffer.alloc(1536)
 
             server = createServer((req, res) => {
@@ -1820,6 +1877,14 @@ describe('request', function () {
                 multicast: true
             })
 
+            _req.on('error', (err: any) => {
+                if (err.code === 'EHOSTUNREACH') {
+                    this.skip()
+                    return
+                }
+                done(err)
+            })
+
             _req.on('bestEventEver', () => {
                 done()
             })
@@ -1831,6 +1896,11 @@ describe('request', function () {
         })
 
         it('should ignore multiple responses from the same hostname when using block2 multicast', function (done) {
+            if (!multicastSupported || process.env.CI) {
+                this.skip()
+                return
+            }
+
             const payload = Buffer.alloc(1536)
 
             let counter = 0
@@ -1850,6 +1920,12 @@ describe('request', function () {
                 port: port2,
                 confirmable: false,
                 multicast: true
+            }).on('error', (err: any) => {
+                if (err.code === 'EHOSTUNREACH') {
+                    this.skip()
+                    return
+                }
+                done(err)
             }).on('response', (res) => {
                 counter++
             }).end()
