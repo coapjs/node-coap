@@ -7,9 +7,11 @@
  */
 
 import crypto from 'crypto'
-import { parse, ParsedPacket } from 'coap-packet'
+import { parse, generate, ParsedPacket } from 'coap-packet'
+import { Socket } from 'dgram'
 import { or, isOption } from './helpers'
 import { MiddlewareParameters } from '../models/models'
+import { getOscoreOptionValue, parseOscoreOption } from './oscore_helpers'
 
 type middlewareCallback = (nullOrError: null | Error) => void
 
@@ -43,7 +45,13 @@ export function handleServerRequest (request: MiddlewareParameters, next: middle
     }
 
     try {
-        request.server._handle(request.packet, request.rsinfo)
+        request.server._handle(
+            request.packet,
+            request.rsinfo,
+            request.wasOscoreProtected ?? false,
+            request.oscoreSenderId,
+            request.oscoreIdContext
+        )
         next(null)
     } catch (err) {
         next(err)
@@ -99,4 +107,90 @@ export function handleProxyResponse (request: MiddlewareParameters, next: middle
     }
 
     next(null)
+}
+
+export function oscoreDecryptRequest (request: MiddlewareParameters, next: middlewareCallback): void {
+    if (request.packet == null) {
+        return next(null)
+    }
+
+    // Skip OSCORE for proxied requests
+    if (request.proxy != null) {
+        return next(null)
+    }
+
+    const oscoreOptValue = getOscoreOptionValue(request.packet)
+
+    if (oscoreOptValue == null) {
+        // Not OSCORE-protected
+        if (request.server._oscoreOnly) {
+            request.server._sendError(
+                Buffer.from('OSCORE required'),
+                request.rsinfo, request.packet, '4.01'
+            )
+            return
+        }
+        return next(null)
+    }
+
+    const { kid, kidContext } = parseOscoreOption(oscoreOptValue)
+    const ctxMgr = request.server._oscoreContextManager
+
+    if (ctxMgr == null || kid == null) {
+        request.server._sendError(
+            Buffer.from('Unauthorized'),
+            request.rsinfo, request.packet, '4.01'
+        )
+        return
+    }
+
+    const oscore = ctxMgr.getByKid(kid, kidContext ?? undefined)
+    if (oscore == null) {
+        request.server._sendError(
+            Buffer.from('Unknown security context'),
+            request.rsinfo, request.packet, '4.01'
+        )
+        return
+    }
+
+    oscore.decode(request.raw)
+        .then((decoded) => {
+            request.raw = decoded
+            request.packet = parse(decoded)
+            request.wasOscoreProtected = true
+            request.oscoreContext = oscore
+            request.oscoreSenderId = kid
+            request.oscoreIdContext = kidContext ?? undefined
+
+            const tokenHex = request.packet.token?.toString('hex')
+            if (tokenHex != null && tokenHex.length > 0) {
+                ctxMgr.bindToken(tokenHex, oscore)
+            }
+
+            next(null)
+        })
+        .catch((err) => {
+            if (err?.status === 201) {
+                // FIRST_REQUEST_AFTER_REBOOT — send 4.01 with Echo challenge
+                const echoNonce = crypto.randomBytes(8)
+                const errPkt = generate({
+                    code: '4.01',
+                    ack: request.packet?.confirmable === true,
+                    messageId: request.packet?.messageId,
+                    token: request.packet?.token,
+                    options: [{ name: '252' as any, value: echoNonce }]
+                })
+                if (request.server._sock instanceof Socket) {
+                    request.server._sock.send(
+                        errPkt, 0, errPkt.length,
+                        request.rsinfo.port, request.rsinfo.address
+                    )
+                }
+                return
+            }
+            request.server._sendError(
+                Buffer.from('OSCORE decode failed'),
+                request.rsinfo, request.packet, '4.01'
+            )
+        })
 }

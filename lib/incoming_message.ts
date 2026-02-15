@@ -13,6 +13,11 @@ import type { ReadableOptions } from 'readable-stream'
 import type { CoapPacket, OptionValue } from '../models/models'
 import { packetToMessage } from './helpers'
 
+export interface OscoreRequestContext {
+    senderId: Buffer
+    idContext?: Buffer
+}
+
 class IncomingMessage extends Readable {
     rsinfo: AddressInfo
     outSocket?: AddressInfo
@@ -23,6 +28,11 @@ class IncomingMessage extends Readable {
     headers: Partial<Record<OptionName, OptionValue>>
     method: CoapMethod
     code: string
+    oscoreContext?: OscoreRequestContext
+
+    get isOscore (): boolean {
+        return this.oscoreContext != null
+    }
 
     constructor (packet: CoapPacket, rsinfo: AddressInfo, outSocket?: AddressInfo, options?: ReadableOptions) {
         super(options)

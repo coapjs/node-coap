@@ -17,7 +17,9 @@ import os from 'os'
 import IncomingMessage from './incoming_message'
 import ObserveStream from './observe_write_stream'
 import RetrySend from './retry_send'
-import { handleProxyResponse, handleServerRequest, parseRequest, proxyRequest } from './middlewares'
+import { handleProxyResponse, handleServerRequest, parseRequest, proxyRequest, oscoreDecryptRequest } from './middlewares'
+import { SecurityContextManager } from './oscore'
+import type { OSCORE } from 'coap-oscore'
 import { parseBlockOption } from './block'
 import { generate, type NamedOption, type Option, type ParsedPacket } from 'coap-packet'
 import { parseBlock2, createBlock2, getOption, isNumeric, isBoolean } from './helpers'
@@ -105,6 +107,8 @@ class CoAPServer extends EventEmitter {
     _sock: Socket | EventEmitter | null
     _internal_socket: boolean
     _clientIdentifier: (request: IncomingMessage) => string
+    _oscoreContextManager: SecurityContextManager | null = null
+    _oscoreOnly: boolean = false
 
     constructor (serverOptions?: CoapServerOptions | typeof requestListener, listener?: typeof requestListener) {
         super()
@@ -143,6 +147,13 @@ class CoAPServer extends EventEmitter {
             this._options.sendAcksForNonConfirmablePackets =
                 parameters.sendAcksForNonConfirmablePackets
         }
+
+        if (this._options.oscoreContexts != null) {
+            this._oscoreContextManager = this._options.oscoreContexts
+            this._oscoreOnly = this._options.oscoreOnly ?? false
+            this._middlewares.push(oscoreDecryptRequest)
+        }
+
         this._middlewares.push(handleServerRequest)
 
         // Multicast settings
@@ -397,7 +408,13 @@ class CoAPServer extends EventEmitter {
      * @param packet The packet that was sent from the client.
      * @param rsinfo Connection info
      */
-    _handle (packet: CoapPacket, rsinfo: AddressInfo): void {
+    _handle (
+        packet: CoapPacket,
+        rsinfo: AddressInfo,
+        oscoreProtected: boolean = false,
+        oscoreSenderId?: Buffer,
+        oscoreIdContext?: Buffer
+    ): void {
         if (packet.code == null || packet.code[0] !== '0') {
             // According to RFC7252 Section 4.2 receiving a confirmable messages
             // that can't be processed, should be rejected by ignoring it AND
@@ -412,6 +429,13 @@ class CoAPServer extends EventEmitter {
         const lru = this._lru
         let Message: typeof ObserveStream | typeof OutMessage = OutMessage
         const request = new IncomingMessage(packet, rsinfo)
+
+        if (oscoreProtected && oscoreSenderId != null) {
+            request.oscoreContext = {
+                senderId: oscoreSenderId,
+                idContext: oscoreIdContext
+            }
+        }
         const cached = lru.peek(this._toKey(request, packet, true))
 
         if (cached != null && !(packet.ack ?? false) && !(packet.reset ?? false) && sock instanceof Socket) {
@@ -420,6 +444,10 @@ class CoAPServer extends EventEmitter {
         } else if (cached != null && ((packet.ack ?? false) || (packet.reset ?? false))) {
             if (cached.response != null && (packet.reset ?? false)) {
                 cached.response.end()
+            }
+            // Stop retransmissions when ACK/RST is received
+            if (cached.sender != null) {
+                cached.sender.reset()
             }
             lru.delete(this._toKey(request, packet, false))
             return
@@ -454,11 +482,6 @@ class CoAPServer extends EventEmitter {
         packet.piggybackReplyMs = this._options.piggybackReplyMs
         const generateResponse = (): OutgoingMessage | ObserveStream | undefined => {
             const response = new Message(packet, (response, packet: ParsedPacket) => {
-                /**
-                 * Extended `Buffer` with additional fields for caching.
-                 *
-                 * TODO: Find a more elegant solution for this type.
-                 */
                 let buf: any
                 const sender = new RetrySend(sock, rsinfo.port, rsinfo.address)
 
@@ -468,34 +491,43 @@ class CoAPServer extends EventEmitter {
                     response.emit('error', err)
                     return
                 }
-                if (Message === OutMessage) {
-                    sender.on('error', response.emit.bind(response, 'error'))
-                } else {
-                    buf.response = response
-                    sender.on('error', () => {
-                        response.end()
-                    })
+
+                // OSCORE encode response if request was protected
+                if (oscoreProtected && this._oscoreContextManager != null) {
+                    const tokenHex = packet.token?.toString('hex')
+                    const oscore = tokenHex != null && tokenHex.length > 0
+                        ? this._oscoreContextManager.getByToken(tokenHex)
+                        : undefined
+
+                    if (oscore != null) {
+                        oscore.encode(buf)
+                            .then((encoded) => {
+                                this._finishSendResponse(
+                                    encoded, response, sender, request,
+                                    packet, lru, Message
+                                )
+                                // Token cleanup
+                                if (Message === OutMessage && this._oscoreContextManager != null && tokenHex != null) {
+                                    this._oscoreContextManager.unbindToken(tokenHex)
+                                }
+                            })
+                            .catch((err) => response.emit('error', err))
+                        // Observe token cleanup on stream finish
+                        if (Message === ObserveStream) {
+                            (response as ObserveStream).once('finish', () => {
+                                if (tokenHex != null) {
+                                    this._oscoreContextManager?.unbindToken(tokenHex)
+                                }
+                            })
+                        }
+                        return
+                    }
                 }
 
-                const key = this._toKey(
-                    request,
-                    packet,
-                    packet.ack || !packet.confirmable
+                this._finishSendResponse(
+                    buf, response, sender, request,
+                    packet, lru, Message
                 )
-                lru.set(key, buf)
-                buf.sender = sender
-
-                if (
-                    this._options.sendAcksForNonConfirmablePackets === true ||
-                    packet.confirmable
-                ) {
-                    sender.send(
-                        buf,
-                        packet.ack || packet.reset || !packet.confirmable
-                    )
-                } else {
-                    debug('OMIT ACK PACKAGE')
-                }
             })
 
             response.statusCode = '2.05'
@@ -607,6 +639,65 @@ class CoAPServer extends EventEmitter {
         this.emit('request', request, response)
 
         this.saveAdditionalBlock2Options(cacheKey, response)
+    }
+
+    private _finishSendResponse (
+        buf: any,
+        response: OutgoingMessage | ObserveStream,
+        sender: RetrySend,
+        request: IncomingMessage,
+        packet: ParsedPacket,
+        lru: CoapLRUCache<string, any>,
+        Message: typeof ObserveStream | typeof OutMessage
+    ): void {
+        if (Message === OutMessage) {
+            sender.on('error', response.emit.bind(response, 'error'))
+        } else {
+            buf.response = response
+            sender.on('error', () => {
+                (response as ObserveStream).end()
+            })
+        }
+
+        const key = this._toKey(
+            request,
+            packet,
+            packet.ack || !packet.confirmable
+        )
+        lru.set(key, buf)
+        buf.sender = sender
+
+        if (
+            this._options.sendAcksForNonConfirmablePackets === true ||
+            packet.confirmable
+        ) {
+            const avoidBackoff = packet.ack || packet.reset || !packet.confirmable
+            debug(`Sending packet: ack=${packet.ack}, reset=${packet.reset}, confirmable=${packet.confirmable}, avoidBackoff=${avoidBackoff}, messageId=${packet.messageId}`)
+            sender.send(
+                buf,
+                avoidBackoff
+            )
+        } else {
+            debug('OMIT ACK PACKAGE')
+        }
+    }
+
+    addOscoreContext (instance: OSCORE, recipientId: Buffer, idContext?: Buffer): void {
+        if (this._oscoreContextManager == null) {
+            this._oscoreContextManager = new SecurityContextManager()
+            // Insert OSCORE middleware before handleServerRequest if not already present
+            const hsrIndex = this._middlewares.indexOf(handleServerRequest)
+            if (hsrIndex >= 0) {
+                this._middlewares.splice(hsrIndex, 0, oscoreDecryptRequest)
+            } else {
+                this._middlewares.push(oscoreDecryptRequest)
+            }
+        }
+        this._oscoreContextManager.addContext(instance, recipientId, idContext)
+    }
+
+    removeOscoreContext (recipientId: Buffer, idContext?: Buffer): void {
+        this._oscoreContextManager?.removeContext(recipientId, idContext)
     }
 
     private saveAdditionalBlock2Options (cacheKey: string | null, response?: OutgoingMessage | ObserveStream): void {

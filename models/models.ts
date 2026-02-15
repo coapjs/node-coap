@@ -9,10 +9,12 @@
 import { CoapMethod, OptionName, Packet, ParsedPacket } from 'coap-packet'
 import { Socket } from 'dgram'
 import { AddressInfo } from 'net'
+import type { OSCORE } from 'coap-oscore'
 import Agent from '../lib/agent'
 import IncomingMessage from '../lib/incoming_message'
 import OutgoingMessage from '../lib/outgoing_message'
 import CoAPServer from '../lib/server'
+import type { SecurityContextManager } from '../lib/oscore'
 
 export declare function requestListener (req: IncomingMessage, res: OutgoingMessage): void
 
@@ -37,6 +39,10 @@ export interface MiddlewareParameters {
     server: CoAPServer
     packet?: ParsedPacket
     proxy?: string
+    oscoreContext?: OSCORE
+    wasOscoreProtected?: boolean
+    oscoreSenderId?: Buffer
+    oscoreIdContext?: Buffer
 }
 
 export interface CoapPacket extends Packet {
@@ -114,10 +120,13 @@ export interface CoapServerOptions {
     clientIdentifier?: (request: IncomingMessage) => string
     reuseAddr?: boolean
     cacheSize?: number
+    oscoreContexts?: SecurityContextManager
+    oscoreOnly?: boolean
 }
 
 export interface AgentOptions {
     type?: 'udp4' | 'udp6'
     socket?: Socket
     port?: number
+    oscoreOnly?: boolean
 }

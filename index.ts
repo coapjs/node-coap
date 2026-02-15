@@ -12,6 +12,7 @@ import IncomingMessage from './lib/incoming_message'
 import OutgoingMessage from './lib/outgoing_message'
 import ObserveReadStream from './lib/observe_read_stream'
 import ObserveWriteStream from './lib/observe_write_stream'
+import { SecurityContextManager } from './lib/oscore'
 import { parameters, refreshTiming, defaultTiming } from './lib/parameters'
 import { isIPv6 } from 'net'
 import { registerOption, registerFormat, ignoreOption } from './lib/option_converter'
@@ -96,6 +97,7 @@ export {
     OutgoingMessage,
     ObserveReadStream,
     ObserveWriteStream,
+    SecurityContextManager,
     Agent,
     Server,
     type ParametersUpdate,
@@ -106,3 +108,5 @@ export {
     type OptionValue,
     type CoapServerOptions
 }
+
+export type { OSCORE, OscoreContext, OscoreContextStatus } from 'coap-oscore'
