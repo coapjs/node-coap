@@ -22,6 +22,10 @@ import { parseBlockOption } from './block'
 import { AddressInfo } from 'net'
 import { parameters } from './parameters'
 
+interface OscoreRsinfo extends AddressInfo {
+    oscore?: boolean
+}
+
 const maxToken = Math.pow(2, 32)
 const maxMessageId = Math.pow(2, 16)
 
@@ -98,7 +102,11 @@ class Agent extends EventEmitter {
                             return
                         }
                         if (this._sock != null) {
-                            this._handle(packet, rsinfo, this._sock.address())
+                            const oscoreRsinfo: OscoreRsinfo = {
+                                ...rsinfo,
+                                oscore: true
+                            }
+                            this._handle(packet, oscoreRsinfo, this._sock.address())
                         }
                     })
                     .catch(() => {
@@ -200,7 +208,7 @@ class Agent extends EventEmitter {
         })
     }
 
-    _handle (packet: ParsedPacket, rsinfo: AddressInfo, outSocket: AddressInfo): void {
+    _handle (packet: ParsedPacket, rsinfo: OscoreRsinfo, outSocket: AddressInfo): void {
         let buf: Buffer
         let response: IncomingMessage
         let req: OutgoingMessage | undefined = this._msgIdToReq.get(packet.messageId)
@@ -383,8 +391,10 @@ class Agent extends EventEmitter {
         if (req.response != null) {
             const response: any = req.response
             if (response.append != null) {
-                // it is an observe request
-                // and we are already streaming
+                // Drop notifications without decode proof on OSCORE-protected streams
+                if (response.oscoreProtected === true && rsinfo.oscore !== true) {
+                    return
+                }
                 return response.append(packet)
             } else {
                 // TODO There is a previous response but is not an ObserveStream !
@@ -399,8 +409,9 @@ class Agent extends EventEmitter {
 
         if (observe && packet.code !== '4.04') {
             response = new ObserveStream(packet, rsinfo, outSocket)
-            if (this._getOscoreContext(rsinfo.address, rsinfo.port) != null) {
+            if (rsinfo.oscore === true) {
                 (response as ObserveStream)._disableFiltering = true
+                ;(response as ObserveStream).oscoreProtected = true
             }
             response.on('close', () => {
                 this._tkToReq.delete(packet.token.toString('hex'))
@@ -418,6 +429,9 @@ class Agent extends EventEmitter {
             })
         } else {
             response = new IncomingMessage(packet, rsinfo, outSocket)
+            if (rsinfo.oscore === true) {
+                response.oscoreProtected = true
+            }
         }
 
         if (!req.multicast) {

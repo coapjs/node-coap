@@ -29,9 +29,10 @@ class IncomingMessage extends Readable {
     method: CoapMethod
     code: string
     oscoreContext?: OscoreRequestContext
+    oscoreProtected: boolean = false
 
     get isOscore (): boolean {
-        return this.oscoreContext != null
+        return this.oscoreProtected || this.oscoreContext != null
     }
 
     constructor (packet: CoapPacket, rsinfo: AddressInfo, outSocket?: AddressInfo, options?: ReadableOptions) {
