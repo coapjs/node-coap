@@ -110,7 +110,8 @@ class Agent extends EventEmitter {
                         }
                     })
                     .catch(() => {
-                        this._handlePlainMessage(msg, rsinfo)
+                        // OSCORE decode failed — drop the message.
+                        // Do NOT fall back to plaintext when a security context exists.
                     })
                 return
             }
@@ -376,13 +377,41 @@ class Agent extends EventEmitter {
         if (packet.code === '4.01' && req != null && this._getOscoreContext(rsinfo.address, rsinfo.port) != null) {
             const echoOpt = getOption(packet.options, '252')
             if (echoOpt != null) {
-                const retryUrl = { ...req.url, token: req._packet.token }
-                const retryReq = this.request(retryUrl)
-                retryReq.setOption('252', echoOpt)
-                retryReq.on('response', (res) => req.emit('response', res))
-                retryReq.on('error', (err) => req.emit('error', err))
-                retryReq.end()
-                return
+                // Limit Echo retries to prevent infinite loops from malicious servers
+                const retryCount = (req as any)._echoRetries ?? 0
+                if (retryCount >= 1) {
+                    // Max retries exceeded — deliver the 4.01 to the application
+                    // (fall through to normal response handling below)
+                } else {
+                    const retryUrl = { ...req.url, token: req._packet.token }
+                    const retryReq = this.request(retryUrl)
+
+                    // Carry over options from original packet (Content-Format, Accept, custom, etc.)
+                    // Skip Uri-Path, Uri-Query, Observe — these are reconstructed from retryUrl by request()
+                    const skipOptions = new Set(['Uri-Path', 'Uri-Query', 'Observe'])
+                    if (req._packet.options != null) {
+                        for (const opt of req._packet.options) {
+                            if (!skipOptions.has(String(opt.name))) {
+                                retryReq.setOption(String(opt.name), opt.value)
+                            }
+                        }
+                    }
+                    retryReq.setOption('252', echoOpt)
+
+                    ;(retryReq as any)._echoRetries = retryCount + 1
+
+                    retryReq.on('response', (res) => req.emit('response', res))
+                    retryReq.on('error', (err) => req.emit('error', err))
+
+                    // Carry over payload from original request
+                    const payload = req.slice()
+                    if (payload.length > 0) {
+                        retryReq.end(payload)
+                    } else {
+                        retryReq.end()
+                    }
+                    return
+                }
             }
         }
 

@@ -235,7 +235,7 @@ class CoAPServer extends EventEmitter {
         }, parameters.maxMessageSize)
 
         if (this._sock instanceof Socket) {
-            this._sock.send(message, 0, message.length, rsinfo.port)
+            this._sock.send(message, 0, message.length, rsinfo.port, rsinfo.address)
         }
     }
 
@@ -493,10 +493,10 @@ class CoAPServer extends EventEmitter {
                 }
 
                 // OSCORE encode response if request was protected
-                if (oscoreProtected && this._oscoreContextManager != null) {
+                if (oscoreProtected && this._oscoreContextManager != null && oscoreSenderId != null) {
                     const tokenHex = packet.token?.toString('hex')
                     const oscore = tokenHex != null && tokenHex.length > 0
-                        ? this._oscoreContextManager.getByToken(tokenHex)
+                        ? this._oscoreContextManager.getByToken(tokenHex, oscoreSenderId)
                         : undefined
 
                     if (oscore != null) {
@@ -508,15 +508,15 @@ class CoAPServer extends EventEmitter {
                                 )
                                 // Token cleanup
                                 if (Message === OutMessage && this._oscoreContextManager != null && tokenHex != null) {
-                                    this._oscoreContextManager.unbindToken(tokenHex)
+                                    this._oscoreContextManager.unbindToken(tokenHex, oscoreSenderId)
                                 }
                             })
                             .catch((err) => response.emit('error', err))
-                        // Observe token cleanup on stream finish
+                        // Observe token cleanup on stream close (covers both finish and error)
                         if (Message === ObserveStream) {
-                            (response as ObserveStream).once('finish', () => {
+                            (response as ObserveStream).once('close', () => {
                                 if (tokenHex != null) {
-                                    this._oscoreContextManager?.unbindToken(tokenHex)
+                                    this._oscoreContextManager?.unbindToken(tokenHex, oscoreSenderId)
                                 }
                             })
                         }

@@ -9,7 +9,7 @@
 import crypto from 'crypto'
 import { parse, generate, ParsedPacket } from 'coap-packet'
 import { Socket } from 'dgram'
-import { or, isOption } from './helpers'
+import { or, isOption, getOption } from './helpers'
 import { MiddlewareParameters } from '../models/models'
 import { getOscoreOptionValue, parseOscoreOption } from './oscore_helpers'
 
@@ -125,7 +125,7 @@ export function oscoreDecryptRequest (request: MiddlewareParameters, next: middl
         // Not OSCORE-protected
         if (request.server._oscoreOnly) {
             request.server._sendError(
-                Buffer.from('OSCORE required'),
+                Buffer.from('Unauthorized'),
                 request.rsinfo, request.packet, '4.01'
             )
             return
@@ -147,7 +147,7 @@ export function oscoreDecryptRequest (request: MiddlewareParameters, next: middl
     const oscore = ctxMgr.getByKid(kid, kidContext ?? undefined)
     if (oscore == null) {
         request.server._sendError(
-            Buffer.from('Unknown security context'),
+            Buffer.from('Unauthorized'),
             request.rsinfo, request.packet, '4.01'
         )
         return
@@ -164,32 +164,89 @@ export function oscoreDecryptRequest (request: MiddlewareParameters, next: middl
 
             const tokenHex = request.packet.token?.toString('hex')
             if (tokenHex != null && tokenHex.length > 0) {
-                ctxMgr.bindToken(tokenHex, oscore)
+                ctxMgr.bindToken(tokenHex, oscore, kid)
             }
 
             next(null)
         })
         .catch((err) => {
             if (err?.status === 201) {
-                // FIRST_REQUEST_AFTER_REBOOT — send 4.01 with Echo challenge
+                // FIRST_REQUEST_AFTER_REBOOT — Echo challenge per RFC 9175
+                const decrypted = err.decrypted as Buffer | undefined
+
+                // Parse inner (decrypted) packet to check for Echo option
+                let innerEcho: Buffer | null = null
+                if (decrypted != null) {
+                    try {
+                        const innerPacket = parse(decrypted)
+                        const echoVal = getOption(innerPacket.options, '252' as any)
+                        if (Buffer.isBuffer(echoVal)) {
+                            innerEcho = echoVal
+                        }
+                    } catch (_) {
+                        // Failed to parse decrypted payload; treat as no Echo
+                    }
+                }
+
+                // Check if the retry contains a valid Echo nonce
+                const storedNonce = ctxMgr.getPendingEcho(kid, kidContext ?? undefined)
+                if (
+                    innerEcho != null &&
+                    storedNonce != null &&
+                    innerEcho.length === storedNonce.length &&
+                    crypto.timingSafeEqual(innerEcho, storedNonce)
+                ) {
+                    // Echo verified — complete the reboot recovery
+                    // Note: clearRebootRecovery() is added in the concurrent node-oscore update
+                    ;(oscore as any).clearRebootRecovery()
+                    ctxMgr.clearPendingEcho(kid, kidContext ?? undefined)
+
+                    // Continue processing with the decrypted inner message
+                    request.raw = decrypted!
+                    request.packet = parse(decrypted!)
+                    request.wasOscoreProtected = true
+                    request.oscoreContext = oscore
+                    request.oscoreSenderId = kid
+                    request.oscoreIdContext = kidContext ?? undefined
+
+                    const tokenHex = request.packet.token?.toString('hex')
+                    if (tokenHex != null && tokenHex.length > 0) {
+                        ctxMgr.bindToken(tokenHex, oscore, kid)
+                    }
+
+                    next(null)
+                    return
+                }
+
+                // No valid Echo — send a new 4.01 + Echo challenge (OSCORE-encrypted)
                 const echoNonce = crypto.randomBytes(8)
-                const errPkt = generate({
+                ctxMgr.storePendingEcho(kid, kidContext ?? undefined, echoNonce)
+
+                const innerResponse = generate({
                     code: '4.01',
                     ack: request.packet?.confirmable === true,
                     messageId: request.packet?.messageId,
                     token: request.packet?.token,
                     options: [{ name: '252' as any, value: echoNonce }]
                 })
-                if (request.server._sock instanceof Socket) {
-                    request.server._sock.send(
-                        errPkt, 0, errPkt.length,
-                        request.rsinfo.port, request.rsinfo.address
-                    )
-                }
+
+                oscore.encode(innerResponse)
+                    .then((encrypted) => {
+                        if (request.server._sock instanceof Socket) {
+                            request.server._sock.send(
+                                encrypted, 0, encrypted.length,
+                                request.rsinfo.port, request.rsinfo.address
+                            )
+                        }
+                    })
+                    .catch(() => {
+                        // Fallback: if OSCORE encode fails, drop silently
+                        // (we must not send plaintext Echo challenges)
+                    })
                 return
             }
             request.server._sendError(
-                Buffer.from('OSCORE decode failed'),
+                Buffer.from('Unauthorized'),
                 request.rsinfo, request.packet, '4.01'
             )
         })

@@ -360,7 +360,7 @@ describe('OSCORE', function () {
     })
 
     describe('unknown client on server', function () {
-        it('should return 4.01 for unknown KID', function (done) {
+        it('should not emit request for unknown KID', function (done) {
             const port = nextPort()
 
             // Client with sender ID 0x05 (not registered on server)
@@ -388,7 +388,7 @@ describe('OSCORE', function () {
 
             const server = trackServer(createServer({ oscoreContexts: contexts }))
             server.on('request', () => {
-                done(new Error('Should not receive request'))
+                done(new Error('Should not receive request from unknown client'))
             })
 
             server.listen(port, () => {
@@ -399,17 +399,18 @@ describe('OSCORE', function () {
                     hostname: '127.0.0.1',
                     port,
                     pathname: '/test',
-                    agent
+                    agent,
+                    retrySend: 0
                 })
-                req.on('response', (res) => {
-                    expect(res.code).to.equal('4.01')
-                    done()
-                })
-                req.on('timeout', () => {
-                    // Also acceptable — server rejected and client decode fails
-                    done()
-                })
+                // Server rejects unknown KID with plaintext 4.01
+                // Client drops it (correct OSCORE behavior — no plaintext accepted from secured peer)
+                // Give the server time to process and verify it didn't emit 'request'
                 req.end()
+
+                setTimeout(() => {
+                    // If we got here, server correctly rejected without emitting 'request'
+                    done()
+                }, 500)
             })
         })
     })

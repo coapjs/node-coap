@@ -55,7 +55,10 @@ export function parseOscoreOption (value: Buffer): OscoreOptionFields {
 
     const pivLen = flags & FLAG_PIV_MASK
     let piv: Buffer | null = null
-    if (pivLen > 0 && offset + pivLen <= value.length) {
+    if (pivLen > 0) {
+        if (offset + pivLen > value.length) {
+            throw new Error('Malformed OSCORE option: PIV truncated')
+        }
         piv = value.slice(offset, offset + pivLen)
         offset += pivLen
     }
@@ -63,13 +66,14 @@ export function parseOscoreOption (value: Buffer): OscoreOptionFields {
     let kidContext: Buffer | null = null
     if ((flags & FLAG_KID_CTX) !== 0) {
         if (offset >= value.length) {
-            return { kid: null, kidContext: null, piv }
+            throw new Error('Malformed OSCORE option: missing KID Context length')
         }
         const kidCtxLen = value[offset++]
-        if (offset + kidCtxLen <= value.length) {
-            kidContext = value.slice(offset, offset + kidCtxLen)
-            offset += kidCtxLen
+        if (offset + kidCtxLen > value.length) {
+            throw new Error('Malformed OSCORE option: KID Context truncated')
         }
+        kidContext = value.slice(offset, offset + kidCtxLen)
+        offset += kidCtxLen
     }
 
     let kid: Buffer | null = null
