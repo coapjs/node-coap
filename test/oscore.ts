@@ -429,9 +429,13 @@ describe('OSCORE', function () {
                 expect(typeof ssn).to.equal('bigint')
             })
 
+            // Use observe so the server sends notifications — notifications
+            // increment SSN and emit the 'ssn' event (normal responses reuse
+            // the request nonce and don't increment SSN per RFC 8613).
             const server = trackServer(createServer({ oscoreContexts: contexts }))
-            server.on('request', (req: IncomingMessage, res: OutgoingMessage) => {
-                res.end(Buffer.from('OK'))
+            server.on('request', (req: IncomingMessage, res: any) => {
+                res.write(Buffer.from('first'))
+                setTimeout(() => res.write(Buffer.from('second')), 20)
             })
             server.listen(port, () => {
                 const agent = trackAgent(new Agent({ type: 'udp4' }))
@@ -441,13 +445,17 @@ describe('OSCORE', function () {
                     hostname: '127.0.0.1',
                     port,
                     pathname: '/test',
+                    observe: true,
                     agent
                 })
-                req.on('response', () => {
-                    setTimeout(() => {
-                        expect(ssnFired).to.equal(true)
-                        done()
-                    }, 50)
+                req.on('response', (res) => {
+                    // After receiving first notification, give SSN event time to propagate
+                    res.once('data', () => {
+                        setTimeout(() => {
+                            expect(ssnFired).to.equal(true)
+                            done()
+                        }, 50)
+                    })
                 })
                 req.end()
             })
