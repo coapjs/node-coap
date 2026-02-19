@@ -67,16 +67,16 @@ class Agent extends EventEmitter {
     }
 
     addOscoreContext (host: string, port: number, instance: OSCORE): void {
-        const key = `${host}:${port}`
+        const key = `${host.toLowerCase()}:${port}`
         this._oscoreContexts.set(key, instance)
     }
 
     removeOscoreContext (host: string, port: number): void {
-        this._oscoreContexts.delete(`${host}:${port}`)
+        this._oscoreContexts.delete(`${host.toLowerCase()}:${port}`)
     }
 
     private _getOscoreContext (host: string, port: number): OSCORE | undefined {
-        return this._oscoreContexts.get(`${host}:${port}`)
+        return this._oscoreContexts.get(`${host.toLowerCase()}:${port}`)
     }
 
     _init (socket?: Socket): void {
