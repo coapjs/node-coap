@@ -97,13 +97,6 @@ export class SecurityContextManager extends EventEmitter {
     }
 
     /**
-     * Listen for SSN changes across all managed contexts.
-     */
-    onSsnChange (cb: (recipientId: Buffer, idContext: Buffer | undefined, ssn: bigint) => void): this {
-        return this.on('ssn', cb)
-    }
-
-    /**
      * Store a pending Echo nonce for a given security context.
      */
     storePendingEcho (recipientId: Buffer, idContext: Buffer | undefined, nonce: Buffer): void {

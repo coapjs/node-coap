@@ -423,7 +423,7 @@ describe('OSCORE', function () {
             contexts.addContext(serverOscore, Buffer.from('01', 'hex'))
 
             let ssnFired = false
-            contexts.onSsnChange((recipientId, idContext, ssn) => {
+            contexts.on('ssn', (recipientId, idContext, ssn) => {
                 ssnFired = true
                 expect(recipientId.toString('hex')).to.equal('01')
                 expect(typeof ssn).to.equal('bigint')

@@ -195,7 +195,7 @@ const oscoreClient1 = new OSCORE({
 contexts.addContext(oscoreClient1, Buffer.from('01', 'hex'))
 
 // Persist SSN across restarts
-contexts.onSsnChange((recipientId, idContext, ssn) => {
+contexts.on('ssn', (recipientId, idContext, ssn) => {
     saveToStorage(`server-ssn-${recipientId.toString('hex')}`, ssn.toString())
 })
 
@@ -774,11 +774,17 @@ Register an OSCORE context. `oscoreInstance` is an `OSCORE` instance, `recipient
 
 Remove a previously registered context. Returns `true` if found and removed.
 
-#### contexts.onSsnChange(callback)
+#### Event: 'ssn'
 
-Listen for Sender Sequence Number changes across all managed contexts. The callback
+Emitted when a Sender Sequence Number changes on any managed context. The listener
 receives `(recipientId: Buffer, idContext: Buffer | undefined, ssn: bigint)`. Use this
 to persist SSN values for context recovery after restarts.
+
+```js
+contexts.on('ssn', (recipientId, idContext, ssn) => {
+    saveToStorage(`server-ssn-${recipientId.toString('hex')}`, ssn.toString())
+})
+```
 
 -------------------------------------------------------
 <a name="globalAgent"></a>
