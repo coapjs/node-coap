@@ -8,7 +8,7 @@
 
 import crypto = require('crypto')
 import { Socket, createSocket } from 'dgram'
-import { AgentOptions, CoapRequestParams, Block } from '../models/models'
+import { AgentOptions, CoapRequestParams, Block, Parameters } from '../models/models'
 import { EventEmitter } from 'events'
 import { parse, generate, ParsedPacket } from 'coap-packet'
 import type { OSCORE } from 'coap-oscore'
@@ -20,7 +20,7 @@ import { parseBlock2, createBlock2, getOption, removeOption } from './helpers'
 import { SegmentedTransmission } from './segmentation'
 import { parseBlockOption } from './block'
 import { AddressInfo } from 'net'
-import { parameters } from './parameters'
+import { parameters, createParameters } from './parameters'
 
 interface OscoreRsinfo extends AddressInfo {
     oscore?: boolean
@@ -42,12 +42,15 @@ class Agent extends EventEmitter {
     _requests: number
     private _oscoreContexts: Map<string, OSCORE>
     private _oscoreOnly: boolean
+    _parameters: Parameters
     constructor (opts?: AgentOptions) {
         super()
 
         if (opts == null) {
             opts = {}
         }
+
+        this._parameters = createParameters(opts.parameters)
 
         if (opts.type == null) {
             opts.type = 'udp4'
@@ -501,7 +504,7 @@ class Agent extends EventEmitter {
         const options = url.options ?? url.headers
         const multicastTimeout = url.multicastTimeout != null ? url.multicastTimeout : 20000
         const host = url.hostname ?? url.host
-        const port = url.port ?? parameters.coapPort
+        const port = url.port ?? this._parameters.coapPort
 
         const req = new OutgoingMessage({}, (req, packet) => {
             if (url.confirmable !== false) {
@@ -554,7 +557,7 @@ class Agent extends EventEmitter {
             }
         })
 
-        req.sender = new RetrySend(this._sock, port, host, url.retrySend)
+        req.sender = new RetrySend(this._sock, port, host, url.retrySend, this._parameters)
 
         const oscoreCtx = this._getOscoreContext(host ?? '', port)
 

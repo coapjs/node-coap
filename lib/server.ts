@@ -8,7 +8,7 @@
 
 import { EventEmitter } from 'events'
 import { isIPv6, type AddressInfo } from 'net'
-import { type CoapServerOptions, type requestListener, type CoapPacket, type Block, type MiddlewareParameters } from '../models/models'
+import { type CoapServerOptions, type requestListener, type CoapPacket, type Block, type MiddlewareParameters, type Parameters } from '../models/models'
 import BlockCache from './cache'
 import OutgoingMessage from './outgoing_message'
 import { Socket, createSocket, type SocketOptions } from 'dgram'
@@ -23,7 +23,7 @@ import type { OSCORE } from 'coap-oscore'
 import { parseBlockOption } from './block'
 import { generate, type NamedOption, type Option, type ParsedPacket } from 'coap-packet'
 import { parseBlock2, createBlock2, getOption, isNumeric, isBoolean } from './helpers'
-import { parameters } from './parameters'
+import { parameters, createParameters } from './parameters'
 import series from 'fastseries'
 import Debug from 'debug'
 const debug = Debug('CoAP Server')
@@ -109,6 +109,8 @@ class CoAPServer extends EventEmitter {
     _clientIdentifier: (request: IncomingMessage) => string
     _oscoreContextManager: SecurityContextManager | null = null
     _oscoreOnly: boolean = false
+    _parameters: Parameters
+    private _maxBlock2: number
 
     constructor (serverOptions?: CoapServerOptions | typeof requestListener, listener?: typeof requestListener) {
         super()
@@ -120,6 +122,8 @@ class CoAPServer extends EventEmitter {
         } else if (serverOptions != null) {
             this._options = serverOptions
         }
+
+        this._parameters = createParameters(this._options.parameters)
 
         this._middlewares = [parseRequest]
 
@@ -140,12 +144,12 @@ class CoAPServer extends EventEmitter {
             (this._options.piggybackReplyMs == null) ||
             !isNumeric(this._options.piggybackReplyMs)
         ) {
-            this._options.piggybackReplyMs = parameters.piggybackReplyMs
+            this._options.piggybackReplyMs = this._parameters.piggybackReplyMs
         }
 
         if (!isBoolean(this._options.sendAcksForNonConfirmablePackets)) {
             this._options.sendAcksForNonConfirmablePackets =
-                parameters.sendAcksForNonConfirmablePackets
+                this._parameters.sendAcksForNonConfirmablePackets
         }
 
         if (this._options.oscoreContexts != null) {
@@ -179,7 +183,7 @@ class CoAPServer extends EventEmitter {
             sizeCalculation: (n, key) => {
                 return n.buffer.byteLength
             },
-            ttl: parameters.exchangeLifetime * 1000,
+            ttl: this._parameters.exchangeLifetime * 1000,
             dispose: (value, key) => {
                 if (value.sender != null) {
                     value.sender.reset()
@@ -190,17 +194,24 @@ class CoAPServer extends EventEmitter {
         this._series = series()
 
         this._block1Cache = new BlockCache(
-            parameters.exchangeLifetime * 1000,
+            this._parameters.exchangeLifetime * 1000,
             () => {
                 return {}
             }
         )
         this._block2Cache = new BlockCache(
-            parameters.exchangeLifetime * 1000,
+            this._parameters.exchangeLifetime * 1000,
             () => {
                 return null
             }
         )
+
+        // Compute max block2 size from parameters
+        this._maxBlock2 = 1024
+        if (this._parameters.maxPayloadSize < 1024) {
+            const exponent = Math.floor(Math.log2(this._parameters.maxPayloadSize))
+            this._maxBlock2 = Math.pow(2, exponent)
+        }
 
         if (listener != null) {
             this.on('request', listener)
@@ -232,7 +243,7 @@ class CoAPServer extends EventEmitter {
             payload,
             messageId: packet != null ? packet.messageId : undefined,
             token: packet != null ? packet.token : undefined
-        }, parameters.maxMessageSize)
+        }, this._parameters.maxMessageSize)
 
         if (this._sock instanceof Socket) {
             this._sock.send(message, 0, message.length, rsinfo.port, rsinfo.address)
@@ -243,7 +254,7 @@ class CoAPServer extends EventEmitter {
         const url = new URL(proxyUri)
         const host = url.hostname
         const port = parseInt(url.port)
-        const message = generate(removeProxyOptions(packet), parameters.maxMessageSize)
+        const message = generate(removeProxyOptions(packet), this._parameters.maxMessageSize)
 
         if (this._sock instanceof Socket) {
             this._sock.send(message, port, host, callback)
@@ -253,7 +264,7 @@ class CoAPServer extends EventEmitter {
     _sendReverseProxied (packet: ParsedPacket, rsinfo: AddressInfo, callback?: (error: Error | null, bytes: number) => void): void {
         const host = rsinfo.address
         const port = rsinfo.port
-        const message = generate(packet, parameters.maxMessageSize)
+        const message = generate(packet, this._parameters.maxMessageSize)
 
         if (this._sock instanceof Socket) {
             this._sock.send(message, port, host, callback)
@@ -311,10 +322,10 @@ class CoAPServer extends EventEmitter {
     }
 
     listen (portOrCallback?: number | EventEmitter | ((err?: Error) => void), addressOrCallback?: string | ((err?: Error) => void), done?: (err?: Error) => void): this {
-        let port = parameters.coapPort
+        let port = this._parameters.coapPort
         if (typeof portOrCallback === 'function') {
             done = portOrCallback
-            port = parameters.coapPort
+            port = this._parameters.coapPort
         } else if (typeof portOrCallback === 'number') {
             port = portOrCallback
         }
@@ -364,11 +375,11 @@ class CoAPServer extends EventEmitter {
             this.emit('error', error)
         })
 
-        if (parameters.pruneTimerPeriod != null) {
+        if (this._parameters.pruneTimerPeriod != null) {
             // Start LRU pruning timer
             this._lru.pruneTimer = setInterval(() => {
                 this._lru.purgeStale()
-            }, parameters.pruneTimerPeriod * 1000)
+            }, this._parameters.pruneTimerPeriod * 1000)
             if (this._lru.pruneTimer.unref != null) {
                 this._lru.pruneTimer.unref()
             }
@@ -483,10 +494,10 @@ class CoAPServer extends EventEmitter {
         const generateResponse = (): OutgoingMessage | ObserveStream | undefined => {
             const response = new Message(packet, (response, packet: ParsedPacket) => {
                 let buf: any
-                const sender = new RetrySend(sock, rsinfo.port, rsinfo.address)
+                const sender = new RetrySend(sock, rsinfo.port, rsinfo.address, undefined, this._parameters)
 
                 try {
-                    buf = generate(packet, parameters.maxMessageSize)
+                    buf = generate(packet, this._parameters.maxMessageSize)
                 } catch (err) {
                     response.emit('error', err)
                     return
@@ -534,6 +545,9 @@ class CoAPServer extends EventEmitter {
             response._request = request._packet
             if (cacheKey != null) {
                 response._cachekey = cacheKey
+            }
+            if (response instanceof OutMessage) {
+                response._maxBlock2 = this._maxBlock2
             }
 
             // inject this function so the response can add an entry to the cache
@@ -745,19 +759,6 @@ class CoAPServer extends EventEmitter {
     }
 }
 
-// Max block size defined in the protocol is 2^(6+4) = 1024
-let maxBlock2 = 1024
-
-// Some network stacks (e.g. 6LowPAN/Thread) might have a lower IP MTU.
-// In those cases the maxPayloadSize parameter can be adjusted
-if (parameters.maxPayloadSize < 1024) {
-    // CoAP Block2 header only has sizes of 2^(i+4) for i in 0 to 6 inclusive,
-    // so pick the next size down that is supported
-    let exponent = Math.log2(parameters.maxPayloadSize)
-    exponent = Math.floor(exponent)
-    maxBlock2 = Math.pow(2, exponent)
-}
-
 /*
 new out message
 inherit from OutgoingMessage
@@ -767,6 +768,7 @@ class OutMessage extends OutgoingMessage {
     _cachekey: string
     // eslint-disable-next-line @typescript-eslint/ban-types
     _addCacheEntry: Function
+    _maxBlock2: number
 
     /**
      * Entry point for a response from the server
@@ -777,6 +779,8 @@ class OutMessage extends OutgoingMessage {
     end (payload?: Buffer): this {
         // removeOption(this._request.options, 'Block1');
         // add logic for Block1 sending
+
+        const maxBlock2 = this._maxBlock2
 
         const block2Buff = getOption(this._request.options, 'Block2')
         let requestedBlockOption: Block | null = null

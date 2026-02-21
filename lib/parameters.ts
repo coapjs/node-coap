@@ -223,4 +223,32 @@ function defaultTiming (): void {
 p.defaultTiming = defaultTiming
 p.refreshTiming = refreshTiming
 
-export { p as parameters, refreshTiming, defaultTiming }
+function createParameters (overrides?: ParametersUpdate): Parameters {
+    const result: Parameters = JSON.parse(JSON.stringify(p))
+    delete result.defaultTiming
+    delete result.refreshTiming
+
+    if (overrides != null) {
+        for (const key in overrides) {
+            if (result[key] != null || key in result) {
+                result[key] = overrides[key]
+            }
+        }
+    }
+
+    result.maxTransmitSpan = result.ackTimeout * ((Math.pow(2, result.maxRetransmit)) - 1) * result.ackRandomFactor
+    result.maxTransmitWait = result.ackTimeout * (Math.pow(2, result.maxRetransmit + 1) - 1) * result.ackRandomFactor
+    result.processingDelay = result.ackTimeout
+    result.maxRTT = 2 * result.maxLatency + result.processingDelay
+    result.exchangeLifetime = result.maxTransmitSpan + result.maxRTT
+
+    if (overrides != null && typeof overrides.pruneTimerPeriod === 'number') {
+        result.pruneTimerPeriod = overrides.pruneTimerPeriod
+    } else {
+        result.pruneTimerPeriod = (0.5 * result.exchangeLifetime)
+    }
+
+    return Object.freeze(result)
+}
+
+export { p as parameters, refreshTiming, defaultTiming, createParameters }

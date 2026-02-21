@@ -122,6 +122,7 @@ export interface CoapServerOptions {
     cacheSize?: number
     oscoreContexts?: SecurityContextManager
     oscoreOnly?: boolean
+    parameters?: ParametersUpdate
 }
 
 export interface AgentOptions {
@@ -129,4 +130,5 @@ export interface AgentOptions {
     socket?: Socket
     port?: number
     oscoreOnly?: boolean
+    parameters?: ParametersUpdate
 }
