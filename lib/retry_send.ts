@@ -32,7 +32,7 @@ export default class RetrySend extends EventEmitter {
     _message: Buffer
     _timer: NodeJS.Timeout
     _bOffTimer: NodeJS.Timeout
-    _parameters: Parameters
+    private _parameters: Parameters
     constructor (sock: any, port: number, host?: string, maxRetransmit?: number, instanceParameters?: Parameters) {
         super()
 
