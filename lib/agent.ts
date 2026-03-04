@@ -543,9 +543,16 @@ class Agent extends EventEmitter {
             const block1Buff = getOption(packet.options, 'Block1')
             if (block1Buff != null) {
                 // Setup for a segmented transmission
-                req.segmentedSender = new SegmentedTransmission(block1Buff[0], req, packet)
-                req.segmentedSender.sendNext()
-            } else {
+                // Block1 value is (NUM<<4)|(M<<3)|SZX; SegmentedTransmission expects SZX (0-6) only
+                const block1State = parseBlockOption(block1Buff as Buffer)
+                const blockSizeBytes = Math.pow(2, block1State.size + 4)
+                // Only re-segment when payload exceeds one block; else client does app-level blockwise (preserve Block1 as-is)
+                if (packet.payload && packet.payload.length > blockSizeBytes) {
+                    req.segmentedSender = new SegmentedTransmission(block1State.size, req, packet)
+                    req.segmentedSender.sendNext()
+                }
+            }
+            if (req.segmentedSender == null) {
                 let buf: Buffer
                 try {
                     buf = generate(packet)
