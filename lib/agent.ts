@@ -42,7 +42,7 @@ class Agent extends EventEmitter {
     _requests: number
     private _oscoreContexts: Map<string, OSCORE>
     private _oscoreOnly: boolean
-    _parameters: Parameters
+    private _parameters: Parameters
     constructor (opts?: AgentOptions) {
         super()
 
@@ -401,7 +401,7 @@ class Agent extends EventEmitter {
                     }
                     retryReq.setOption('252', echoOpt)
 
-                    ;(retryReq as any)._echoRetries = retryCount + 1
+                    (retryReq as any)._echoRetries = retryCount + 1
 
                     retryReq.on('response', (res) => req.emit('response', res))
                     retryReq.on('error', (err) => req.emit('error', err))
@@ -443,7 +443,7 @@ class Agent extends EventEmitter {
             response = new ObserveStream(packet, rsinfo, outSocket)
             if (rsinfo.oscore === true) {
                 (response as ObserveStream)._disableFiltering = true
-                ;(response as ObserveStream).oscoreProtected = true
+                (response as ObserveStream).oscoreProtected = true
             }
             response.on('close', () => {
                 this._tkToReq.delete(packet.token.toString('hex'))
@@ -569,7 +569,8 @@ class Agent extends EventEmitter {
         const oscoreCtx = this._getOscoreContext(host ?? '', port)
 
         if (oscoreCtx == null && this._oscoreOnly) {
-            throw new Error('No OSCORE context for ' + (host ?? '') + ':' + port)
+            const hostStr = host ?? ''
+            throw new Error('No OSCORE context for ' + hostStr + (hostStr !== '' ? ':' : '') + port)
         }
 
         if (oscoreCtx != null) {
