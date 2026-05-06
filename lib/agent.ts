@@ -112,9 +112,34 @@ class Agent extends EventEmitter {
                             this._handle(packet, oscoreRsinfo, this._sock.address())
                         }
                     })
-                    .catch(() => {
-                        // OSCORE decode failed — drop the message.
-                        // Do NOT fall back to plaintext when a security context exists.
+                    .catch((err) => {
+                        // OSCORE decode failed — do NOT fall back to plaintext
+                        // when a security context exists, but propagate the error
+                        // to the matching request so it doesn't hang silently.
+                        // Common trigger: server lost its OSCORE context (e.g.
+                        // after restart) and replied with plain CoAP 4.01 — we
+                        // refuse to deliver the plaintext payload, but the
+                        // request must learn about the failure.
+                        try {
+                            const outerPacket = parse(msg)
+                            const token = outerPacket.token?.toString('hex')
+                            let req: OutgoingMessage | undefined
+                            if (token != null && token.length > 0) {
+                                req = this._tkToReq.get(token)
+                            }
+                            // messageId fallback — outer packet always carries
+                            // a messageId, and the token entry may have been
+                            // cleaned up by a prior retry or block transfer.
+                            if (req == null && outerPacket.messageId != null) {
+                                req = this._msgIdToReq.get(outerPacket.messageId)
+                            }
+                            if (req != null) {
+                                req.sender.reset()
+                                req.emit('error', new Error(`OSCORE decode failed: ${err?.message ?? 'unknown error'}`))
+                            }
+                        } catch {
+                            // Can't parse the outer packet either — nothing to do
+                        }
                     })
                 return
             }
