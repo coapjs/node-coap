@@ -10,6 +10,8 @@ import { nextPort } from './common'
 import { expect } from 'chai'
 import { request, createServer, Agent, SecurityContextManager } from '../index'
 import { OSCORE, OscoreContextStatus } from 'coap-oscore'
+import { generate, parse } from 'coap-packet'
+import dgram from 'dgram'
 import type IncomingMessage from '../lib/incoming_message'
 import type OutgoingMessage from '../lib/outgoing_message'
 import type Server from '../lib/server'
@@ -402,13 +404,14 @@ describe('OSCORE', function () {
                     agent,
                     retrySend: 0
                 })
-                // Server rejects unknown KID with plaintext 4.01
-                // Client drops it (correct OSCORE behavior — no plaintext accepted from secured peer)
-                // Give the server time to process and verify it didn't emit 'request'
+                // Server rejects unknown KID with plaintext 4.01. The client
+                // surfaces this as an error on the request — swallow it; the
+                // assertion we care about is that the server's 'request' event
+                // never fires for an unknown KID.
+                req.on('error', () => {})
                 req.end()
 
                 setTimeout(() => {
-                    // If we got here, server correctly rejected without emitting 'request'
                     done()
                 }, 500)
             })
@@ -572,5 +575,507 @@ describe('OSCORE', function () {
                 req.end()
             })
         })
+    })
+
+    describe('non-OSCORE messages from OSCORE peer', function () {
+        it('should not error the request when receiving a plain empty ACK followed by a separate OSCORE response', function (done) {
+            const port = nextPort()
+            const { client: clientOscore, server: serverOscore } = createOscorePair()
+
+            const fakeServer = dgram.createSocket('udp4')
+            let finished = false
+            const finish = (err?: Error): void => {
+                if (finished) return
+                finished = true
+                try { fakeServer.close() } catch {}
+                done(err)
+            }
+
+            fakeServer.on('message', (msg, rinfo) => {
+                serverOscore.decode(msg).then(async (decoded) => {
+                    const innerReq = parse(decoded)
+                    const outerReq = parse(msg)
+                    const messageId = outerReq.messageId
+                    const token = innerReq.token
+
+                    // Step 1: plain empty ACK (RFC 8613 §4.2 — never OSCORE-protected).
+                    // This is the trigger for the regression introduced in ef74dce.
+                    const emptyAck = generate({
+                        code: '0.00',
+                        ack: true,
+                        messageId,
+                        token: Buffer.alloc(0)
+                    })
+                    fakeServer.send(emptyAck, 0, emptyAck.length, rinfo.port, rinfo.address)
+
+                    // Step 2: separate OSCORE-protected CON response with the actual payload.
+                    const responseInner = generate({
+                        code: '2.05',
+                        confirmable: true,
+                        messageId: (messageId + 1) & 0xffff,
+                        token,
+                        payload: Buffer.from('hello-after-empty-ack')
+                    })
+                    const responseEncoded = await serverOscore.encode(responseInner)
+                    setTimeout(() => {
+                        if (finished) return
+                        fakeServer.send(responseEncoded, 0, responseEncoded.length, rinfo.port, rinfo.address)
+                    }, 30)
+                }).catch((err) => {
+                    finish(err as Error)
+                })
+            })
+
+            fakeServer.bind(port, () => {
+                const agent = trackAgent(new Agent({ type: 'udp4' }))
+                agent.addOscoreContext('127.0.0.1', port, clientOscore)
+
+                const req = request({
+                    hostname: '127.0.0.1',
+                    port,
+                    pathname: '/test',
+                    agent
+                })
+                req.on('error', (err) => {
+                    finish(new Error(`request errored unexpectedly: ${err.message}`))
+                })
+                req.on('response', (res) => {
+                    try {
+                        expect(res.payload.toString()).to.equal('hello-after-empty-ack')
+                        finish()
+                    } catch (e) {
+                        finish(e as Error)
+                    }
+                })
+                req.end()
+            })
+        }).timeout(2000)
+
+        it('should not error the request with an OSCORE-decode error when receiving a plain RST', function (done) {
+            const port = nextPort()
+            const { client: clientOscore, server: serverOscore } = createOscorePair()
+
+            const fakeServer = dgram.createSocket('udp4')
+            let finished = false
+            const finish = (err?: Error): void => {
+                if (finished) return
+                finished = true
+                try { fakeServer.close() } catch {}
+                done(err)
+            }
+
+            fakeServer.on('message', (msg, rinfo) => {
+                serverOscore.decode(msg).then((decoded) => {
+                    const outerReq = parse(msg)
+                    const messageId = outerReq.messageId
+
+                    // Plain RST (Code 0.00, reset=true). Per RFC 8613 §4.2 this is
+                    // never OSCORE-protected.
+                    const rst = generate({
+                        code: '0.00',
+                        reset: true,
+                        messageId,
+                        token: Buffer.alloc(0)
+                    })
+                    fakeServer.send(rst, 0, rst.length, rinfo.port, rinfo.address)
+                }).catch((err) => {
+                    finish(err as Error)
+                })
+            })
+
+            fakeServer.bind(port, () => {
+                const agent = trackAgent(new Agent({ type: 'udp4' }))
+                agent.addOscoreContext('127.0.0.1', port, clientOscore)
+
+                const req = request({
+                    hostname: '127.0.0.1',
+                    port,
+                    pathname: '/test',
+                    agent
+                })
+                req.on('error', (err) => {
+                    if (/OSCORE decode failed/.test(err.message)) {
+                        finish(new Error(`RST was misreported as OSCORE decode failure: ${err.message}`))
+                        return
+                    }
+                    // Any other error (e.g. a future explicit "request reset") is acceptable
+                    // for this test — we only care that we are NOT emitting an OSCORE error.
+                    finish()
+                })
+                req.on('response', (res) => {
+                    // Equally acceptable: RST surfaced as a response with the reset flag set.
+                    try {
+                        const pkt: any = (res as any)._packet
+                        expect(pkt?.reset === true || pkt?.code === '0.00').to.equal(true)
+                        finish()
+                    } catch (e) {
+                        finish(e as Error)
+                    }
+                })
+                req.end()
+            })
+        }).timeout(2000)
+
+        it('should complete a NON request with a NON OSCORE response (no ACK exchange)', function (done) {
+            const port = nextPort()
+            const { client: clientOscore, server: serverOscore } = createOscorePair()
+
+            const fakeServer = dgram.createSocket('udp4')
+            let finished = false
+            const finish = (err?: Error): void => {
+                if (finished) return
+                finished = true
+                try { fakeServer.close() } catch {}
+                done(err)
+            }
+
+            fakeServer.on('message', (msg, rinfo) => {
+                serverOscore.decode(msg).then(async (decoded) => {
+                    const innerReq = parse(decoded)
+                    const outerReq = parse(msg)
+                    expect(outerReq.confirmable).to.equal(false)
+
+                    const responseInner = generate({
+                        code: '2.05',
+                        confirmable: false,
+                        messageId: ((outerReq.messageId ?? 0) + 1) & 0xffff,
+                        token: innerReq.token,
+                        payload: Buffer.from('non-response')
+                    })
+                    const responseEncoded = await serverOscore.encode(responseInner)
+                    fakeServer.send(responseEncoded, 0, responseEncoded.length, rinfo.port, rinfo.address)
+                }).catch((err) => {
+                    finish(err as Error)
+                })
+            })
+
+            fakeServer.bind(port, () => {
+                const agent = trackAgent(new Agent({ type: 'udp4' }))
+                agent.addOscoreContext('127.0.0.1', port, clientOscore)
+
+                const req = request({
+                    hostname: '127.0.0.1',
+                    port,
+                    pathname: '/test',
+                    confirmable: false,
+                    agent
+                })
+                req.on('error', (err) => {
+                    finish(new Error(`request errored unexpectedly: ${err.message}`))
+                })
+                req.on('response', (res) => {
+                    try {
+                        expect(res.payload.toString()).to.equal('non-response')
+                        finish()
+                    } catch (e) {
+                        finish(e as Error)
+                    }
+                })
+                req.end()
+            })
+        }).timeout(2000)
+
+        it('should emit error on the matching request when peer replies with plaintext (lost OSCORE context)', function (done) {
+            const port = nextPort()
+            const { client: clientOscore, server: serverOscore } = createOscorePair()
+
+            const fakeServer = dgram.createSocket('udp4')
+            let finished = false
+            const finish = (err?: Error): void => {
+                if (finished) return
+                finished = true
+                try { fakeServer.close() } catch {}
+                done(err)
+            }
+
+            fakeServer.on('message', (msg, rinfo) => {
+                serverOscore.decode(msg).then((decoded) => {
+                    const innerReq = parse(decoded)
+                    const outerReq = parse(msg)
+
+                    // Simulate "server lost its OSCORE context after reboot": reply
+                    // with a plain CoAP 4.01, *not* OSCORE-protected. ef74dce was
+                    // explicitly added to surface this case to the request.
+                    const plainErr = generate({
+                        code: '4.01',
+                        ack: true,
+                        messageId: outerReq.messageId,
+                        token: innerReq.token,
+                        payload: Buffer.from('Unauthorized')
+                    })
+                    fakeServer.send(plainErr, 0, plainErr.length, rinfo.port, rinfo.address)
+                }).catch((err) => {
+                    finish(err as Error)
+                })
+            })
+
+            fakeServer.bind(port, () => {
+                const agent = trackAgent(new Agent({ type: 'udp4' }))
+                agent.addOscoreContext('127.0.0.1', port, clientOscore)
+
+                const req = request({
+                    hostname: '127.0.0.1',
+                    port,
+                    pathname: '/test',
+                    agent
+                })
+                req.on('error', (err) => {
+                    try {
+                        expect(err.message).to.match(/OSCORE|plaintext/i)
+                        finish()
+                    } catch (e) {
+                        finish(e as Error)
+                    }
+                })
+                req.on('response', () => {
+                    finish(new Error('plaintext 4.01 should not have been delivered as a response'))
+                })
+                req.end()
+            })
+        }).timeout(2000)
+
+        it('should emit error on the matching request when an OSCORE-protected response has a corrupted MAC', function (done) {
+            const port = nextPort()
+            const { client: clientOscore, server: serverOscore } = createOscorePair()
+
+            const fakeServer = dgram.createSocket('udp4')
+            let finished = false
+            const finish = (err?: Error): void => {
+                if (finished) return
+                finished = true
+                try { fakeServer.close() } catch {}
+                done(err)
+            }
+
+            fakeServer.on('message', (msg, rinfo) => {
+                serverOscore.decode(msg).then(async (decoded) => {
+                    const innerReq = parse(decoded)
+                    const outerReq = parse(msg)
+
+                    // Build a real OSCORE response, then flip a byte in its
+                    // ciphertext to break the MAC. Outer packet still carries
+                    // the OSCORE option.
+                    const responseInner = generate({
+                        code: '2.05',
+                        ack: true,
+                        messageId: outerReq.messageId,
+                        token: innerReq.token,
+                        payload: Buffer.from('would-have-been-content')
+                    })
+                    const encrypted = await serverOscore.encode(responseInner)
+                    const corrupted = Buffer.from(encrypted)
+                    corrupted[corrupted.length - 1] ^= 0xff
+
+                    fakeServer.send(corrupted, 0, corrupted.length, rinfo.port, rinfo.address)
+                }).catch((err) => {
+                    finish(err as Error)
+                })
+            })
+
+            fakeServer.bind(port, () => {
+                const agent = trackAgent(new Agent({ type: 'udp4' }))
+                agent.addOscoreContext('127.0.0.1', port, clientOscore)
+
+                const req = request({
+                    hostname: '127.0.0.1',
+                    port,
+                    pathname: '/test',
+                    agent
+                })
+                req.on('error', (err) => {
+                    try {
+                        expect(err.message).to.match(/OSCORE/i)
+                        finish()
+                    } catch (e) {
+                        finish(e as Error)
+                    }
+                })
+                req.on('response', () => {
+                    finish(new Error('corrupted OSCORE response should not have been delivered'))
+                })
+                req.end()
+            })
+        }).timeout(2000)
+
+        it('should silently drop unparseable garbage datagrams from an OSCORE peer', function (done) {
+            const port = nextPort()
+            const { client: clientOscore, server: serverOscore } = createOscorePair()
+
+            const fakeServer = dgram.createSocket('udp4')
+            let finished = false
+            let errored = false
+            const finish = (err?: Error): void => {
+                if (finished) return
+                finished = true
+                try { fakeServer.close() } catch {}
+                done(err)
+            }
+
+            fakeServer.on('message', (msg, rinfo) => {
+                serverOscore.decode(msg).then(async (decoded) => {
+                    const innerReq = parse(decoded)
+                    const outerReq = parse(msg)
+
+                    // 1. Send pure garbage — too short to be a valid CoAP header.
+                    const garbage = Buffer.from([0xff, 0xff])
+                    fakeServer.send(garbage, 0, garbage.length, rinfo.port, rinfo.address)
+
+                    // 2. Then send a real OSCORE-protected response so the test
+                    // can complete deterministically.
+                    setTimeout(async () => {
+                        if (finished) return
+                        const responseInner = generate({
+                            code: '2.05',
+                            ack: true,
+                            messageId: outerReq.messageId,
+                            token: innerReq.token,
+                            payload: Buffer.from('after-garbage')
+                        })
+                        const encoded = await serverOscore.encode(responseInner)
+                        if (finished) return
+                        fakeServer.send(encoded, 0, encoded.length, rinfo.port, rinfo.address)
+                    }, 30)
+                }).catch((err) => {
+                    finish(err as Error)
+                })
+            })
+
+            fakeServer.bind(port, () => {
+                const agent = trackAgent(new Agent({ type: 'udp4' }))
+                agent.addOscoreContext('127.0.0.1', port, clientOscore)
+
+                const req = request({
+                    hostname: '127.0.0.1',
+                    port,
+                    pathname: '/test',
+                    agent
+                })
+                req.on('error', (err) => {
+                    errored = true
+                    finish(new Error(`request errored unexpectedly: ${err.message}`))
+                })
+                req.on('response', (res) => {
+                    if (errored) return
+                    try {
+                        expect(res.payload.toString()).to.equal('after-garbage')
+                        finish()
+                    } catch (e) {
+                        finish(e as Error)
+                    }
+                })
+                req.end()
+            })
+        }).timeout(2000)
+
+        it('should resolve a piggybacked OSCORE response (ACK with payload)', function (done) {
+            const port = nextPort()
+            const { client: clientOscore, server: serverOscore } = createOscorePair()
+
+            const fakeServer = dgram.createSocket('udp4')
+            let finished = false
+            const finish = (err?: Error): void => {
+                if (finished) return
+                finished = true
+                try { fakeServer.close() } catch {}
+                done(err)
+            }
+
+            fakeServer.on('message', (msg, rinfo) => {
+                serverOscore.decode(msg).then(async (decoded) => {
+                    const innerReq = parse(decoded)
+                    const outerReq = parse(msg)
+
+                    // Piggyback: ACK *is* the response (same messageId, with payload).
+                    const responseInner = generate({
+                        code: '2.05',
+                        ack: true,
+                        messageId: outerReq.messageId,
+                        token: innerReq.token,
+                        payload: Buffer.from('piggybacked')
+                    })
+                    const encoded = await serverOscore.encode(responseInner)
+                    fakeServer.send(encoded, 0, encoded.length, rinfo.port, rinfo.address)
+                }).catch((err) => {
+                    finish(err as Error)
+                })
+            })
+
+            fakeServer.bind(port, () => {
+                const agent = trackAgent(new Agent({ type: 'udp4' }))
+                agent.addOscoreContext('127.0.0.1', port, clientOscore)
+
+                const req = request({
+                    hostname: '127.0.0.1',
+                    port,
+                    pathname: '/test',
+                    agent
+                })
+                req.on('error', (err) => {
+                    finish(new Error(`request errored unexpectedly: ${err.message}`))
+                })
+                req.on('response', (res) => {
+                    try {
+                        expect(res.payload.toString()).to.equal('piggybacked')
+                        finish()
+                    } catch (e) {
+                        finish(e as Error)
+                    }
+                })
+                req.end()
+            })
+        }).timeout(2000)
+
+        it('should still complete a plain CoAP request when the agent has no OSCORE context for the peer', function (done) {
+            const port = nextPort()
+
+            const fakeServer = dgram.createSocket('udp4')
+            let finished = false
+            const finish = (err?: Error): void => {
+                if (finished) return
+                finished = true
+                try { fakeServer.close() } catch {}
+                done(err)
+            }
+
+            fakeServer.on('message', (msg, rinfo) => {
+                try {
+                    const incoming = parse(msg)
+                    const response = generate({
+                        code: '2.05',
+                        ack: true,
+                        messageId: incoming.messageId,
+                        token: incoming.token,
+                        payload: Buffer.from('plain-ok')
+                    })
+                    fakeServer.send(response, 0, response.length, rinfo.port, rinfo.address)
+                } catch (e) {
+                    finish(e as Error)
+                }
+            })
+
+            fakeServer.bind(port, () => {
+                // Note: no addOscoreContext for this peer.
+                const agent = trackAgent(new Agent({ type: 'udp4' }))
+
+                const req = request({
+                    hostname: '127.0.0.1',
+                    port,
+                    pathname: '/test',
+                    agent
+                })
+                req.on('error', (err) => {
+                    finish(new Error(`plain request errored unexpectedly: ${err.message}`))
+                })
+                req.on('response', (res) => {
+                    try {
+                        expect(res.payload.toString()).to.equal('plain-ok')
+                        finish()
+                    } catch (e) {
+                        finish(e as Error)
+                    }
+                })
+                req.end()
+            })
+        }).timeout(2000)
     })
 })

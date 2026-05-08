@@ -21,6 +21,7 @@ import { SegmentedTransmission } from './segmentation'
 import { parseBlockOption } from './block'
 import { AddressInfo } from 'net'
 import { parameters, createParameters } from './parameters'
+import { hasOscoreOption } from './oscore_helpers'
 
 interface OscoreRsinfo extends AddressInfo {
     oscore?: boolean
@@ -92,58 +93,74 @@ class Agent extends EventEmitter {
         this._sock = socket ?? createSocket({ type: this._opts.type ?? 'udp4' })
         this._sock.on('message', (msg, rsinfo) => {
             const oscoreCtx = this._getOscoreContext(rsinfo.address, rsinfo.port)
-            if (oscoreCtx != null) {
-                oscoreCtx.decode(msg)
-                    .then((decoded) => {
-                        let packet: ParsedPacket
-                        try {
-                            packet = parse(decoded)
-                        } catch {
-                            return
-                        }
-                        if (packet.code[0] === '0' && packet.code !== '0.00') {
-                            return
-                        }
-                        if (this._sock != null) {
-                            const oscoreRsinfo: OscoreRsinfo = {
-                                ...rsinfo,
-                                oscore: true
-                            }
-                            this._handle(packet, oscoreRsinfo, this._sock.address())
-                        }
-                    })
-                    .catch((err) => {
-                        // OSCORE decode failed — do NOT fall back to plaintext
-                        // when a security context exists, but propagate the error
-                        // to the matching request so it doesn't hang silently.
-                        // Common trigger: server lost its OSCORE context (e.g.
-                        // after restart) and replied with plain CoAP 4.01 — we
-                        // refuse to deliver the plaintext payload, but the
-                        // request must learn about the failure.
-                        try {
-                            const outerPacket = parse(msg)
-                            const token = outerPacket.token?.toString('hex')
-                            let req: OutgoingMessage | undefined
-                            if (token != null && token.length > 0) {
-                                req = this._tkToReq.get(token)
-                            }
-                            // messageId fallback — outer packet always carries
-                            // a messageId, and the token entry may have been
-                            // cleaned up by a prior retry or block transfer.
-                            if (req == null && outerPacket.messageId != null) {
-                                req = this._msgIdToReq.get(outerPacket.messageId)
-                            }
-                            if (req != null) {
-                                req.sender.reset()
-                                req.emit('error', new Error(`OSCORE decode failed: ${err?.message ?? 'unknown error'}`))
-                            }
-                        } catch {
-                            // Can't parse the outer packet either — nothing to do
-                        }
-                    })
+            if (oscoreCtx == null) {
+                this._handlePlainMessage(msg, rsinfo)
                 return
             }
-            this._handlePlainMessage(msg, rsinfo)
+
+            // Not every datagram from an OSCORE peer is OSCORE-protected.
+            // RFC 8613 §4.2 forbids protecting empty messages (transport-layer
+            // ACK/RST), and a peer that lost its context may reply in plaintext.
+            // Inspect the outer packet first to choose the right path.
+            let outerPacket: ParsedPacket
+            try {
+                outerPacket = parse(msg)
+            } catch {
+                return
+            }
+
+            if (!hasOscoreOption(outerPacket)) {
+                if (outerPacket.code === '0.00') {
+                    // Empty ACK / RST — legitimate transport-layer message.
+                    if (this._sock != null) {
+                        this._handle(outerPacket, rsinfo, this._sock.address())
+                    }
+                    return
+                }
+                // Non-empty plaintext from a peer we expect OSCORE from — peer
+                // likely lost its context. Surface to the matching request.
+                const token = outerPacket.token?.toString('hex')
+                if (token != null && token.length > 0) {
+                    const req = this._tkToReq.get(token)
+                    if (req != null) {
+                        req.sender.reset()
+                        req.emit('error', new Error('Received plaintext response on OSCORE-protected channel'))
+                    }
+                }
+                return
+            }
+
+            oscoreCtx.decode(msg)
+                .then((decoded) => {
+                    let packet: ParsedPacket
+                    try {
+                        packet = parse(decoded)
+                    } catch {
+                        return
+                    }
+                    if (packet.code[0] === '0' && packet.code !== '0.00') {
+                        return
+                    }
+                    if (this._sock != null) {
+                        const oscoreRsinfo: OscoreRsinfo = {
+                            ...rsinfo,
+                            oscore: true
+                        }
+                        this._handle(packet, oscoreRsinfo, this._sock.address())
+                    }
+                })
+                .catch((err) => {
+                    // Decode failed on a packet that *claimed* OSCORE protection.
+                    // Propagate to the matching request so it doesn't hang.
+                    const token = outerPacket.token?.toString('hex')
+                    if (token != null && token.length > 0) {
+                        const req = this._tkToReq.get(token)
+                        if (req != null) {
+                            req.sender.reset()
+                            req.emit('error', new Error(`OSCORE decode failed: ${err?.message ?? 'unknown error'}`))
+                        }
+                    }
+                })
         })
 
         if (this._opts.port != null) {
