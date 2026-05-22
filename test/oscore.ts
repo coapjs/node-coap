@@ -1078,4 +1078,135 @@ describe('OSCORE', function () {
             })
         }).timeout(2000)
     })
+
+    describe('oscoreOnly applied via addOscoreContext', function () {
+        it('should reject plaintext after a context is added at runtime', function (done) {
+            const port = nextPort()
+            const { server: serverOscore } = createOscorePair()
+
+            // Server is created with oscoreOnly:true but no contexts yet
+            const server = trackServer(createServer({ oscoreOnly: true }))
+            server.on('request', () => {
+                done(new Error('Should not receive request — oscoreOnly should reject plaintext'))
+            })
+
+            server.listen(port, () => {
+                server.addOscoreContext(serverOscore, Buffer.from('01', 'hex'))
+
+                const plainAgent = trackAgent(new Agent({ type: 'udp4' }))
+                const req = request({
+                    hostname: '127.0.0.1',
+                    port,
+                    pathname: '/test',
+                    agent: plainAgent
+                })
+                req.on('response', (res) => {
+                    expect(res.code).to.equal('4.01')
+                    done()
+                })
+                req.end()
+            })
+        })
+    })
+
+    describe('oscoreOnly agent drops inbound plaintext', function () {
+        it('should silently drop unsolicited plaintext from peers with no context', function (done) {
+            const agent = trackAgent(new Agent({ type: 'udp4', oscoreOnly: true }))
+            const agentSock: any = (agent as any)._sock
+            let errored = false
+            agent.on('error', () => { errored = true })
+
+            agentSock.bind(0, '127.0.0.1', () => {
+                const agentPort = agentSock.address().port
+                const sender = dgram.createSocket('udp4')
+                const datagram = generate({
+                    code: '2.05',
+                    payload: Buffer.from('plain'),
+                    messageId: 1,
+                    token: Buffer.alloc(0)
+                })
+                sender.send(datagram, agentPort, '127.0.0.1', () => {
+                    sender.close()
+                    // Give the agent a tick to (not) emit anything
+                    setTimeout(() => {
+                        try {
+                            expect(errored).to.equal(false)
+                            done()
+                        } catch (e) {
+                            done(e as Error)
+                        }
+                    }, 100)
+                })
+            })
+        }).timeout(2000)
+    })
+
+    describe('PIV validation', function () {
+        it('should reject OSCORE options with reserved PIV length', function (done) {
+            const port = nextPort()
+            const { server: serverOscore } = createOscorePair()
+            const contexts = new SecurityContextManager()
+            contexts.addContext(serverOscore, Buffer.from('01', 'hex'))
+
+            const server = trackServer(createServer({ oscoreContexts: contexts }))
+            server.on('request', () => {
+                done(new Error('Should not receive request — malformed PIV must be rejected'))
+            })
+
+            server.listen(port, () => {
+                // Hand-craft a CoAP packet with an OSCORE option whose flag byte
+                // encodes PIV length 6 (reserved per RFC 8613 §6.1).
+                const oscoreValue = Buffer.concat([
+                    Buffer.from([0x06]), // flags: pivLen=6
+                    Buffer.alloc(6) // arbitrary PIV bytes
+                ])
+                const packet = generate({
+                    code: '0.01',
+                    confirmable: true,
+                    messageId: 1,
+                    token: Buffer.from([0xaa]),
+                    options: [{ name: 'OSCORE' as any, value: oscoreValue }]
+                })
+                const client = dgram.createSocket('udp4')
+                client.on('message', (msg) => {
+                    try {
+                        const reply = parse(msg)
+                        expect(reply.code).to.equal('4.01')
+                        client.close()
+                        done()
+                    } catch (e) {
+                        client.close()
+                        done(e as Error)
+                    }
+                })
+                client.send(packet, port, '127.0.0.1')
+            })
+        }).timeout(2000)
+    })
+
+    describe('pending Echo nonce TTL', function () {
+        it('should evict stored Echo nonces after the TTL elapses', function (done) {
+            // Shortcut the TTL for the test by monkey-patching the static
+            // (readonly is TS-only; the value is captured at store time).
+            const originalTtl = (SecurityContextManager as any).PENDING_ECHO_TTL_MS
+            ;(SecurityContextManager as any).PENDING_ECHO_TTL_MS = 50
+
+            const contexts = new SecurityContextManager()
+            const recipientId = Buffer.from('01', 'hex')
+            const nonce = Buffer.from('cafebabe', 'hex')
+            contexts.storePendingEcho(recipientId, undefined, nonce)
+            expect(contexts.getPendingEcho(recipientId, undefined)).to.deep.equal(nonce)
+
+            setTimeout(() => {
+                try {
+                    expect(contexts.getPendingEcho(recipientId, undefined)).to.equal(undefined)
+                    done()
+                } catch (e) {
+                    done(e as Error)
+                } finally {
+                    ;(SecurityContextManager as any).PENDING_ECHO_TTL_MS = originalTtl
+                }
+            }, 150)
+        }).timeout(2000)
+    })
 })

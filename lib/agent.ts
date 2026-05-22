@@ -6,7 +6,7 @@
  * See the included LICENSE file for more details.
  */
 
-import crypto = require('crypto')
+import crypto from 'crypto'
 import { Socket, createSocket } from 'dgram'
 import { AgentOptions, CoapRequestParams, Block, Parameters } from '../models/models'
 import { EventEmitter } from 'events'
@@ -21,7 +21,7 @@ import { SegmentedTransmission } from './segmentation'
 import { parseBlockOption } from './block'
 import { AddressInfo } from 'net'
 import { parameters, createParameters } from './parameters'
-import { hasOscoreOption } from './oscore_helpers'
+import { hasOscoreOption, ECHO_OPTION } from './oscore_helpers'
 
 interface OscoreRsinfo extends AddressInfo {
     oscore?: boolean
@@ -94,6 +94,11 @@ class Agent extends EventEmitter {
         this._sock.on('message', (msg, rsinfo) => {
             const oscoreCtx = this._getOscoreContext(rsinfo.address, rsinfo.port)
             if (oscoreCtx == null) {
+                if (this._oscoreOnly) {
+                    // Drop unsolicited plaintext from peers with no context
+                    // when the agent is in OSCORE-only mode.
+                    return
+                }
                 this._handlePlainMessage(msg, rsinfo)
                 return
             }
@@ -420,7 +425,7 @@ class Agent extends EventEmitter {
 
         // Echo auto-retry for OSCORE peers
         if (packet.code === '4.01' && req != null && this._getOscoreContext(rsinfo.address, rsinfo.port) != null) {
-            const echoOpt = getOption(packet.options, '252')
+            const echoOpt = getOption(packet.options, ECHO_OPTION)
             if (echoOpt != null) {
                 // Limit Echo retries to prevent infinite loops from malicious servers
                 const retryCount = (req as any)._echoRetries ?? 0
@@ -441,7 +446,7 @@ class Agent extends EventEmitter {
                             }
                         }
                     }
-                    retryReq.setOption('252', echoOpt)
+                    retryReq.setOption(ECHO_OPTION, echoOpt)
 
                     ;(retryReq as any)._echoRetries = retryCount + 1
 
@@ -485,7 +490,7 @@ class Agent extends EventEmitter {
             response = new ObserveStream(packet, rsinfo, outSocket)
             if (rsinfo.oscore === true) {
                 (response as ObserveStream)._disableFiltering = true
-                ;(response as ObserveStream).oscoreProtected = true
+                response.oscoreProtected = true
             }
             response.on('close', () => {
                 this._tkToReq.delete(packet.token.toString('hex'))

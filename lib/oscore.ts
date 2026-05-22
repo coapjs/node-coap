@@ -16,9 +16,13 @@ import type { OSCORE } from 'coap-oscore'
  */
 export class SecurityContextManager extends EventEmitter {
     private static readonly MAX_TOKEN_BINDINGS = 10000
+    // Echo challenges only need to live long enough for the client to
+    // round-trip the nonce back; if the client never replies, the entry
+    // is evicted so the map can't grow unbounded.
+    private static readonly PENDING_ECHO_TTL_MS = 30_000
     private _contexts: Map<string, OSCORE>
     private _tokenToContext: Map<string, OSCORE>
-    private _pendingEchoNonces: Map<string, Buffer>
+    private _pendingEchoNonces: Map<string, { nonce: Buffer, timer: NodeJS.Timeout }>
 
     constructor () {
         super()
@@ -98,10 +102,22 @@ export class SecurityContextManager extends EventEmitter {
 
     /**
      * Store a pending Echo nonce for a given security context.
+     * The entry self-evicts after PENDING_ECHO_TTL_MS to prevent the map
+     * from accumulating entries when peers never reply to the challenge.
      */
     storePendingEcho (recipientId: Buffer, idContext: Buffer | undefined, nonce: Buffer): void {
         const key = this._toKey(recipientId, idContext)
-        this._pendingEchoNonces.set(key, nonce)
+        const existing = this._pendingEchoNonces.get(key)
+        if (existing != null) {
+            clearTimeout(existing.timer)
+        }
+        const timer = setTimeout(() => {
+            this._pendingEchoNonces.delete(key)
+        }, SecurityContextManager.PENDING_ECHO_TTL_MS)
+        if (typeof timer.unref === 'function') {
+            timer.unref()
+        }
+        this._pendingEchoNonces.set(key, { nonce, timer })
     }
 
     /**
@@ -109,7 +125,7 @@ export class SecurityContextManager extends EventEmitter {
      */
     getPendingEcho (recipientId: Buffer, idContext: Buffer | undefined): Buffer | undefined {
         const key = this._toKey(recipientId, idContext)
-        return this._pendingEchoNonces.get(key)
+        return this._pendingEchoNonces.get(key)?.nonce
     }
 
     /**
@@ -117,7 +133,11 @@ export class SecurityContextManager extends EventEmitter {
      */
     clearPendingEcho (recipientId: Buffer, idContext: Buffer | undefined): void {
         const key = this._toKey(recipientId, idContext)
-        this._pendingEchoNonces.delete(key)
+        const entry = this._pendingEchoNonces.get(key)
+        if (entry != null) {
+            clearTimeout(entry.timer)
+            this._pendingEchoNonces.delete(key)
+        }
     }
 
     private _toKey (recipientId: Buffer, idContext?: Buffer): string {

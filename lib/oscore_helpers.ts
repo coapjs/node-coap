@@ -13,6 +13,16 @@ const OSCORE_OPTION_NUMBER = 9
 const FLAG_KID = 0x08
 const FLAG_KID_CTX = 0x10
 const FLAG_PIV_MASK = 0x07
+// Bits 5-7 of the OSCORE option flag byte are reserved per RFC 8613 §6.1
+// and MUST be 0 in a valid option.
+const FLAG_RESERVED_MASK = 0xe0
+// PIV (Partial IV) length is encoded in the low 3 bits; values 6 and 7 are
+// reserved per RFC 8613 §6.1.
+const MAX_PIV_LEN = 5
+
+// RFC 9175 Echo option number (used as the OSCORE reboot-recovery challenge
+// per RFC 8613 Appendix B.1.2).
+export const ECHO_OPTION = '252'
 
 export interface OscoreOptionFields {
     kid: Buffer | null
@@ -53,7 +63,14 @@ export function parseOscoreOption (value: Buffer): OscoreOptionFields {
     let offset = 0
     const flags = value[offset++]
 
+    if ((flags & FLAG_RESERVED_MASK) !== 0) {
+        throw new Error('Malformed OSCORE option: reserved flag bits set')
+    }
+
     const pivLen = flags & FLAG_PIV_MASK
+    if (pivLen > MAX_PIV_LEN) {
+        throw new Error('Malformed OSCORE option: PIV length reserved')
+    }
     let piv: Buffer | null = null
     if (pivLen > 0) {
         if (offset + pivLen > value.length) {

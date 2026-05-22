@@ -11,7 +11,7 @@ import { parse, generate, ParsedPacket } from 'coap-packet'
 import { Socket } from 'dgram'
 import { or, isOption, getOption } from './helpers'
 import { MiddlewareParameters } from '../models/models'
-import { getOscoreOptionValue, parseOscoreOption } from './oscore_helpers'
+import { getOscoreOptionValue, parseOscoreOption, ECHO_OPTION } from './oscore_helpers'
 
 type middlewareCallback = (nullOrError: null | Error) => void
 
@@ -133,7 +133,18 @@ export function oscoreDecryptRequest (request: MiddlewareParameters, next: middl
         return next(null)
     }
 
-    const { kid, kidContext } = parseOscoreOption(oscoreOptValue)
+    let kid: Buffer | null
+    let kidContext: Buffer | null
+    try {
+        ({ kid, kidContext } = parseOscoreOption(oscoreOptValue))
+    } catch {
+        // Malformed OSCORE option (reserved bits, PIV length out of range, etc.)
+        request.server._sendError(
+            Buffer.from('Unauthorized'),
+            request.rsinfo, request.packet, '4.01'
+        )
+        return
+    }
     const ctxMgr = request.server._oscoreContextManager
 
     if (ctxMgr == null || kid == null) {
@@ -179,7 +190,7 @@ export function oscoreDecryptRequest (request: MiddlewareParameters, next: middl
                 if (decrypted != null) {
                     try {
                         const innerPacket = parse(decrypted)
-                        const echoVal = getOption(innerPacket.options, '252' as any)
+                        const echoVal = getOption(innerPacket.options, ECHO_OPTION)
                         if (Buffer.isBuffer(echoVal)) {
                             innerEcho = echoVal
                         }
@@ -197,8 +208,7 @@ export function oscoreDecryptRequest (request: MiddlewareParameters, next: middl
                     crypto.timingSafeEqual(innerEcho, storedNonce)
                 ) {
                     // Echo verified — complete the reboot recovery
-                    // Note: clearRebootRecovery() is added in the concurrent node-oscore update
-                    ;(oscore as any).clearRebootRecovery()
+                    oscore.clearRebootRecovery()
                     ctxMgr.clearPendingEcho(kid, kidContext ?? undefined)
 
                     // Continue processing with the decrypted inner message
@@ -227,7 +237,7 @@ export function oscoreDecryptRequest (request: MiddlewareParameters, next: middl
                     ack: request.packet?.confirmable === true,
                     messageId: request.packet?.messageId,
                     token: request.packet?.token,
-                    options: [{ name: '252' as any, value: echoNonce }]
+                    options: [{ name: ECHO_OPTION as any, value: echoNonce }]
                 })
 
                 oscore.encode(innerResponse)

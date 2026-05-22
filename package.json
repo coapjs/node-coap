@@ -1,6 +1,6 @@
 {
   "name": "coap",
-  "version": "1.6.0",
+  "version": "1.4.2",
   "description": "A CoAP library for node modelled after 'http'",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -57,7 +57,7 @@
     "bl": "^6.0.12",
     "@types/readable-stream": "^4.0.14",
     "capitalize": "^2.0.4",
-    "coap-oscore": "^2.2.1",
+    "coap-oscore": "^2.2.2",
     "coap-packet": "^1.1.1",
     "debug": "^4.3.5",
     "fastseries": "^2.0.0",

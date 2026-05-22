@@ -178,8 +178,7 @@ req.end()
 
 ```js
 const coap = require('coap')
-const { OSCORE, SecurityContextManager } = require('coap')
-const { OscoreContextStatus } = require('coap-oscore')
+const { OSCORE, OscoreContextStatus, SecurityContextManager } = require('coap')
 
 const contexts = new SecurityContextManager()
 
