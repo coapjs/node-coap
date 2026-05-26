@@ -448,6 +448,154 @@ describe('OSCORE', function () {
         })
     })
 
+    // RFC 9175 Echo path — disabled pending a coap-oscore API surface for
+    // building the Echo challenge response. The current implementation in
+    // lib/middlewares.ts:172-251 catches OscoreRebootRecoveryError, builds a
+    // 4.01 + Echo, then calls `oscore.encode(innerResponse)` to wrap it. But
+    // `encode` of a response requires a registered request interaction, and
+    // the reboot-recovery decode throws *before* `upsertRequestInteraction`
+    // runs (coap-oscore/dist/oscore.js:327). Result: the Echo challenge fails
+    // with "Interaction not found for token" and is dropped silently.
+    //
+    // Reaching green here needs coap-oscore to expose either a public
+    // `upsertRequestInteraction` or a dedicated `encodeEchoChallenge` helper.
+    // Tests left as `.skip` (not deleted) so the moment that API lands, the
+    // gap closes by flipping `.skip` back to active.
+    describe.skip('server-side Echo (RFC 9175)', function () {
+        it('should challenge first request after reboot and accept the Echo retry', function (done) {
+            const port = nextPort()
+
+            // Client is Fresh; server is Restored — first inbound OSCORE
+            // request will trigger an Echo challenge per RFC 9175.
+            const masterSecret = Buffer.from('0102030405060708090a0b0c0d0e0f10', 'hex')
+            const masterSalt = Buffer.from('9e7ca92223786340', 'hex')
+            const clientId = Buffer.from('01', 'hex')
+            const serverId = Buffer.from('02', 'hex')
+
+            const clientOscore = new OSCORE({
+                masterSecret,
+                masterSalt,
+                senderId: clientId,
+                recipientId: serverId,
+                idContext: Buffer.alloc(0),
+                status: OscoreContextStatus.Fresh
+            })
+            const serverOscore = new OSCORE({
+                masterSecret,
+                masterSalt,
+                senderId: serverId,
+                recipientId: clientId,
+                idContext: Buffer.alloc(0),
+                status: OscoreContextStatus.Restored
+            })
+
+            const contexts = new SecurityContextManager()
+            contexts.addContext(serverOscore, clientId)
+
+            const server = trackServer(createServer({ oscoreContexts: contexts }))
+            let appRequests = 0
+            server.on('request', (req: IncomingMessage, res: OutgoingMessage) => {
+                appRequests++
+                expect(req.isOscore).to.equal(true)
+                res.end(Buffer.from('hello-after-echo'))
+            })
+
+            server.listen(port, () => {
+                const agent = trackAgent(new Agent({ type: 'udp4' }))
+                agent.addOscoreContext('127.0.0.1', port, clientOscore)
+
+                const req = request({
+                    hostname: '127.0.0.1',
+                    port,
+                    pathname: '/test',
+                    agent
+                })
+                req.on('error', done)
+                req.on('response', (res) => {
+                    try {
+                        expect(res.payload.toString()).to.equal('hello-after-echo')
+                        // The first request was Echo-challenged inside the
+                        // middleware and never reached the app handler. Only
+                        // the Echo-bearing retry should have made it through.
+                        expect(appRequests).to.equal(1)
+                        done()
+                    } catch (e) {
+                        done(e as Error)
+                    }
+                })
+                req.end()
+            })
+        }).timeout(3000)
+
+        it('should re-challenge when the Echo retry carries a wrong nonce', function (done) {
+            const port = nextPort()
+
+            const masterSecret = Buffer.from('0102030405060708090a0b0c0d0e0f10', 'hex')
+            const masterSalt = Buffer.from('9e7ca92223786340', 'hex')
+            const clientId = Buffer.from('01', 'hex')
+            const serverId = Buffer.from('02', 'hex')
+
+            const clientOscore = new OSCORE({
+                masterSecret,
+                masterSalt,
+                senderId: clientId,
+                recipientId: serverId,
+                idContext: Buffer.alloc(0),
+                status: OscoreContextStatus.Fresh
+            })
+            const serverOscore = new OSCORE({
+                masterSecret,
+                masterSalt,
+                senderId: serverId,
+                recipientId: clientId,
+                idContext: Buffer.alloc(0),
+                status: OscoreContextStatus.Restored
+            })
+
+            const contexts = new SecurityContextManager()
+            contexts.addContext(serverOscore, clientId)
+
+            // Pre-store a *different* expected Echo nonce — the agent's
+            // auto-retry will echo back the server's actual challenge nonce,
+            // which won't match. The server should issue a *second* Echo
+            // challenge rather than letting the request through.
+            //
+            // We assert that the request handler is never invoked (the agent
+            // caps Echo retries at 1, so the second 4.01 is delivered to the
+            // application as an error/response).
+            const server = trackServer(createServer({ oscoreContexts: contexts }))
+            server.on('request', () => {
+                done(new Error('Request handler should not fire when Echo verification fails'))
+            })
+
+            server.listen(port, () => {
+                const agent = trackAgent(new Agent({ type: 'udp4' }))
+                agent.addOscoreContext('127.0.0.1', port, clientOscore)
+
+                // Pre-load a stale nonce so the genuine Echo retry from the
+                // agent doesn't match — simulates an attacker replaying an
+                // old challenge.
+                contexts.storePendingEcho(clientId, undefined, Buffer.from('deadbeefdeadbeef', 'hex'))
+
+                const req = request({
+                    hostname: '127.0.0.1',
+                    port,
+                    pathname: '/test',
+                    agent
+                })
+                req.on('response', (res) => {
+                    // After Echo retry cap (1) is hit, the second 4.01 with a
+                    // fresh challenge is delivered to the app. We just need
+                    // the server's app handler to NOT have fired.
+                    expect(res.code).to.equal('4.01')
+                    done()
+                })
+                req.on('error', done)
+                req.end()
+            })
+        }).timeout(3000)
+    })
+
     describe('parseOscoreOption validation', function () {
         it('should reject pivLen > 5 (RFC 8613 §3.1)', function () {
             // flags byte with PIV length = 6, then 6 dummy bytes
