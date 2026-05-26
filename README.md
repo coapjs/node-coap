@@ -512,6 +512,29 @@ Emitted when the request does not receive a response or acknowledgement within a
 Emitted when an error occurs. This can be due to socket error, confirmable message timeout or any other generic error.
 `Error` object is provided, that describes the error.
 
+#### message.on('block', function(info) { })
+Emitted once per block during a blockwise transfer — Block1 (upload) or Block2 (download). Useful for progress bars on large payloads.
+
+```js
+const req = coap.request({ hostname: 'localhost', method: 'PUT' })
+
+req.on('block', (info) => {
+  // info = {
+  //   direction: 'sent' | 'received',
+  //   num,                // 0-indexed block
+  //   more,               // true while more blocks are expected
+  //   blockSize,          // bytes per block (16, 32, … 1024)
+  //   bytesTransferred,   // cumulative bytes through this block
+  //   totalBytes          // known for Block1; for Block2 only set on the last block
+  // }
+  const total = info.totalBytes ?? '?'
+  console.log(`${info.direction} ${info.bytesTransferred}/${total}`)
+})
+
+req.on('response', () => {})
+req.end(Buffer.alloc(4096))
+```
+
 -------------------------------------------------------
 <a name="incoming"></a>
 ### IncomingMessage
