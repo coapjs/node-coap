@@ -16,7 +16,7 @@ import { SecurityContextManager } from './lib/oscore'
 import { parameters, refreshTiming, defaultTiming } from './lib/parameters'
 import { isIPv6 } from 'net'
 import { registerOption, registerFormat, ignoreOption } from './lib/option_converter'
-import type { CoapServerOptions, requestListener, CoapRequestParams, ParametersUpdate, AgentOptions, CoapPacket, Option, OptionValue } from './models/models'
+import type { CoapServerOptions, requestListener, CoapRequestParams, ParametersUpdate, AgentOptions, CoapPacket, Option, OptionValue, BlockEvent } from './models/models'
 
 export let globalAgent = new Agent({ type: 'udp4' })
 export let globalAgentIPv6 = new Agent({ type: 'udp6' })
@@ -106,7 +106,8 @@ export {
     type CoapPacket,
     type Option,
     type OptionValue,
-    type CoapServerOptions
+    type CoapServerOptions,
+    type BlockEvent
 }
 
 export type { OSCORE, OscoreContext, OscoreContextStatus } from 'coap-oscore'

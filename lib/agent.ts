@@ -392,6 +392,16 @@ class Agent extends EventEmitter {
             // accumulate payload
             req._totalPayload = Buffer.concat([req._totalPayload, packet.payload])
 
+            // parseBlock2 already converts the SZX exponent into a byte size.
+            req.emit('block', {
+                direction: 'received',
+                num: block2.num,
+                more: block2.more === 1,
+                blockSize: block2.size,
+                bytesTransferred: req._totalPayload.length,
+                totalBytes: block2.more === 0 ? req._totalPayload.length : undefined
+            })
+
             if (block2.more === 1) {
                 // increase message id for next request
                 if (req._packet.messageId != null) {

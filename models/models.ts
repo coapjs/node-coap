@@ -33,6 +33,29 @@ export interface Block {
     size: number
 }
 
+/**
+ * Payload of the `block` event emitted by an outgoing request for each
+ * Block1 (upload) or Block2 (download) transfer. Use it for progress
+ * reporting on large transfers.
+ *
+ * - `direction`: `'sent'` for an outbound Block1 chunk, `'received'` for
+ *   an inbound Block2 chunk.
+ * - `num`: 0-indexed block number.
+ * - `more`: `true` while further blocks are expected.
+ * - `blockSize`: block size in bytes (16, 32, 64, 128, 256, 512, or 1024).
+ * - `bytesTransferred`: cumulative bytes transferred including this block.
+ * - `totalBytes`: total payload size in bytes. Known up-front for Block1;
+ *   for Block2 it is only set on the final block.
+ */
+export interface BlockEvent {
+    direction: 'sent' | 'received'
+    num: number
+    more: boolean
+    blockSize: number
+    bytesTransferred: number
+    totalBytes?: number
+}
+
 export interface MiddlewareParameters {
     raw: Buffer
     rsinfo: AddressInfo
