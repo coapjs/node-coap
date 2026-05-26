@@ -12,6 +12,7 @@ import { request, createServer, Agent, SecurityContextManager } from '../index'
 import { OSCORE, OscoreContextStatus } from 'coap-oscore'
 import { generate, parse } from 'coap-packet'
 import dgram from 'dgram'
+import { parseOscoreOption } from '../lib/oscore_helpers'
 import type IncomingMessage from '../lib/incoming_message'
 import type OutgoingMessage from '../lib/outgoing_message'
 import type Server from '../lib/server'
@@ -199,6 +200,35 @@ describe('OSCORE', function () {
             })
 
             server.listen(port, () => {
+                const plainAgent = trackAgent(new Agent({ type: 'udp4' }))
+                const req = request({
+                    hostname: '127.0.0.1',
+                    port,
+                    pathname: '/test',
+                    agent: plainAgent
+                })
+                req.on('response', (res) => {
+                    expect(res.code).to.equal('4.01')
+                    done()
+                })
+                req.end()
+            })
+        })
+
+        it('should honour oscoreOnly when contexts are added dynamically after construction', function (done) {
+            const port = nextPort()
+            const { server: serverOscore } = createOscorePair()
+
+            // No oscoreContexts in the constructor — exercising the path that
+            // previously dropped the oscoreOnly flag.
+            const server = trackServer(createServer({ oscoreOnly: true }))
+            server.on('request', () => {
+                done(new Error('Should not receive request from plaintext client'))
+            })
+
+            server.listen(port, () => {
+                server.addOscoreContext(serverOscore, Buffer.from('01', 'hex'))
+
                 const plainAgent = trackAgent(new Agent({ type: 'udp4' }))
                 const req = request({
                     hostname: '127.0.0.1',
@@ -415,6 +445,59 @@ describe('OSCORE', function () {
                     done()
                 }, 500)
             })
+        })
+    })
+
+    describe('parseOscoreOption validation', function () {
+        it('should reject pivLen > 5 (RFC 8613 §3.1)', function () {
+            // flags byte with PIV length = 6, then 6 dummy bytes
+            expect(() => parseOscoreOption(Buffer.from([0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06])))
+                .to.throw(/PIV length/)
+            expect(() => parseOscoreOption(Buffer.from([0x07, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07])))
+                .to.throw(/PIV length/)
+        })
+
+        it('should reject reserved flag bits (RFC 8613 §6.1)', function () {
+            expect(() => parseOscoreOption(Buffer.from([0x20]))).to.throw(/reserved flag bits/)
+            expect(() => parseOscoreOption(Buffer.from([0x40]))).to.throw(/reserved flag bits/)
+            expect(() => parseOscoreOption(Buffer.from([0x80]))).to.throw(/reserved flag bits/)
+        })
+
+        it('should still accept valid options with pivLen 0–5', function () {
+            // pivLen=5, no kid/kidContext
+            expect(() => parseOscoreOption(Buffer.from([0x05, 1, 2, 3, 4, 5]))).to.not.throw()
+            // kid flag set + 1-byte kid
+            expect(() => parseOscoreOption(Buffer.from([0x08, 0xaa]))).to.not.throw()
+        })
+    })
+
+    describe('SecurityContextManager pending Echo nonces', function () {
+        it('should expire pending Echo nonces after the configured TTL', function () {
+            const ctxMgr = new SecurityContextManager({ echoTtlMs: 5 })
+            const kid = Buffer.from('01', 'hex')
+            const nonce = Buffer.from('aabbccdd', 'hex')
+            ctxMgr.storePendingEcho(kid, undefined, nonce)
+            expect(ctxMgr.getPendingEcho(kid, undefined)?.equals(nonce)).to.equal(true)
+            const expired = new Promise<void>((resolve) => setTimeout(() => {
+                expect(ctxMgr.getPendingEcho(kid, undefined)).to.equal(undefined)
+                resolve()
+            }, 15))
+            return expired
+        })
+
+        it('should evict the oldest entry when the pending-Echo map fills', function () {
+            // Provoke the LRU eviction path with a small synthetic instance.
+            // We can't reach the 1000 cap in a unit test, so cheat: poke the
+            // private map directly to fill it to capacity, then store one more.
+            const ctxMgr = new SecurityContextManager()
+            const internal: Map<string, { nonce: Buffer, expiresAt: number }> = (ctxMgr as any)._pendingEchoNonces
+            for (let i = 0; i < 1000; i++) {
+                internal.set(`stub${i}`, { nonce: Buffer.from([i & 0xff]), expiresAt: Date.now() + 60_000 })
+            }
+            const firstKey = internal.keys().next().value
+            ctxMgr.storePendingEcho(Buffer.from('aa', 'hex'), undefined, Buffer.from('ee', 'hex'))
+            expect(internal.size).to.be.at.most(1000)
+            expect(internal.has(firstKey as string)).to.equal(false)
         })
     })
 

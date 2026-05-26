@@ -196,9 +196,13 @@ export function oscoreDecryptRequest (request: MiddlewareParameters, next: middl
                     innerEcho.length === storedNonce.length &&
                     crypto.timingSafeEqual(innerEcho, storedNonce)
                 ) {
-                    // Echo verified — complete the reboot recovery
-                    // Note: clearRebootRecovery() is added in the concurrent node-oscore update
-                    ;(oscore as any).clearRebootRecovery()
+                    // Echo verified — complete the reboot recovery.
+                    // clearRebootRecovery() may not exist on older coap-oscore
+                    // releases; guard so the Echo path still completes.
+                    const clearRecovery = (oscore as any).clearRebootRecovery
+                    if (typeof clearRecovery === 'function') {
+                        clearRecovery.call(oscore)
+                    }
                     ctxMgr.clearPendingEcho(kid, kidContext ?? undefined)
 
                     // Continue processing with the decrypted inner message

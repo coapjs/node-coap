@@ -16,6 +16,10 @@ export default class ObserveReadStream extends IncomingMessage {
     _lastMessageId: number | undefined
     _lastTime: number
     _disableFiltering: boolean
+    // Inherited from IncomingMessage; redeclared here so consumers reading
+    // ObserveReadStream's surface see the flag explicitly.
+    declare oscoreProtected: boolean
+
     constructor (packet: CoapPacket, rsinfo: AddressInfo, outSocket: AddressInfo) {
         super(packet, rsinfo, outSocket, { objectMode: true })
 

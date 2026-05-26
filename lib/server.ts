@@ -152,9 +152,9 @@ class CoAPServer extends EventEmitter {
                 this._parameters.sendAcksForNonConfirmablePackets
         }
 
+        this._oscoreOnly = this._options.oscoreOnly ?? false
         if (this._options.oscoreContexts != null) {
             this._oscoreContextManager = this._options.oscoreContexts
-            this._oscoreOnly = this._options.oscoreOnly ?? false
             this._middlewares.push(oscoreDecryptRequest)
         }
 

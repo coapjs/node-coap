@@ -94,6 +94,12 @@ class Agent extends EventEmitter {
         this._sock.on('message', (msg, rsinfo) => {
             const oscoreCtx = this._getOscoreContext(rsinfo.address, rsinfo.port)
             if (oscoreCtx == null) {
+                // oscoreOnly is a strict policy: refuse any inbound datagram
+                // from a peer for which we hold no OSCORE context. Symmetric
+                // with the outbound block in request().
+                if (this._oscoreOnly) {
+                    return
+                }
                 this._handlePlainMessage(msg, rsinfo)
                 return
             }
@@ -463,13 +469,12 @@ class Agent extends EventEmitter {
         const observe = req.url.observe != null && [true, 0, '0'].includes(req.url.observe)
 
         if (req.response != null) {
-            const response: any = req.response
-            if (response.append != null) {
+            if (req.response instanceof ObserveStream) {
                 // Drop notifications without decode proof on OSCORE-protected streams
-                if (response.oscoreProtected === true && rsinfo.oscore !== true) {
+                if (req.response.oscoreProtected && !rsinfo.oscore) {
                     return
                 }
-                return response.append(packet)
+                return req.response.append(packet, false)
             } else {
                 // TODO There is a previous response but is not an ObserveStream !
                 return
@@ -482,11 +487,12 @@ class Agent extends EventEmitter {
         }
 
         if (observe && packet.code !== '4.04') {
-            response = new ObserveStream(packet, rsinfo, outSocket)
+            const observeStream = new ObserveStream(packet, rsinfo, outSocket)
             if (rsinfo.oscore === true) {
-                (response as ObserveStream)._disableFiltering = true
-                ;(response as ObserveStream).oscoreProtected = true
+                observeStream._disableFiltering = true
+                observeStream.oscoreProtected = true
             }
+            response = observeStream
             response.on('close', () => {
                 this._tkToReq.delete(packet.token.toString('hex'))
                 this._cleanUp()

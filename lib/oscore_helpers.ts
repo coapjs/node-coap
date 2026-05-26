@@ -13,6 +13,11 @@ const OSCORE_OPTION_NUMBER = 9
 const FLAG_KID = 0x08
 const FLAG_KID_CTX = 0x10
 const FLAG_PIV_MASK = 0x07
+// RFC 8613 §6.1: the upper bits (0x20, 0x40, 0x80) of the flag byte are
+// reserved and MUST be 0. Per RFC 8613 §3.1, partial IV is bounded to 5
+// bytes — so pivLen values 6 and 7 are also illegal.
+const FLAG_RESERVED_MASK = 0xe0
+const MAX_PIV_LEN = 5
 
 export interface OscoreOptionFields {
     kid: Buffer | null
@@ -53,7 +58,14 @@ export function parseOscoreOption (value: Buffer): OscoreOptionFields {
     let offset = 0
     const flags = value[offset++]
 
+    if ((flags & FLAG_RESERVED_MASK) !== 0) {
+        throw new Error('Malformed OSCORE option: reserved flag bits set')
+    }
+
     const pivLen = flags & FLAG_PIV_MASK
+    if (pivLen > MAX_PIV_LEN) {
+        throw new Error('Malformed OSCORE option: PIV length exceeds RFC 8613 §3.1 maximum')
+    }
     let piv: Buffer | null = null
     if (pivLen > 0) {
         if (offset + pivLen > value.length) {

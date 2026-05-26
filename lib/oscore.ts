@@ -14,17 +14,29 @@ import type { OSCORE } from 'coap-oscore'
  * Contexts are keyed by recipientId:idContext (hex) — matching
  * the KID + KID Context fields from the OSCORE option in incoming requests.
  */
+interface PendingEcho {
+    nonce: Buffer
+    expiresAt: number
+}
+
 export class SecurityContextManager extends EventEmitter {
     private static readonly MAX_TOKEN_BINDINGS = 10000
+    private static readonly MAX_PENDING_ECHOS = 1000
+    // Default Echo nonce lifetime — matches default EXCHANGE_LIFETIME.
+    // After this point the client's CON exchange has already given up, so
+    // the server has no reason to keep the challenge alive.
+    private static readonly DEFAULT_ECHO_TTL_MS = 247 * 1000
     private _contexts: Map<string, OSCORE>
     private _tokenToContext: Map<string, OSCORE>
-    private _pendingEchoNonces: Map<string, Buffer>
+    private _pendingEchoNonces: Map<string, PendingEcho>
+    private _echoTtlMs: number
 
-    constructor () {
+    constructor (options?: { echoTtlMs?: number }) {
         super()
         this._contexts = new Map()
         this._tokenToContext = new Map()
         this._pendingEchoNonces = new Map()
+        this._echoTtlMs = options?.echoTtlMs ?? SecurityContextManager.DEFAULT_ECHO_TTL_MS
     }
 
     /**
@@ -98,18 +110,40 @@ export class SecurityContextManager extends EventEmitter {
 
     /**
      * Store a pending Echo nonce for a given security context.
+     * Entry expires after `echoTtlMs` and the map is capped at
+     * MAX_PENDING_ECHOS — peers that trigger Echo and never reply
+     * cannot pin memory indefinitely.
      */
     storePendingEcho (recipientId: Buffer, idContext: Buffer | undefined, nonce: Buffer): void {
+        this._sweepExpiredEchos()
+        if (this._pendingEchoNonces.size >= SecurityContextManager.MAX_PENDING_ECHOS) {
+            const firstKey = this._pendingEchoNonces.keys().next().value
+            if (firstKey != null) {
+                this._pendingEchoNonces.delete(firstKey)
+            }
+        }
         const key = this._toKey(recipientId, idContext)
-        this._pendingEchoNonces.set(key, nonce)
+        this._pendingEchoNonces.set(key, {
+            nonce,
+            expiresAt: Date.now() + this._echoTtlMs
+        })
     }
 
     /**
      * Retrieve the pending Echo nonce for a given security context.
+     * Returns undefined for entries that have expired (and removes them).
      */
     getPendingEcho (recipientId: Buffer, idContext: Buffer | undefined): Buffer | undefined {
         const key = this._toKey(recipientId, idContext)
-        return this._pendingEchoNonces.get(key)
+        const entry = this._pendingEchoNonces.get(key)
+        if (entry == null) {
+            return undefined
+        }
+        if (entry.expiresAt <= Date.now()) {
+            this._pendingEchoNonces.delete(key)
+            return undefined
+        }
+        return entry.nonce
     }
 
     /**
@@ -118,6 +152,15 @@ export class SecurityContextManager extends EventEmitter {
     clearPendingEcho (recipientId: Buffer, idContext: Buffer | undefined): void {
         const key = this._toKey(recipientId, idContext)
         this._pendingEchoNonces.delete(key)
+    }
+
+    private _sweepExpiredEchos (): void {
+        const now = Date.now()
+        for (const [key, entry] of this._pendingEchoNonces) {
+            if (entry.expiresAt <= now) {
+                this._pendingEchoNonces.delete(key)
+            }
+        }
     }
 
     private _toKey (recipientId: Buffer, idContext?: Buffer): string {
