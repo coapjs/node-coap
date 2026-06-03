@@ -68,6 +68,15 @@ export default class RetrySend extends EventEmitter {
         if (messageId !== this._lastMessageId) {
             this._lastMessageId = messageId
             this._sendAttemp = 0
+            // Restart the backoff. A single RetrySend instance is reused for
+            // every block of a segmented Block1 transfer; without this reset,
+            // _currentTime only ever doubles across an entire request, so a
+            // stall on any block ratchets every subsequent block's retransmit
+            // delay until it exceeds the peer's idle/session timeout and the
+            // transfer wedges. Retransmits of the SAME message (called via
+            // _bOff) keep the same messageId and correctly fall through this
+            // branch, preserving the exponential backoff up to maxRetransmit.
+            this._currentTime = this._parameters.ackTimeout * (1 + (this._parameters.ackRandomFactor - 1) * Math.random()) * 1000
         }
 
         if (avoidBackoff !== true && ++this._sendAttemp <= this._maxRetransmit) {
@@ -78,6 +87,10 @@ export default class RetrySend extends EventEmitter {
     }
 
     send (message: Buffer, avoidBackoff?: boolean): void {
+        // Clear any orphaned timers from a prior message. Callers that don't
+        // explicitly reset() before re-sending would otherwise leak a stale
+        // _bOffTimer firing against the new buffer.
+        this.reset()
         this._message = message
         this._send(avoidBackoff)
 
