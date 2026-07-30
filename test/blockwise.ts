@@ -386,6 +386,45 @@ describe('blockwise2', function () {
             res.end(payload)
         })
     })
+
+    it('should keep the Content-Format option in every block2 response, not just the first two (GWLB-2618)', function (done) {
+        // 4 blocks @ 16 bytes/block: the bug only surfaces from block index 2 onwards,
+        // so 2 blocks (as most other tests in this file use) would not catch it.
+        const payloadLength = 32 + 16 + 1
+        const bigPayload = Buffer.alloc(payloadLength)
+        fillPayloadBuffer(bigPayload)
+
+        server.on('request', (req, res) => {
+            res.setOption('Content-Format', 'application/link-format')
+            res.end(bigPayload)
+        })
+
+        const token = Buffer.alloc(4)
+        fillPayloadBuffer(token)
+
+        const hasContentFormat: boolean[] = []
+        let nextBlockNum = 0
+
+        client.on('message', (msg) => {
+            const res = parse(msg)
+            const cfOption = res.options?.find((opt) => opt.name === 'Content-Format')
+            hasContentFormat[nextBlockNum] = cfOption != null
+
+            const block2Buff = getOption(res.options, 'Block2')
+            const block2 = block2Buff instanceof Buffer ? parseBlock2(block2Buff) : null
+
+            if (block2?.more === 1) {
+                nextBlockNum++
+                sendNextBlock2(token, nextBlockNum)
+            } else {
+                expect(hasContentFormat.length).to.be.greaterThan(2)
+                expect(hasContentFormat.every((present) => present)).to.eql(true)
+                setImmediate(done)
+            }
+        })
+
+        sendNextBlock2(token, 0)
+    })
 })
 
 describe('blockwise1', () => {

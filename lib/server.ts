@@ -580,6 +580,12 @@ class CoAPServer extends EventEmitter {
                         const cacheEntry = this._block2Cache.get(cacheKey)
                         cacheEntry?.options.forEach((option) => response._packet.options?.push(option))
                         response.end(cacheEntry?.buffer)
+                        // response.end() just replaced the cache entry with a fresh
+                        // { options: [] } (see OutMessage.end() below), so the
+                        // representation options applied above (e.g. Content-Format)
+                        // would be lost for every block after this one unless we
+                        // re-save them now, same as the initial (block 0) response does.
+                        this.saveAdditionalBlock2Options(cacheKey, response)
                     }
                     return
                 }
