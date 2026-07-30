@@ -1,6 +1,6 @@
 {
-  "name": "coap",
-  "version": "1.4.2",
+  "name": "@ts-art/node-coap",
+  "version": "1.8.3",
   "description": "A CoAP library for node modelled after 'http'",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
