@@ -386,6 +386,45 @@ describe('blockwise2', function () {
             res.end(payload)
         })
     })
+
+    it('should keep the Content-Format option in every block2 response, not just the first two (GWLB-2618)', function (done) {
+        // 4 blocks @ 16 bytes/block: the bug only surfaces from block index 2 onwards,
+        // so 2 blocks (as most other tests in this file use) would not catch it.
+        const payloadLength = 32 + 16 + 1
+        const bigPayload = Buffer.alloc(payloadLength)
+        fillPayloadBuffer(bigPayload)
+
+        server.on('request', (req, res) => {
+            res.setOption('Content-Format', 'application/link-format')
+            res.end(bigPayload)
+        })
+
+        const token = Buffer.alloc(4)
+        fillPayloadBuffer(token)
+
+        const hasContentFormat: boolean[] = []
+        let nextBlockNum = 0
+
+        client.on('message', (msg) => {
+            const res = parse(msg)
+            const cfOption = res.options?.find((opt) => opt.name === 'Content-Format')
+            hasContentFormat[nextBlockNum] = cfOption != null
+
+            const block2Buff = getOption(res.options, 'Block2')
+            const block2 = block2Buff instanceof Buffer ? parseBlock2(block2Buff) : null
+
+            if (block2?.more === 1) {
+                nextBlockNum++
+                sendNextBlock2(token, nextBlockNum)
+            } else {
+                expect(hasContentFormat.length).to.be.greaterThan(2)
+                expect(hasContentFormat.every((present) => present)).to.eql(true)
+                setImmediate(done)
+            }
+        })
+
+        sendNextBlock2(token, 0)
+    })
 })
 
 describe('blockwise1', () => {
@@ -938,5 +977,134 @@ describe('blockwise1', () => {
 
             req.end()
         })
+    })
+})
+
+describe('block transfer progress events', function () {
+    describe('Block1 (upload)', function () {
+        let server: dgram.Socket
+        let port: number
+
+        beforeEach(function (done) {
+            port = nextPort()
+            server = dgram.createSocket('udp4')
+            server.bind(port, done)
+        })
+
+        afterEach(function () {
+            server.close()
+        })
+
+    it('should emit per-block "block" events for outgoing Block1 (upload)', function (done) {
+        // 32-byte payload + 16-byte blocks → 2 blocks (num 0 with more=1, num 1 with more=0)
+        const largePayload = Buffer.alloc(32)
+        for (let i = 0; i < largePayload.length; i++) {
+            largePayload[i] = i % 256
+        }
+
+        server.on('message', (msg, rinfo) => {
+            const packet = parse(msg)
+            if (packet.code !== '0.03') return
+            const block1Option = packet.options?.find(opt => opt.name === 'Block1')
+            if (block1Option == null || !Buffer.isBuffer(block1Option.value)) return
+            const block1 = parseBlockOption(block1Option.value)
+            if (block1 == null) return
+
+            const piggyback = generate({
+                code: block1.more === 1 ? '2.31' : '2.04',
+                messageId: packet.messageId,
+                ack: true,
+                token: packet.token,
+                options: [{ name: 'Block1', value: block1Option.value }]
+            })
+            server.send(piggyback, 0, piggyback.length, rinfo.port, rinfo.address)
+        })
+
+        const events: any[] = []
+        const req = request({ port, method: 'PUT', confirmable: true })
+        req.setOption('Block1', Buffer.of(0x00)) // size exponent 0 → 16-byte blocks
+        req.write(largePayload)
+        req.on('block', (info: any) => events.push(info))
+        req.on('response', () => {
+            try {
+                expect(events).to.have.lengthOf(2)
+                expect(events[0]).to.deep.include({
+                    direction: 'sent',
+                    num: 0,
+                    more: true,
+                    blockSize: 16,
+                    bytesTransferred: 16,
+                    totalBytes: 32
+                })
+                expect(events[1]).to.deep.include({
+                    direction: 'sent',
+                    num: 1,
+                    more: false,
+                    blockSize: 16,
+                    bytesTransferred: 32,
+                    totalBytes: 32
+                })
+                done()
+            } catch (e) {
+                done(e as Error)
+            }
+        })
+        req.on('error', done)
+        req.end()
+    }).timeout(3000)
+    })
+
+    describe('Block2 (download)', function () {
+        let server
+        let port: number
+
+        beforeEach(function (done) {
+            port = nextPort()
+            server = createServer()
+            server.listen(port, done)
+        })
+
+        afterEach(function () {
+            server.close()
+        })
+
+        it('should emit per-block "block" events for incoming Block2 (download)', function (done) {
+            // 1536 > 1024 default max payload → server auto-blockwises into 2
+            // 1024-byte blocks (last block carries the trailing 512 bytes).
+            const payload = Buffer.alloc(1536, 0xab)
+            server.on('request', (req, res) => {
+                res.end(payload)
+            })
+
+            const events: any[] = []
+            const req = request({ port })
+            req.on('block', (info: any) => events.push(info))
+            req.on('response', (res) => {
+                try {
+                    expect(events).to.have.lengthOf(2)
+                    expect(events[0]).to.deep.include({
+                        direction: 'received',
+                        num: 0,
+                        more: true,
+                        blockSize: 1024,
+                        bytesTransferred: 1024
+                    })
+                    expect(events[0].totalBytes).to.equal(undefined)
+                    expect(events[1]).to.deep.include({
+                        direction: 'received',
+                        num: 1,
+                        more: false,
+                        blockSize: 1024,
+                        bytesTransferred: 1536,
+                        totalBytes: 1536
+                    })
+                    done()
+                } catch (e) {
+                    done(e as Error)
+                }
+            })
+            req.on('error', done)
+            req.end()
+        }).timeout(3000)
     })
 })

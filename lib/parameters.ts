@@ -192,28 +192,33 @@ const p: Parameters = {
 
 const defaultParameters: Parameters = JSON.parse(JSON.stringify(p))
 
-function refreshTiming (values?: ParametersUpdate): void {
-    for (const key in values) {
-        if (p[key] != null) {
-            p[key] = values[key]
+function applyOverrides (target: Parameters, overrides?: ParametersUpdate): void {
+    if (overrides != null) {
+        for (const key in overrides) {
+            if (key in target) {
+                target[key] = overrides[key]
+            }
         }
     }
+}
 
-    p.maxTransmitSpan = p.ackTimeout * ((Math.pow(2, p.maxRetransmit)) - 1) * p.ackRandomFactor
+function deriveTimings (target: Parameters, overrides?: ParametersUpdate): void {
+    target.maxTransmitSpan = target.ackTimeout * ((Math.pow(2, target.maxRetransmit)) - 1) * target.ackRandomFactor
+    target.maxTransmitWait = target.ackTimeout * (Math.pow(2, target.maxRetransmit + 1) - 1) * target.ackRandomFactor
+    target.processingDelay = target.ackTimeout
+    target.maxRTT = 2 * target.maxLatency + target.processingDelay
+    target.exchangeLifetime = target.maxTransmitSpan + target.maxRTT
 
-    p.maxTransmitWait = p.ackTimeout * (Math.pow(2, p.maxRetransmit + 1) - 1) * p.ackRandomFactor
-
-    p.processingDelay = p.ackTimeout
-
-    p.maxRTT = 2 * p.maxLatency + p.processingDelay
-
-    p.exchangeLifetime = p.maxTransmitSpan + p.maxRTT
-
-    if (values != null && typeof values.pruneTimerPeriod === 'number') {
-        p.pruneTimerPeriod = values.pruneTimerPeriod
+    if (overrides != null && typeof overrides.pruneTimerPeriod === 'number') {
+        target.pruneTimerPeriod = overrides.pruneTimerPeriod
     } else {
-        p.pruneTimerPeriod = (0.5 * p.exchangeLifetime)
+        target.pruneTimerPeriod = (0.5 * target.exchangeLifetime)
     }
+}
+
+function refreshTiming (values?: ParametersUpdate): void {
+    applyOverrides(p, values)
+    deriveTimings(p, values)
 }
 
 function defaultTiming (): void {
@@ -223,4 +228,15 @@ function defaultTiming (): void {
 p.defaultTiming = defaultTiming
 p.refreshTiming = refreshTiming
 
-export { p as parameters, refreshTiming, defaultTiming }
+function createParameters (overrides?: ParametersUpdate): Parameters {
+    const result: Parameters = JSON.parse(JSON.stringify(p))
+    delete result.defaultTiming
+    delete result.refreshTiming
+
+    applyOverrides(result, overrides)
+    deriveTimings(result, overrides)
+
+    return Object.freeze(result)
+}
+
+export { p as parameters, refreshTiming, defaultTiming, createParameters }

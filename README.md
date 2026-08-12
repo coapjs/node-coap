@@ -11,6 +11,7 @@ __node-coap__ is a client and server library for CoAP modeled after the `http` m
   * <a href="#install">Installation</a>
   * <a href="#basic">Basic Example</a>
   * <a href="#proxy">Proxy features</a>
+  * <a href="#oscore">OSCORE (Object Security)</a>
   * <a href="#api">API</a>
   * <a href="#contributing">Contributing</a>
   * <a href="#license">License &amp; copyright</a>
@@ -33,7 +34,8 @@ This library follows:
   for the observe specification,
 * [RFC 7959](https://datatracker.ietf.org/doc/html/rfc7959) for
   the blockwise specification,
-* [RFC 8132](https://datatracker.ietf.org/doc/html/rfc8132) for the PATCH, FETCH, and iPATCH methods.
+* [RFC 8132](https://datatracker.ietf.org/doc/html/rfc8132) for the PATCH, FETCH, and iPATCH methods,
+* [RFC 8613](https://datatracker.ietf.org/doc/html/rfc8613) for OSCORE (Object Security for Constrained RESTful Environments) via the [coap-oscore](https://github.com/stoprocent/node-coap-oscore) package.
 
 It does not parse the protocol but it use
 [CoAP-packet](http://github.com/mcollina/coap-packet) instead.
@@ -123,6 +125,147 @@ that writes all the information it receives along with the origin port and a pro
 The example shows that the target server sees the last ten requests as coming from the same port (the proxy), while the
 first ten come from different ports.
 
+<a name="oscore"></a>
+## OSCORE (Object Security)
+
+node-coap has built-in support for [OSCORE (RFC 8613)](https://datatracker.ietf.org/doc/html/rfc8613),
+providing end-to-end encryption for CoAP messages using the
+[coap-oscore](https://github.com/stoprocent/node-coap-oscore) package. OSCORE operates at the CoAP
+message level, encrypting after serialization and decrypting before parsing, so all existing CoAP
+features (block transfers, observe, caching) work transparently over OSCORE.
+
+### Client Example
+
+```js
+const coap = require('coap')
+const { OSCORE, OscoreContextStatus } = require('coap-oscore')
+
+// Create an OSCORE security context
+const oscore = new OSCORE({
+    masterSecret: Buffer.from('0102030405060708090a0b0c0d0e0f10', 'hex'),
+    masterSalt: Buffer.from('9e7ca92223786340', 'hex'),
+    senderId: Buffer.from('01', 'hex'),
+    recipientId: Buffer.from('02', 'hex'),
+    idContext: Buffer.alloc(0),
+    status: OscoreContextStatus.Fresh
+})
+
+// Persist Sender Sequence Number across restarts
+oscore.on('ssn', (ssn) => {
+    saveToStorage('client-ssn', ssn.toString())
+})
+
+// Create an agent and register the OSCORE context for the target peer
+const agent = new coap.Agent({ type: 'udp4' })
+agent.addOscoreContext('192.168.1.100', 5683, oscore)
+
+// All requests to this peer are now automatically OSCORE-protected
+const req = coap.request({
+    hostname: '192.168.1.100',
+    port: 5683,
+    pathname: '/temperature',
+    agent
+})
+
+req.on('response', (res) => {
+    console.log(res.payload.toString())
+})
+
+req.end()
+```
+
+### Server Example
+
+```js
+const coap = require('coap')
+const { OSCORE, SecurityContextManager } = require('coap')
+const { OscoreContextStatus } = require('coap-oscore')
+
+const contexts = new SecurityContextManager()
+
+// Register a context for client "01"
+const oscoreClient1 = new OSCORE({
+    masterSecret: Buffer.from('0102030405060708090a0b0c0d0e0f10', 'hex'),
+    masterSalt: Buffer.from('9e7ca92223786340', 'hex'),
+    senderId: Buffer.from('02', 'hex'),      // server's sender ID
+    recipientId: Buffer.from('01', 'hex'),    // client's sender ID
+    idContext: Buffer.alloc(0),
+    status: OscoreContextStatus.Fresh
+})
+contexts.addContext(oscoreClient1, Buffer.from('01', 'hex'))
+
+// Persist SSN across restarts
+contexts.on('ssn', (recipientId, idContext, ssn) => {
+    saveToStorage(`server-ssn-${recipientId.toString('hex')}`, ssn.toString())
+})
+
+// Pass contexts to the server — it accepts both OSCORE and plaintext requests
+const server = coap.createServer({ oscoreContexts: contexts })
+
+server.on('request', (req, res) => {
+    if (req.isOscore) {
+        console.log('Secure request from:', req.oscoreContext.senderId.toString('hex'))
+    } else {
+        console.log('Unprotected request')
+    }
+    // Response is automatically OSCORE-encrypted if the request was protected
+    res.end('Hello World')
+})
+
+server.listen(5683)
+```
+
+### OSCORE-Only Mode
+
+Both client and server can enforce that all traffic must be OSCORE-protected:
+
+```js
+// Server: reject unprotected requests with 4.01
+const server = coap.createServer({
+    oscoreContexts: contexts,
+    oscoreOnly: true
+})
+
+// Agent: throw if no OSCORE context exists for the target peer
+const agent = new coap.Agent({ type: 'udp4', oscoreOnly: true })
+```
+
+### Observe over OSCORE
+
+Observe works transparently. Each notification is independently encrypted:
+
+```js
+const req = coap.request({
+    hostname: '192.168.1.100',
+    pathname: '/temperature',
+    observe: true,
+    agent  // agent with OSCORE context
+})
+
+req.on('response', (res) => {
+    res.on('data', (payload) => {
+        console.log('Update:', payload.toString())
+    })
+})
+
+req.end()
+```
+
+### Dynamic Context Registration
+
+Contexts can be added or removed at runtime on both agent and server,
+which is useful after an EDHOC key exchange completes:
+
+```js
+// Agent
+agent.addOscoreContext('192.168.1.100', 5683, oscoreInstance)
+agent.removeOscoreContext('192.168.1.100', 5683)
+
+// Server
+server.addOscoreContext(oscoreInstance, recipientId, idContext)
+server.removeOscoreContext(recipientId, idContext)
+```
+
 <a name="api"></a>
 ## API
 
@@ -136,6 +279,7 @@ first ten come from different ports.
   * <a href="#ignoreOption"><code>coap.<b>ignoreOption()</b></code></a>
   * <a href="#registerFormat"><code>coap.<b>registerFormat()</b></code></a>
   * <a href="#agent"><code>coap.<b>Agent</b></code></a>
+  * <a href="#securitycontextmanager"><code>coap.<b>SecurityContextManager</b></code></a>
   * <a href="#globalAgent"><code>coap.<b>globalAgent</b></code></a>
   * <a href="#globalAgentIPv6"><code>coap.<b>globalAgentIPv6</b></code></a>
   * <a href="#updateTiming"><code>coap.<b>updateTiming</b></code></a>
@@ -230,6 +374,8 @@ The constructor can be given an optional options object, containing one of the f
 * `sendAcksForNonConfirmablePackets`: Optional. Use this to suppress sending ACK messages for non-confirmable packages
 * `clientIdentifier`: Optional. If specified, it should be a callback function with a signature like `clientIdentifier(request)`, where request is an `IncomingMessage`. The function should return a string that the caches can assume will uniquely identify the client.
 * `reuseAddr`: Optional. Use this to specify whether it should be possible to have multiple server instances listening to the same port. Default `true`.
+* `oscoreContexts`: Optional. A [`SecurityContextManager`](#securitycontextmanager) instance containing pre-registered OSCORE contexts. When set, the server will automatically decrypt incoming OSCORE-protected requests and encrypt responses. See <a href="#oscore">OSCORE</a>.
+* `oscoreOnly`: Optional. If `true`, the server will reject unprotected (non-OSCORE) requests with a `4.01` response. Only meaningful when `oscoreContexts` is also set. Default `false`.
 
 #### Event: 'request'
 
@@ -263,6 +409,17 @@ In such case, the custom socket must be pre-configured manually, i.e. CoAP serve
 will not bind, add multicast groups or do any other configuration.
 
 This function is asynchronous.
+
+#### server.addOscoreContext(oscoreInstance, recipientId[, idContext])
+
+Register an OSCORE security context at runtime. If the server was created without `oscoreContexts`, this will
+lazily initialize the OSCORE middleware. `oscoreInstance` is an `OSCORE` instance from the `coap-oscore` package.
+`recipientId` is the client's Sender ID (a `Buffer`). `idContext` is an optional `Buffer` for disambiguation when
+multiple contexts share the same Recipient ID.
+
+#### server.removeOscoreContext(recipientId[, idContext])
+
+Remove a previously registered OSCORE context.
 
 #### server.close([callback])
 
@@ -355,6 +512,29 @@ Emitted when the request does not receive a response or acknowledgement within a
 Emitted when an error occurs. This can be due to socket error, confirmable message timeout or any other generic error.
 `Error` object is provided, that describes the error.
 
+#### message.on('block', function(info) { })
+Emitted once per block during a blockwise transfer — Block1 (upload) or Block2 (download). Useful for progress bars on large payloads.
+
+```js
+const req = coap.request({ hostname: 'localhost', method: 'PUT' })
+
+req.on('block', (info) => {
+  // info = {
+  //   direction: 'sent' | 'received',
+  //   num,                // 0-indexed block
+  //   more,               // true while more blocks are expected
+  //   blockSize,          // bytes per block (16, 32, … 1024)
+  //   bytesTransferred,   // cumulative bytes through this block
+  //   totalBytes          // known for Block1; for Block2 only set on the last block
+  // }
+  const total = info.totalBytes ?? '?'
+  console.log(`${info.direction} ${info.bytesTransferred}/${total}`)
+})
+
+req.on('response', () => {})
+req.end(Buffer.alloc(4096))
+```
+
 -------------------------------------------------------
 <a name="incoming"></a>
 ### IncomingMessage
@@ -420,6 +600,19 @@ See [the `dgram` docs](http://nodejs.org/api/dgram.html#dgram_event_message) for
 
 Information about the socket used for the communication (address and port).
 
+#### message.isOscore
+
+`true` if this request was received with OSCORE protection, `false` otherwise.
+Only meaningful on the server side (in the `'request'` event handler).
+
+#### message.oscoreContext
+
+Present when `isOscore` is `true`. An object with the following properties:
+
+- `senderId`: `Buffer` — the client's Sender ID (which is the server's Recipient ID).
+- `idContext`: `Buffer | undefined` — the ID Context, if present in the OSCORE option.
+
+This can be used to identify which OSCORE client sent the request.
 
 -------------------------------------------------------
 <a name="observeread"></a>
@@ -567,6 +760,54 @@ Opts is an optional object with the following optional properties:
   UDP socket.
 
 * `socket`: use existing socket instead of creating a new one.
+
+* `oscoreOnly`: if `true`, the agent will throw an error when sending a request
+  to a peer that has no registered OSCORE context. Default `false`.
+
+#### agent.addOscoreContext(host, port, oscoreInstance)
+
+Register an OSCORE security context for a remote peer. `host` is the peer's IP address or hostname (string),
+`port` is the peer's port number, and `oscoreInstance` is an `OSCORE` instance from the `coap-oscore` package.
+Once registered, all requests to this `host:port` will be automatically OSCORE-encrypted, and all responses
+from this peer will be automatically decrypted.
+
+#### agent.removeOscoreContext(host, port)
+
+Remove a previously registered OSCORE context for a remote peer.
+
+-------------------------------------------------------
+<a name="securitycontextmanager"></a>
+### coap.SecurityContextManager
+
+A manager for server-side OSCORE security contexts. Contexts are keyed by
+`recipientId` and optional `idContext`, matching the KID and KID Context
+fields from the OSCORE option in incoming requests.
+
+```js
+const { SecurityContextManager } = require('coap')
+const contexts = new SecurityContextManager()
+```
+
+#### contexts.addContext(oscoreInstance, recipientId[, idContext])
+
+Register an OSCORE context. `oscoreInstance` is an `OSCORE` instance, `recipientId` is the client's Sender ID
+(`Buffer`), and `idContext` is an optional `Buffer` for disambiguation.
+
+#### contexts.removeContext(recipientId[, idContext])
+
+Remove a previously registered context. Returns `true` if found and removed.
+
+#### Event: 'ssn'
+
+Emitted when a Sender Sequence Number changes on any managed context. The listener
+receives `(recipientId: Buffer, idContext: Buffer | undefined, ssn: bigint)`. Use this
+to persist SSN values for context recovery after restarts.
+
+```js
+contexts.on('ssn', (recipientId, idContext, ssn) => {
+    saveToStorage(`server-ssn-${recipientId.toString('hex')}`, ssn.toString())
+})
+```
 
 -------------------------------------------------------
 <a name="globalAgent"></a>

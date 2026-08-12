@@ -8,9 +8,10 @@
 
 import crypto = require('crypto')
 import { Socket, createSocket } from 'dgram'
-import { AgentOptions, CoapRequestParams, Block } from '../models/models'
+import { AgentOptions, CoapRequestParams, Block, Parameters } from '../models/models'
 import { EventEmitter } from 'events'
 import { parse, generate, ParsedPacket } from 'coap-packet'
+import type { OSCORE } from 'coap-oscore'
 import IncomingMessage from './incoming_message'
 import OutgoingMessage from './outgoing_message'
 import ObserveStream from './observe_read_stream'
@@ -19,7 +20,12 @@ import { parseBlock2, createBlock2, getOption, removeOption } from './helpers'
 import { SegmentedTransmission } from './segmentation'
 import { parseBlockOption } from './block'
 import { AddressInfo } from 'net'
-import { parameters } from './parameters'
+import { parameters, createParameters } from './parameters'
+import { hasOscoreOption } from './oscore_helpers'
+
+interface OscoreRsinfo extends AddressInfo {
+    oscore?: boolean
+}
 
 const maxToken = Math.pow(2, 32)
 const maxMessageId = Math.pow(2, 16)
@@ -35,12 +41,17 @@ class Agent extends EventEmitter {
     _lastMessageId: number
     private _msgInFlight: number
     _requests: number
+    private _oscoreContexts: Map<string, OSCORE>
+    private _oscoreOnly: boolean
+    private _parameters: Parameters
     constructor (opts?: AgentOptions) {
         super()
 
         if (opts == null) {
             opts = {}
         }
+
+        this._parameters = createParameters(opts.parameters)
 
         if (opts.type == null) {
             opts.type = 'udp4'
@@ -53,8 +64,23 @@ class Agent extends EventEmitter {
         }
 
         this._opts = opts
+        this._oscoreContexts = new Map()
+        this._oscoreOnly = opts.oscoreOnly ?? false
 
         this._init(opts.socket)
+    }
+
+    addOscoreContext (host: string, port: number, instance: OSCORE): void {
+        const key = `${host.toLowerCase()}:${port}`
+        this._oscoreContexts.set(key, instance)
+    }
+
+    removeOscoreContext (host: string, port: number): void {
+        this._oscoreContexts.delete(`${host.toLowerCase()}:${port}`)
+    }
+
+    private _getOscoreContext (host: string, port: number): OSCORE | undefined {
+        return this._oscoreContexts.get(`${host.toLowerCase()}:${port}`)
     }
 
     _init (socket?: Socket): void {
@@ -66,22 +92,81 @@ class Agent extends EventEmitter {
 
         this._sock = socket ?? createSocket({ type: this._opts.type ?? 'udp4' })
         this._sock.on('message', (msg, rsinfo) => {
-            let packet: ParsedPacket
+            const oscoreCtx = this._getOscoreContext(rsinfo.address, rsinfo.port)
+            if (oscoreCtx == null) {
+                // oscoreOnly is a strict policy: refuse any inbound datagram
+                // from a peer for which we hold no OSCORE context. Symmetric
+                // with the outbound block in request().
+                if (this._oscoreOnly) {
+                    return
+                }
+                this._handlePlainMessage(msg, rsinfo)
+                return
+            }
+
+            // Not every datagram from an OSCORE peer is OSCORE-protected.
+            // RFC 8613 §4.2 forbids protecting empty messages (transport-layer
+            // ACK/RST), and a peer that lost its context may reply in plaintext.
+            // Inspect the outer packet first to choose the right path.
+            let outerPacket: ParsedPacket
             try {
-                packet = parse(msg)
-            } catch (err) {
+                outerPacket = parse(msg)
+            } catch {
                 return
             }
 
-            if (packet.code[0] === '0' && packet.code !== '0.00') {
-                // ignore this packet since it's not a response.
+            if (!hasOscoreOption(outerPacket)) {
+                if (outerPacket.code === '0.00') {
+                    // Empty ACK / RST — legitimate transport-layer message.
+                    if (this._sock != null) {
+                        this._handle(outerPacket, rsinfo, this._sock.address())
+                    }
+                    return
+                }
+                // Non-empty plaintext from a peer we expect OSCORE from — peer
+                // likely lost its context. Surface to the matching request.
+                const token = outerPacket.token?.toString('hex')
+                if (token != null && token.length > 0) {
+                    const req = this._tkToReq.get(token)
+                    if (req != null) {
+                        req.sender.reset()
+                        req.emit('error', new Error('Received plaintext response on OSCORE-protected channel'))
+                    }
+                }
                 return
             }
 
-            if (this._sock != null) {
-                const outSocket = this._sock.address()
-                this._handle(packet, rsinfo, outSocket)
-            }
+            oscoreCtx.decode(msg)
+                .then((decoded) => {
+                    let packet: ParsedPacket
+                    try {
+                        packet = parse(decoded)
+                    } catch {
+                        return
+                    }
+                    if (packet.code[0] === '0' && packet.code !== '0.00') {
+                        return
+                    }
+                    if (this._sock != null) {
+                        const oscoreRsinfo: OscoreRsinfo = {
+                            ...rsinfo,
+                            oscore: true
+                        }
+                        this._handle(packet, oscoreRsinfo, this._sock.address())
+                    }
+                })
+                .catch((err) => {
+                    // Decode failed on a packet that *claimed* OSCORE protection.
+                    // Propagate to the matching request so it doesn't hang.
+                    const token = outerPacket.token?.toString('hex')
+                    if (token != null && token.length > 0) {
+                        const req = this._tkToReq.get(token)
+                        if (req != null) {
+                            req.sender.reset()
+                            req.emit('error', new Error(`OSCORE decode failed: ${err?.message ?? 'unknown error'}`))
+                        }
+                    }
+                })
         })
 
         if (this._opts.port != null) {
@@ -101,6 +186,24 @@ class Agent extends EventEmitter {
 
         this._msgInFlight = 0
         this._requests = 0
+    }
+
+    private _handlePlainMessage (msg: Buffer, rsinfo: AddressInfo): void {
+        let packet: ParsedPacket
+        try {
+            packet = parse(msg)
+        } catch (err) {
+            return
+        }
+
+        if (packet.code[0] === '0' && packet.code !== '0.00') {
+            return
+        }
+
+        if (this._sock != null) {
+            const outSocket = this._sock.address()
+            this._handle(packet, rsinfo, outSocket)
+        }
     }
 
     close (done?: (err?: Error) => void): this {
@@ -157,7 +260,7 @@ class Agent extends EventEmitter {
         })
     }
 
-    _handle (packet: ParsedPacket, rsinfo: AddressInfo, outSocket: AddressInfo): void {
+    _handle (packet: ParsedPacket, rsinfo: OscoreRsinfo, outSocket: AddressInfo): void {
         let buf: Buffer
         let response: IncomingMessage
         let req: OutgoingMessage | undefined = this._msgIdToReq.get(packet.messageId)
@@ -289,6 +392,16 @@ class Agent extends EventEmitter {
             // accumulate payload
             req._totalPayload = Buffer.concat([req._totalPayload, packet.payload])
 
+            // parseBlock2 already converts the SZX exponent into a byte size.
+            req.emit('block', {
+                direction: 'received',
+                num: block2.num,
+                more: block2.more === 1,
+                blockSize: block2.size,
+                bytesTransferred: req._totalPayload.length,
+                totalBytes: block2.more === 0 ? req._totalPayload.length : undefined
+            })
+
             if (block2.more === 1) {
                 // increase message id for next request
                 if (req._packet.messageId != null) {
@@ -321,14 +434,57 @@ class Agent extends EventEmitter {
             }
         }
 
+        // Echo auto-retry for OSCORE peers
+        if (packet.code === '4.01' && req != null && this._getOscoreContext(rsinfo.address, rsinfo.port) != null) {
+            const echoOpt = getOption(packet.options, '252')
+            if (echoOpt != null) {
+                // Limit Echo retries to prevent infinite loops from malicious servers
+                const retryCount = (req as any)._echoRetries ?? 0
+                if (retryCount >= 1) {
+                    // Max retries exceeded — deliver the 4.01 to the application
+                    // (fall through to normal response handling below)
+                } else {
+                    const retryUrl = { ...req.url, token: req._packet.token }
+                    const retryReq = this.request(retryUrl)
+
+                    // Carry over options from original packet (Content-Format, Accept, custom, etc.)
+                    // Skip Uri-Path, Uri-Query, Observe — these are reconstructed from retryUrl by request()
+                    const skipOptions = new Set(['Uri-Path', 'Uri-Query', 'Observe'])
+                    if (req._packet.options != null) {
+                        for (const opt of req._packet.options) {
+                            if (!skipOptions.has(String(opt.name))) {
+                                retryReq.setOption(String(opt.name), opt.value)
+                            }
+                        }
+                    }
+                    retryReq.setOption('252', echoOpt)
+
+                    ;(retryReq as any)._echoRetries = retryCount + 1
+
+                    retryReq.on('response', (res) => req.emit('response', res))
+                    retryReq.on('error', (err) => req.emit('error', err))
+
+                    // Carry over payload from original request
+                    const payload = req.slice()
+                    if (payload.length > 0) {
+                        retryReq.end(payload)
+                    } else {
+                        retryReq.end()
+                    }
+                    return
+                }
+            }
+        }
+
         const observe = req.url.observe != null && [true, 0, '0'].includes(req.url.observe)
 
         if (req.response != null) {
-            const response: any = req.response
-            if (response.append != null) {
-                // it is an observe request
-                // and we are already streaming
-                return response.append(packet)
+            if (req.response instanceof ObserveStream) {
+                // Drop notifications without decode proof on OSCORE-protected streams
+                if (req.response.oscoreProtected && !rsinfo.oscore) {
+                    return
+                }
+                return req.response.append(packet, false)
             } else {
                 // TODO There is a previous response but is not an ObserveStream !
                 return
@@ -341,7 +497,12 @@ class Agent extends EventEmitter {
         }
 
         if (observe && packet.code !== '4.04') {
-            response = new ObserveStream(packet, rsinfo, outSocket)
+            const observeStream = new ObserveStream(packet, rsinfo, outSocket)
+            if (rsinfo.oscore === true) {
+                observeStream._disableFiltering = true
+                observeStream.oscoreProtected = true
+            }
+            response = observeStream
             response.on('close', () => {
                 this._tkToReq.delete(packet.token.toString('hex'))
                 this._cleanUp()
@@ -358,6 +519,9 @@ class Agent extends EventEmitter {
             })
         } else {
             response = new IncomingMessage(packet, rsinfo, outSocket)
+            if (rsinfo.oscore === true) {
+                response.oscoreProtected = true
+            }
         }
 
         if (!req.multicast) {
@@ -398,7 +562,7 @@ class Agent extends EventEmitter {
         const options = url.options ?? url.headers
         const multicastTimeout = url.multicastTimeout != null ? url.multicastTimeout : 20000
         const host = url.hostname ?? url.host
-        const port = url.port ?? parameters.coapPort
+        const port = url.port ?? this._parameters.coapPort
 
         const req = new OutgoingMessage({}, (req, packet) => {
             if (url.confirmable !== false) {
@@ -437,9 +601,16 @@ class Agent extends EventEmitter {
             const block1Buff = getOption(packet.options, 'Block1')
             if (block1Buff != null) {
                 // Setup for a segmented transmission
-                req.segmentedSender = new SegmentedTransmission(block1Buff[0], req, packet)
-                req.segmentedSender.sendNext()
-            } else {
+                // Block1 value is (NUM<<4)|(M<<3)|SZX; SegmentedTransmission expects SZX (0-6) only
+                const block1State = parseBlockOption(block1Buff as Buffer)
+                const blockSizeBytes = Math.pow(2, block1State.size + 4)
+                // Only re-segment when payload exceeds one block; else client does app-level blockwise (preserve Block1 as-is)
+                if (packet.payload && packet.payload.length > blockSizeBytes) {
+                    req.segmentedSender = new SegmentedTransmission(block1State.size, req, packet)
+                    req.segmentedSender.sendNext()
+                }
+            }
+            if (req.segmentedSender == null) {
                 let buf: Buffer
                 try {
                     buf = generate(packet)
@@ -451,7 +622,23 @@ class Agent extends EventEmitter {
             }
         })
 
-        req.sender = new RetrySend(this._sock, port, host, url.retrySend)
+        req.sender = new RetrySend(this._sock, port, host, url.retrySend, this._parameters)
+
+        const oscoreCtx = this._getOscoreContext(host ?? '', port)
+
+        if (oscoreCtx == null && this._oscoreOnly) {
+            const hostStr = host ?? ''
+            throw new Error('No OSCORE context for ' + hostStr + (hostStr !== '' ? ':' : '') + port)
+        }
+
+        if (oscoreCtx != null) {
+            const originalSend = req.sender.send.bind(req.sender)
+            req.sender.send = (message: Buffer, avoidBackoff?: boolean) => {
+                oscoreCtx.encode(message)
+                    .then((encoded) => originalSend(encoded, avoidBackoff))
+                    .catch((err) => req.emit('error', err))
+            }
+        }
 
         req.url = url
 

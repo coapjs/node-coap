@@ -7,7 +7,7 @@
  */
 
 import { BufferListStream } from 'bl'
-import { CoapPacket, CoapRequestParams, OptionValue } from '../models/models'
+import { BlockEvent, CoapPacket, CoapRequestParams, OptionValue } from '../models/models'
 import { genAck, toCode, setOption } from './helpers'
 import RetrySend from './retry_send'
 import { SegmentedTransmission } from './segmentation'
@@ -15,7 +15,12 @@ import IncomingMessage from './incoming_message'
 import { OptionName, Packet } from 'coap-packet'
 
 
-export default class OutgoingMessage extends BufferListStream {
+interface OutgoingMessage {
+    on(event: 'block', listener: (info: BlockEvent) => void): this
+    on(event: string | symbol, listener: (...args: any[]) => void): this
+}
+
+class OutgoingMessage extends BufferListStream {
     _packet: Packet
     _ackTimer: NodeJS.Timeout | null
     _send: (req: OutgoingMessage, packet: Packet) => void
@@ -131,3 +136,5 @@ export default class OutgoingMessage extends BufferListStream {
         return this.setOption(name, values)
     }
 }
+
+export default OutgoingMessage

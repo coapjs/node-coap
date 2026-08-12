@@ -116,5 +116,14 @@ export class SegmentedTransmission {
             return
         }
         this.req.sender.send(buf, !this.packet.confirmable)
+
+        this.req.emit('block', {
+            direction: 'sent',
+            num: this.blockState.num,
+            more: this.blockState.more === 1,
+            blockSize: this.byteSize,
+            bytesTransferred: this.currentByte,
+            totalBytes: this.totalLength
+        })
     }
 }
